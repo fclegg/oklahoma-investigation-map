@@ -19,7 +19,7 @@
       padding: 10px;
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,.2);
-      font-family: system-ui, Arial, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       width: 440px;
       max-width: calc(100vw - 20px);
     }
@@ -38,165 +38,467 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 14px;
+      background: #fff;
+      font-family: inherit;
     }
-    textarea { width: 100%; min-height: 60px; }
-    #search{ flex: 1; }
-    .danger{ color: #c00; border-color: #c00; }
-    .editMode{ font-size: 12px; color: #0a5; display: none; }
+    textarea { width: 100%; min-height: 60px; resize: vertical; }
+    #search{ flex: 1; min-width: 200px; }
+    label { font-size: 13px; }
+    .hint{ font-size: 12px; color: #555; margin-top: 4px; line-height: 1.25; }
+    .small{ width: 130px; }
+    .grow{ flex: 1; min-width: 160px; }
+    .btnRow{ display: flex; gap: 8px; flex-wrap: wrap; }
+    .danger{ border-color: #d33 !important; color: #d33 !important; }
+
+    .editMode{
+      font-size: 12px;
+      color: #0a5;
+      margin-top: 4px;
+      display: none;
+    }
+
+    #statusBar{
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      z-index: 1100;
+      background: rgba(255,255,255,0.95);
+      padding: 8px 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      max-width: 380px;
+      font-size: 13px;
+    }
+    #statusBar strong{ display:block; margin-bottom: 4px; }
+    #statusText{ white-space: pre-wrap; }
   </style>
 </head>
 
 <body>
-
-<div id="controls" class="panel">
-  <div class="row">
-    <input id="search" placeholder="Search location..." />
-    <button id="clearBtn">Clear</button>
+  <div id="statusBar">
+    <strong>Firestore status</strong>
+    <div id="statusText">Loading…</div>
   </div>
-</div>
 
-<div id="newLocationPanel" class="panel">
-  <strong>New / Edit Location</strong>
-  <div id="editBanner" class="editMode">Editing existing pin</div>
+  <!-- Filters -->
+  <div id="controls" class="panel">
+    <div class="row">
+      <input id="search" type="text" placeholder="Search location name..." />
+      <button id="clearBtn" type="button">Clear</button>
+    </div>
 
-  <form id="form">
-    <input id="name" placeholder="Location name" required />
-    <input id="lat" placeholder="Lat" required />
-    <input id="lng" placeholder="Lng" required />
+    <div class="row">
+      <label for="teamFilter">Team:</label>
+      <select id="teamFilter">
+        <option value="ALL">All</option>
+        <option value="Okmulgee Team">Okmulgee Team</option>
+        <option value="Tulsa Team">Tulsa Team</option>
+        <option value="Unassigned">Unassigned</option>
+      </select>
 
-    <select id="team">
-      <option>Unassigned</option>
-      <option>Okmulgee Team</option>
-      <option>Tulsa Team</option>
-    </select>
+      <label for="statusFilter">Status:</label>
+      <select id="statusFilter">
+        <option value="ALL">All</option>
+        <option value="Active">Active</option>
+        <option value="Closed">Closed</option>
+        <option value="Unknown">Unknown</option>
+      </select>
+    </div>
 
-    <select id="entity">
-      <option>Unknown</option>
-      <option>Ghost</option>
-      <option>Demon</option>
-    </select>
+    <div class="row">
+      <label for="permissionFilter">Permission:</label>
+      <select id="permissionFilter">
+        <option value="ALL">All</option>
+        <option value="Required">Required</option>
+        <option value="Not Required">Not Required</option>
+        <option value="Unknown">Unknown</option>
+      </select>
 
-    <textarea id="details" placeholder="Notes"></textarea>
+      <label for="entityFilter">Entity:</label>
+      <select id="entityFilter">
+        <option value="ALL">All</option>
+        <option value="Ghost">Ghost</option>
+        <option value="Demon">Demon</option>
+        <option value="Unknown">Unknown</option>
+      </select>
+    </div>
+  </div>
 
-    <button type="submit" id="submitBtn">Add Location</button>
-    <button type="button" id="cancelEdit" style="display:none">Cancel</button>
-  </form>
-</div>
+  <!-- New Location Form -->
+  <div id="newLocationPanel" class="panel">
+    <div class="row">
+      <strong>New Location</strong>
+      <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
+    </div>
 
-<div id="map"></div>
+    <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <form id="newLocationForm">
+      <div class="row">
+        <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
+        <select id="nl_team" class="small">
+          <option value="Unassigned">Unassigned</option>
+          <option value="Okmulgee Team">Okmulgee Team</option>
+          <option value="Tulsa Team">Tulsa Team</option>
+        </select>
+      </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, onSnapshot,
-    doc, updateDoc, deleteDoc
-  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+      <div class="row">
+        <select id="nl_status" class="small">
+          <option value="Active">Active</option>
+          <option value="Closed">Closed</option>
+          <option value="Unknown">Unknown</option>
+        </select>
 
-  // 🔥 YOUR FIREBASE CONFIG
-  const firebaseConfig = {
-    apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
-    authDomain: "oklahoma-investigation-map.firebaseapp.com",
-    projectId: "oklahoma-investigation-map",
-    storageBucket: "oklahoma-investigation-map.firebasestorage.app",
-    messagingSenderId: "809288424180",
-    appId: "1:809288424180:web:6b6989762ea7db99151ca1"
-  };
+        <select id="nl_permission" class="small">
+          <option value="Unknown">Permission: Unknown</option>
+          <option value="Required">Permission: Required</option>
+          <option value="Not Required">Permission: Not Required</option>
+        </select>
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+        <select id="nl_entity" class="small">
+          <option value="Unknown">Entity: Unknown</option>
+          <option value="Ghost">Entity: Ghost</option>
+          <option value="Demon">Entity: Demon</option>
+        </select>
+      </div>
 
-  // ---------------- MAP ----------------
-  const map = L.map("map").setView([35.5, -97.5], 7);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+      <div class="row">
+        <input id="nl_lat" class="small" type="number" step="any" placeholder="Lat" required />
+        <input id="nl_lng" class="small" type="number" step="any" placeholder="Lng" required />
+        <button id="pickBtn" type="button">Pick from map</button>
+      </div>
 
-  const layer = L.layerGroup().addTo(map);
-  let editingId = null;
+      <div class="row">
+        <textarea id="nl_details" placeholder="Details / notes (optional)"></textarea>
+      </div>
 
-  function renderPin(loc, id){
-    const m = L.marker([loc.lat, loc.lng]).addTo(layer);
-    m.bindPopup(`
-      <b>${loc.name}</b><br>
-      Team: ${loc.team}<br>
-      Entity: ${loc.entity}<br><br>
-      ${loc.details || ""}<br><br>
-      <button data-edit="${id}">Edit</button>
-      <button data-del="${id}" class="danger">Delete</button>
-    `);
+      <div class="btnRow">
+        <button id="submitBtn" type="submit">Add Location</button>
+        <button id="cancelEditBtn" type="button" style="display:none;">Cancel Edit</button>
+      </div>
 
-    m.on("popupopen", e => {
-      const el = e.popup.getElement();
-      el.querySelector("[data-edit]").onclick = () => editPin(id, loc);
-      el.querySelector("[data-del]").onclick = async () => {
-        if(confirm("Delete this pin?")){
-          await deleteDoc(doc(db,"locations",id));
-        }
-      };
-    });
-  }
+      <div id="pickHint" class="hint" style="display:none;">
+        Click the map to set coordinates. Press Esc to cancel.
+      </div>
+    </form>
+  </div>
 
-  function editPin(id, loc){
-    editingId = id;
-    editBanner.style.display = "block";
-    cancelEdit.style.display = "inline";
-    submitBtn.textContent = "Update Location";
+  <div id="map"></div>
 
-    name.value = loc.name;
-    lat.value = loc.lat;
-    lng.value = loc.lng;
-    team.value = loc.team;
-    entity.value = loc.entity;
-    details.value = loc.details || "";
-  }
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  // LIVE DATABASE LISTENER
-  onSnapshot(collection(db,"locations"), snap => {
-    layer.clearLayers();
-    snap.forEach(docSnap => {
-      renderPin(docSnap.data(), docSnap.id);
-    });
-  });
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      doc,
+      updateDoc,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  // FORM SUBMIT
-  form.onsubmit = async e => {
-    e.preventDefault();
-
-    const data = {
-      name: name.value,
-      lat: Number(lat.value),
-      lng: Number(lng.value),
-      team: team.value,
-      entity: entity.value,
-      details: details.value
+    // ----- FIREBASE CONFIG -----
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
+      authDomain: "oklahoma-investigation-map.firebaseapp.com",
+      projectId: "oklahoma-investigation-map",
+      storageBucket: "oklahoma-investigation-map.firebasestorage.app",
+      messagingSenderId: "809288424180",
+      appId: "1:809288424180:web:6b6989762ea7db99151ca1"
     };
 
-    if(editingId){
-      await updateDoc(doc(db,"locations",editingId), data);
-    } else {
-      await addDoc(collection(db,"locations"), data);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const LOCATIONS = "locations";
+
+    // ----- DOM REFS (IMPORTANT in module scripts) -----
+    const statusText = document.getElementById("statusText");
+    const searchEl = document.getElementById("search");
+    const clearBtn = document.getElementById("clearBtn");
+    const teamFilterEl = document.getElementById("teamFilter");
+    const statusFilterEl = document.getElementById("statusFilter");
+    const permissionFilterEl = document.getElementById("permissionFilter");
+    const entityFilterEl = document.getElementById("entityFilter");
+
+    const editModeBanner = document.getElementById("editModeBanner");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const submitBtn = document.getElementById("submitBtn");
+
+    const form = document.getElementById("newLocationForm");
+    const nl_name = document.getElementById("nl_name");
+    const nl_team = document.getElementById("nl_team");
+    const nl_status = document.getElementById("nl_status");
+    const nl_permission = document.getElementById("nl_permission");
+    const nl_entity = document.getElementById("nl_entity");
+    const nl_lat = document.getElementById("nl_lat");
+    const nl_lng = document.getElementById("nl_lng");
+    const nl_details = document.getElementById("nl_details");
+    const pickBtn = document.getElementById("pickBtn");
+    const pickHint = document.getElementById("pickHint");
+
+    function setStatus(msg){ statusText.textContent = msg; }
+
+    // ----- MAP -----
+    const map = L.map('map').setView([35.4676, -97.5164], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markerLayer = L.layerGroup().addTo(map);
+    let markers = []; // [{ loc, marker }]
+    let editingId = null;
+
+    function setEditMode(idOrNull) {
+      editingId = idOrNull;
+      const on = !!editingId;
+      editModeBanner.style.display = on ? "block" : "none";
+      cancelEditBtn.style.display = on ? "inline-block" : "none";
+      submitBtn.textContent = on ? "Update Location" : "Add Location";
     }
 
-    form.reset();
-    editingId = null;
-    editBanner.style.display = "none";
-    cancelEdit.style.display = "none";
-    submitBtn.textContent = "Add Location";
-  };
+    function makeMarker(loc) {
+      const actions = `
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="editPinBtn" data-id="${loc.id}">Edit</button>
+          <button type="button" class="deletePinBtn danger" data-id="${loc.id}">Delete</button>
+        </div>`;
 
-  cancelEdit.onclick = () => {
-    editingId = null;
-    form.reset();
-    editBanner.style.display = "none";
-    cancelEdit.style.display = "none";
-    submitBtn.textContent = "Add Location";
-  };
+      return L.marker([loc.lat, loc.lng]).bindPopup(
+        `<b>${loc.name}</b><br>
+         Team: ${loc.team}<br>
+         Status: ${loc.status}<br>
+         Permission: ${loc.permission}<br>
+         Entity: ${loc.entity}<br><br>
+         ${loc.details ? loc.details : ""}
+         ${actions}`
+      );
+    }
 
-  map.on("click", e => {
-    lat.value = e.latlng.lat.toFixed(6);
-    lng.value = e.latlng.lng.toFixed(6);
-  });
-</script>
+    function applyFilters() {
+      const teamValue = teamFilterEl.value;
+      const statusValue = statusFilterEl.value;
+      const permissionValue = permissionFilterEl.value;
+      const entityValue = entityFilterEl.value;
+      const searchValue = searchEl.value.trim().toLowerCase();
 
+      markerLayer.clearLayers();
+
+      markers.forEach(({ loc, marker }) => {
+        const teamOk = (teamValue === "ALL") || (loc.team === teamValue);
+        const statusOk = (statusValue === "ALL") || (loc.status === statusValue);
+        const permissionOk = (permissionValue === "ALL") || (loc.permission === permissionValue);
+        const entityOk = (entityValue === "ALL") || (loc.entity === entityValue);
+        const searchOk = (searchValue === "") || (String(loc.name || "").toLowerCase().includes(searchValue));
+
+        if (teamOk && statusOk && permissionOk && entityOk && searchOk) {
+          marker.addTo(markerLayer);
+        }
+      });
+    }
+
+    // Popup buttons
+    map.on("popupopen", (e) => {
+      const popupEl = e.popup.getElement();
+      if (!popupEl) return;
+
+      const editBtn = popupEl.querySelector(".editPinBtn");
+      const deleteBtn = popupEl.querySelector(".deletePinBtn");
+
+      if (editBtn) {
+        editBtn.addEventListener("click", () => {
+          const id = editBtn.dataset.id;
+          const loc = markers.find(m => m.loc.id === id)?.loc;
+          if (!loc) return alert("Could not find that pin.");
+
+          nl_name.value = loc.name || "";
+          nl_team.value = loc.team || "Unassigned";
+          nl_status.value = loc.status || "Unknown";
+          nl_permission.value = loc.permission || "Unknown";
+          nl_entity.value = loc.entity || "Unknown";
+          nl_lat.value = Number(loc.lat).toFixed(6);
+          nl_lng.value = Number(loc.lng).toFixed(6);
+          nl_details.value = loc.details || "";
+
+          setEditMode(id);
+          alert("Editing mode enabled. Update the form and click Update Location.");
+        });
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+          const id = deleteBtn.dataset.id;
+          if (!confirm("Delete this pin? This cannot be undone.")) return;
+
+          try {
+            await deleteDoc(doc(db, LOCATIONS, id));
+            if (editingId === id) setEditMode(null);
+          } catch (err) {
+            console.error(err);
+            alert("Delete failed: " + (err?.message || err));
+          }
+        });
+      }
+    });
+
+    // Filter events
+    teamFilterEl.addEventListener("change", applyFilters);
+    statusFilterEl.addEventListener("change", applyFilters);
+    permissionFilterEl.addEventListener("change", applyFilters);
+    entityFilterEl.addEventListener("change", applyFilters);
+    searchEl.addEventListener("input", applyFilters);
+
+    clearBtn.addEventListener("click", () => {
+      teamFilterEl.value = "ALL";
+      statusFilterEl.value = "ALL";
+      permissionFilterEl.value = "ALL";
+      entityFilterEl.value = "ALL";
+      searchEl.value = "";
+      applyFilters();
+    });
+
+    // Pick coords mode
+    let picking = false;
+    function setPicking(on) {
+      picking = on;
+      pickHint.style.display = on ? "block" : "none";
+      pickBtn.textContent = on ? "Picking…" : "Pick from map";
+      pickBtn.disabled = on;
+      map.getContainer().style.cursor = on ? "crosshair" : "";
+    }
+    pickBtn.addEventListener("click", () => setPicking(true));
+    map.on("click", (e) => {
+      if (!picking) return;
+      nl_lat.value = e.latlng.lat.toFixed(6);
+      nl_lng.value = e.latlng.lng.toFixed(6);
+      setPicking(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && picking) setPicking(false);
+    });
+
+    cancelEditBtn.addEventListener("click", () => {
+      setEditMode(null);
+      form.reset();
+    });
+
+    // Submit -> Firestore add/update
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = nl_name.value.trim();
+      const team = nl_team.value;
+      const status = nl_status.value;
+      const permission = nl_permission.value.replace("Permission: ", "");
+      const entity = nl_entity.value.replace("Entity: ", "");
+      const lat = Number(nl_lat.value);
+      const lng = Number(nl_lng.value);
+      const details = nl_details.value.trim();
+
+      if (!name) return alert("Location name is required.");
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert("Valid latitude and longitude are required.");
+
+      const payload = {
+        name, team, status, permission, entity, lat, lng, details,
+        updatedAt: serverTimestamp()
+      };
+
+      try {
+        if (editingId) {
+          await updateDoc(doc(db, LOCATIONS, editingId), payload);
+          alert("Location updated!");
+          setEditMode(null);
+        } else {
+          payload.createdAt = serverTimestamp();
+          await addDoc(collection(db, LOCATIONS), payload);
+          alert("Location added!");
+        }
+        form.reset();
+      } catch (err) {
+        console.error(err);
+        alert("Save failed: " + (err?.message || err));
+      }
+    });
+
+    // Real-time listener (persistence)
+    setStatus("Connecting to Firestore…");
+    onSnapshot(
+      collection(db, LOCATIONS),
+      (snapshot) => {
+        setStatus(`Connected.\nCollection: ${LOCATIONS}\nDocs loaded: ${snapshot.size}`);
+
+        markers = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const loc = {
+            id: docSnap.id,
+            name: data.name || "(Unnamed)",
+            team: data.team || "Unassigned",
+            status: data.status || "Unknown",
+            permission: data.permission || "Unknown",
+            entity: data.entity || "Unknown",
+            lat: Number(data.lat),
+            lng: Number(data.lng),
+            details: data.details || ""
+          };
+          if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+            markers.push({ loc, marker: makeMarker(loc) });
+          }
+        });
+
+        applyFilters();
+      },
+      (err) => {
+        console.error(err);
+        setStatus("Listener error:\n" + (err?.message || err));
+      }
+    );
+
+    // Counties overlay (optional)
+    fetch("./data/counties_ok.geojson")
+      .then(res => {
+        if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
+        return res.json();
+      })
+      .then(counties => {
+        const jurisdiction = {
+          "Tulsa": "Tulsa Team",
+          "Wagoner": "Tulsa Team",
+          "Okmulgee": "Okmulgee Team",
+          "Muskogee": "Okmulgee Team"
+        };
+
+        const teamColors = {
+          "Tulsa Team": "#1f78b4",
+          "Okmulgee Team": "#e31a1c",
+          "Unassigned": "#bdbdbd"
+        };
+
+        L.geoJSON(counties, {
+          style: feature => {
+            const name = feature.properties.NAME;
+            const team = jurisdiction[name] || "Unassigned";
+            return {
+              color: "#000",
+              weight: 2,
+              fillOpacity: 0.4,
+              fillColor: teamColors[team]
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const name = feature.properties.NAME;
+            const team = jurisdiction[name] || "Unassigned";
+            layer.bindTooltip(`${name} County`);
+            layer.bindPopup(`<b>${name} County</b><br>Jurisdiction: ${team}`);
+          }
+        }).addTo(map);
+      })
+      .catch(err => console.error("GeoJSON load error:", err));
+  </script>
 </body>
 </html>
