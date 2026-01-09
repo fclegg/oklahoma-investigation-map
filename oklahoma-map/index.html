@@ -1,0 +1,576 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oklahoma Investigation Map</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    body { margin: 0; }
+    #map { height: 100vh; width: 100%; }
+
+    /* Control panels */
+    .panel{
+      position: absolute;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.2);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      width: 440px;
+      max-width: calc(100vw - 20px);
+    }
+    #controls{ top: 10px; }
+    #newLocationPanel{ top: 145px; }
+
+    .row{
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    input, select, button, textarea{
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      font-family: inherit;
+    }
+    textarea { width: 100%; min-height: 60px; resize: vertical; }
+    #search{ flex: 1; min-width: 200px; }
+    label { font-size: 13px; }
+
+    .hint{
+      font-size: 12px;
+      color: #555;
+      margin-top: 4px;
+      line-height: 1.25;
+    }
+    .small{ width: 130px; }
+    .grow{ flex: 1; min-width: 160px; }
+    .btnRow{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .danger{
+      border-color: #d33 !important;
+      color: #d33 !important;
+    }
+
+    .editMode{
+      font-size: 12px;
+      color: #0a5;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Filters -->
+  <div id="controls" class="panel">
+    <div class="row">
+      <input id="search" type="text" placeholder="Search location name..." />
+      <button id="clearBtn" type="button">Clear</button>
+    </div>
+
+    <div class="row">
+      <label for="teamFilter">Team:</label>
+      <select id="teamFilter">
+        <option value="ALL">All</option>
+        <option value="Okmulgee Team">Okmulgee Team</option>
+        <option value="Tulsa Team">Tulsa Team</option>
+        <option value="Unassigned">Unassigned</option>
+      </select>
+
+      <label for="statusFilter">Status:</label>
+      <select id="statusFilter">
+        <option value="ALL">All</option>
+        <option value="Active">Active</option>
+        <option value="Closed">Closed</option>
+        <option value="Unknown">Unknown</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label for="permissionFilter">Permission:</label>
+      <select id="permissionFilter">
+        <option value="ALL">All</option>
+        <option value="Required">Required</option>
+        <option value="Not Required">Not Required</option>
+        <option value="Unknown">Unknown</option>
+      </select>
+
+      <label for="entityFilter">Entity:</label>
+      <select id="entityFilter">
+        <option value="ALL">All</option>
+        <option value="Ghost">Ghost</option>
+        <option value="Demon">Demon</option>
+        <option value="Unknown">Unknown</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- New Location Form -->
+  <div id="newLocationPanel" class="panel">
+    <div class="row">
+      <strong>New Location</strong>
+      <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
+    </div>
+
+    <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
+
+    <form id="newLocationForm">
+      <div class="row">
+        <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
+        <select id="nl_team" class="small">
+          <option value="Unassigned">Unassigned</option>
+          <option value="Okmulgee Team">Okmulgee Team</option>
+          <option value="Tulsa Team">Tulsa Team</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <select id="nl_status" class="small">
+          <option value="Active">Active</option>
+          <option value="Closed">Closed</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+
+        <select id="nl_permission" class="small">
+          <option value="Permission: Unknown">Permission: Unknown</option>
+          <option value="Permission: Required">Permission: Required</option>
+          <option value="Permission: Not Required">Permission: Not Required</option>
+        </select>
+
+        <select id="nl_entity" class="small">
+          <option value="Entity: Unknown">Entity: Unknown</option>
+          <option value="Entity: Ghost">Entity: Ghost</option>
+          <option value="Entity: Demon">Entity: Demon</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <input id="nl_lat" class="small" type="number" step="any" placeholder="Lat" required />
+        <input id="nl_lng" class="small" type="number" step="any" placeholder="Lng" required />
+        <button id="pickBtn" type="button">Pick from map</button>
+      </div>
+
+      <div class="row">
+        <textarea id="nl_details" placeholder="Details / notes (optional)"></textarea>
+      </div>
+
+      <div class="btnRow">
+        <button id="submitBtn" type="submit">Add Location</button>
+        <button id="cancelEditBtn" type="button" style="display:none;">Cancel Edit</button>
+        <button id="exportBtn" type="button">Export Saved JSON</button>
+        <button id="clearSavedBtn" type="button" class="danger">Clear Saved</button>
+      </div>
+
+      <div id="pickHint" class="hint" style="display:none;">
+        Click the map to set coordinates. Press Esc to cancel.
+      </div>
+    </form>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // ---------------------------
+    // MAP SETUP
+    // ---------------------------
+    const map = L.map('map').setView([35.4676, -97.5164], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // ---------------------------
+    // DATA + STORAGE
+    // ---------------------------
+    const STORAGE_KEY = "ok_investigation_locations_v1";
+
+    // Built-in locations (ship with page). These are not editable in localStorage flow.
+    const baseLocations = [
+      {
+        name: "Crown Hill Cemetery",
+        lat: 36.1540,
+        lng: -95.9928,
+        team: "Tulsa Team",
+        status: "Active",
+        permission: "Required",
+        entity: "Ghost",
+        details: "Historic cemetery. Notes go here."
+      }
+    ];
+
+    function genId() {
+      return (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now() + Math.random());
+    }
+
+    function loadSavedLocations() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+
+        // Migration: ensure every saved location has an id
+        let changed = false;
+        for (const loc of parsed) {
+          if (!loc.id) {
+            loc.id = genId();
+            changed = true;
+          }
+        }
+        if (changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+
+        return parsed;
+      } catch {
+        return [];
+      }
+    }
+
+    function saveLocations(locations) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
+    }
+
+    function addSavedLocation(loc) {
+      const saved = loadSavedLocations();
+      const withId = { id: genId(), ...loc };
+      saved.push(withId);
+      saveLocations(saved);
+      return withId.id;
+    }
+
+    function updateSavedLocation(updatedLoc) {
+      const saved = loadSavedLocations();
+      const idx = saved.findIndex(l => l.id === updatedLoc.id);
+      if (idx === -1) return false;
+      saved[idx] = updatedLoc;
+      saveLocations(saved);
+      return true;
+    }
+
+    function deleteSavedLocation(id) {
+      const saved = loadSavedLocations();
+      const next = saved.filter(l => l.id !== id);
+      saveLocations(next);
+    }
+
+    // ---------------------------
+    // PINS + FILTERS
+    // ---------------------------
+    const markerLayer = L.layerGroup().addTo(map);
+    let markers = []; // [{ loc, marker, source }]
+    let editingId = null; // if set, form submit updates this saved pin
+
+    const editModeBanner = document.getElementById("editModeBanner");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function setEditMode(idOrNull) {
+      editingId = idOrNull;
+      const on = !!editingId;
+      editModeBanner.style.display = on ? "block" : "none";
+      cancelEditBtn.style.display = on ? "inline-block" : "none";
+      submitBtn.textContent = on ? "Update Location" : "Add Location";
+    }
+
+    function makeMarker(loc) {
+      const isSaved = !!loc.id; // saved pins have id, base pins do not
+
+      const actions = isSaved
+        ? `<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+             <button type="button" class="editPinBtn" data-id="${loc.id}">Edit</button>
+             <button type="button" class="deletePinBtn danger" data-id="${loc.id}">Delete</button>
+           </div>`
+        : `<div class="hint" style="margin-top:8px;">Built-in pin (not editable here)</div>`;
+
+      return L.marker([loc.lat, loc.lng]).bindPopup(
+        `<b>${loc.name}</b><br>
+         Team: ${loc.team}<br>
+         Status: ${loc.status}<br>
+         Permission: ${loc.permission}<br>
+         Entity: ${loc.entity}<br><br>
+         ${loc.details ? loc.details : ""}
+         ${actions}`
+      );
+    }
+
+    function rebuildMarkers() {
+      const saved = loadSavedLocations();
+      const allLocations = [
+        ...baseLocations.map(l => ({ ...l, __source: "base" })),
+        ...saved.map(l => ({ ...l, __source: "saved" }))
+      ];
+
+      markers = allLocations.map(loc => ({
+        loc,
+        marker: makeMarker(loc),
+        source: loc.__source
+      }));
+
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const teamValue = document.getElementById("teamFilter").value;
+      const statusValue = document.getElementById("statusFilter").value;
+      const permissionValue = document.getElementById("permissionFilter").value;
+      const entityValue = document.getElementById("entityFilter").value;
+      const searchValue = document.getElementById("search").value.trim().toLowerCase();
+
+      markerLayer.clearLayers();
+
+      markers.forEach(({ loc, marker }) => {
+        const teamOk = (teamValue === "ALL") || (loc.team === teamValue);
+        const statusOk = (statusValue === "ALL") || (loc.status === statusValue);
+        const permissionOk = (permissionValue === "ALL") || (loc.permission === permissionValue);
+        const entityOk = (entityValue === "ALL") || (loc.entity === entityValue);
+        const searchOk = (searchValue === "") || (String(loc.name || "").toLowerCase().includes(searchValue));
+
+        if (teamOk && statusOk && permissionOk && entityOk && searchOk) {
+          marker.addTo(markerLayer);
+        }
+      });
+    }
+
+    // Wire popup button clicks (Edit/Delete)
+    map.on("popupopen", (e) => {
+      const popupEl = e.popup.getElement();
+      if (!popupEl) return;
+
+      const editBtn = popupEl.querySelector(".editPinBtn");
+      const deleteBtn = popupEl.querySelector(".deletePinBtn");
+
+      if (editBtn) {
+        editBtn.addEventListener("click", () => {
+          const id = editBtn.dataset.id;
+          const saved = loadSavedLocations();
+          const loc = saved.find(l => l.id === id);
+          if (!loc) return alert("Could not find that saved pin.");
+
+          // Fill form
+          document.getElementById("nl_name").value = loc.name || "";
+          document.getElementById("nl_team").value = loc.team || "Unassigned";
+          document.getElementById("nl_status").value = loc.status || "Unknown";
+          document.getElementById("nl_permission").value = `Permission: ${loc.permission || "Unknown"}`;
+          document.getElementById("nl_entity").value = `Entity: ${loc.entity || "Unknown"}`;
+          document.getElementById("nl_lat").value = Number(loc.lat).toFixed(6);
+          document.getElementById("nl_lng").value = Number(loc.lng).toFixed(6);
+          document.getElementById("nl_details").value = loc.details || "";
+
+          setEditMode(id);
+          alert("Editing mode enabled. Update the form and click Update Location.");
+        });
+      }
+
+      if (deleteBtn) {
+        deleteBtn.addEventListener("click", () => {
+          const id = deleteBtn.dataset.id;
+          const ok = confirm("Delete this pin? This cannot be undone.");
+          if (!ok) return;
+
+          deleteSavedLocation(id);
+          rebuildMarkers();
+          map.closePopup();
+          if (editingId === id) setEditMode(null);
+        });
+      }
+    });
+
+    // Filter events
+    document.getElementById("teamFilter").addEventListener("change", applyFilters);
+    document.getElementById("statusFilter").addEventListener("change", applyFilters);
+    document.getElementById("permissionFilter").addEventListener("change", applyFilters);
+    document.getElementById("entityFilter").addEventListener("change", applyFilters);
+    document.getElementById("search").addEventListener("input", applyFilters);
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      document.getElementById("teamFilter").value = "ALL";
+      document.getElementById("statusFilter").value = "ALL";
+      document.getElementById("permissionFilter").value = "ALL";
+      document.getElementById("entityFilter").value = "ALL";
+      document.getElementById("search").value = "";
+      applyFilters();
+    });
+
+    // ---------------------------
+    // NEW LOCATION FORM
+    // ---------------------------
+    let picking = false;
+    const pickHint = document.getElementById("pickHint");
+    const pickBtn = document.getElementById("pickBtn");
+
+    function setPicking(on) {
+      picking = on;
+      pickHint.style.display = on ? "block" : "none";
+      pickBtn.textContent = on ? "Picking…" : "Pick from map";
+      pickBtn.disabled = on;
+      map.getContainer().style.cursor = on ? "crosshair" : "";
+    }
+
+    pickBtn.addEventListener("click", () => setPicking(true));
+
+    map.on("click", (e) => {
+      if (!picking) return;
+      document.getElementById("nl_lat").value = e.latlng.lat.toFixed(6);
+      document.getElementById("nl_lng").value = e.latlng.lng.toFixed(6);
+      setPicking(false);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && picking) setPicking(false);
+    });
+
+    cancelEditBtn.addEventListener("click", () => {
+      setEditMode(null);
+      // clear form
+      document.getElementById("nl_name").value = "";
+      document.getElementById("nl_lat").value = "";
+      document.getElementById("nl_lng").value = "";
+      document.getElementById("nl_details").value = "";
+    });
+
+    document.getElementById("newLocationForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("nl_name").value.trim();
+      const team = document.getElementById("nl_team").value;
+      const status = document.getElementById("nl_status").value;
+
+      const permissionRaw = document.getElementById("nl_permission").value;
+      const permission = permissionRaw.replace("Permission: ", "");
+
+      const entityRaw = document.getElementById("nl_entity").value;
+      const entity = entityRaw.replace("Entity: ", "");
+
+      const lat = Number(document.getElementById("nl_lat").value);
+      const lng = Number(document.getElementById("nl_lng").value);
+      const details = document.getElementById("nl_details").value.trim();
+
+      if (!name) return alert("Location name is required.");
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return alert("Valid latitude and longitude are required.");
+      }
+
+      const loc = {
+        id: editingId || undefined,
+        name, lat, lng, team, status, permission, entity, details
+      };
+
+      if (editingId) {
+        const ok = updateSavedLocation(loc);
+        if (!ok) alert("Could not update. Pin may have been deleted.");
+        else alert("Location updated!");
+        setEditMode(null);
+      } else {
+        addSavedLocation(loc);
+        alert("Location added!");
+      }
+
+      rebuildMarkers();
+
+      // Clear form
+      document.getElementById("nl_name").value = "";
+      document.getElementById("nl_lat").value = "";
+      document.getElementById("nl_lng").value = "";
+      document.getElementById("nl_details").value = "";
+    });
+
+    // Export saved locations as JSON (saved pins only)
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const saved = loadSavedLocations();
+      const blob = new Blob([JSON.stringify(saved, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "saved_locations.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    });
+
+    // Clear ALL saved locations
+    document.getElementById("clearSavedBtn").addEventListener("click", () => {
+      const ok = confirm("This will delete ALL saved pins added from the form. Continue?");
+      if (!ok) return;
+      localStorage.removeItem(STORAGE_KEY);
+      setEditMode(null);
+      rebuildMarkers();
+    });
+
+    // Build markers on load
+    rebuildMarkers();
+
+    // ---------------------------------------
+    // COUNTIES LAYER (Jurisdiction shading)
+    // ---------------------------------------
+    fetch("./data/counties_ok.geojson")
+      .then(res => {
+        if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
+        return res.json();
+      })
+      .then(counties => {
+        const jurisdiction = {
+          "Tulsa": "Tulsa Team",
+          "Wagoner": "Tulsa Team",
+          "Okmulgee": "Okmulgee Team",
+          "Muskogee": "Okmulgee Team"
+        };
+
+        const teamColors = {
+          "Tulsa Team": "#1f78b4",
+          "Okmulgee Team": "#e31a1c",
+          "Unassigned": "#bdbdbd"
+        };
+
+        L.geoJSON(counties, {
+          style: feature => {
+            const name = feature.properties.NAME;
+            const team = jurisdiction[name] || "Unassigned";
+            return {
+              color: "#000",
+              weight: 2,
+              fillOpacity: 0.4,
+              fillColor: teamColors[team]
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const name = feature.properties.NAME;
+            const team = jurisdiction[name] || "Unassigned";
+
+            layer.bindTooltip(`${name} County`);
+            layer.bindPopup(`<b>${name} County</b><br>Jurisdiction: ${team}`);
+
+            layer.on({
+              mouseover: () => {
+                layer.setStyle({ weight: 4, color: "#ffff00" });
+                if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) layer.bringToFront();
+              },
+              mouseout: () => {
+                layer.setStyle({ weight: 2, color: "#000" });
+              },
+              click: () => map.fitBounds(layer.getBounds())
+            });
+          }
+        }).addTo(map);
+      })
+      .catch(err => console.error("GeoJSON load error:", err));
+  </script>
+</body>
+</html>
