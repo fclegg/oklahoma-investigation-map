@@ -23,8 +23,39 @@
       width: 440px;
       max-width: calc(100vw - 20px);
     }
-    #controls{ top: 10px; }
-    #newLocationPanel{ top: 145px; }
+
+    /* Collapsible container */
+    #menuWrap{
+      top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #menuHeader{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    #menuTitle{
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    #menuToggle{
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* Menu content collapses */
+    .menuBody{ display: block; }
+    .collapsed .menuBody{ display: none; }
 
     .row{
       display: flex;
@@ -33,6 +64,7 @@
       margin-bottom: 8px;
       flex-wrap: wrap;
     }
+
     input, select, button, textarea{
       padding: 6px 8px;
       border: 1px solid #ccc;
@@ -44,18 +76,14 @@
     textarea { width: 100%; min-height: 60px; resize: vertical; }
     #search{ flex: 1; min-width: 200px; }
     label { font-size: 13px; }
+
     .hint{ font-size: 12px; color: #555; margin-top: 4px; line-height: 1.25; }
     .small{ width: 130px; }
     .grow{ flex: 1; min-width: 160px; }
     .btnRow{ display: flex; gap: 8px; flex-wrap: wrap; }
     .danger{ border-color: #d33 !important; color: #d33 !important; }
 
-    .editMode{
-      font-size: 12px;
-      color: #0a5;
-      margin-top: 4px;
-      display: none;
-    }
+    .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
 
     #statusBar{
       position: absolute;
@@ -72,6 +100,11 @@
     }
     #statusBar strong{ display:block; margin-bottom: 4px; }
     #statusText{ white-space: pre-wrap; }
+
+    /* Mobile: collapse menu by default and keep it smaller */
+    @media (max-width: 600px){
+      .panel{ width: calc(100vw - 20px); }
+    }
   </style>
 </head>
 
@@ -81,108 +114,144 @@
     <div id="statusText">Loading…</div>
   </div>
 
-  <!-- Filters -->
-  <div id="controls" class="panel">
-    <div class="row">
-      <input id="search" type="text" placeholder="Search location name..." />
-      <button id="clearBtn" type="button">Clear</button>
+  <!-- Collapsible Menu -->
+  <div id="menuWrap" class="panel collapsed">
+    <div id="menuHeader">
+      <div id="menuTitle">Investigation Menu</div>
+      <button id="menuToggle" type="button">Open</button>
     </div>
 
-    <div class="row">
-      <label for="teamFilter">Team:</label>
-      <select id="teamFilter">
-        <option value="ALL">All</option>
-        <option value="Okmulgee Team">Okmulgee Team</option>
-        <option value="Tulsa Team">Tulsa Team</option>
-        <option value="Unassigned">Unassigned</option>
-      </select>
+    <div class="menuBody">
+      <!-- Filters -->
+      <div id="controls">
+        <div class="row">
+          <input id="search" type="text" placeholder="Search location name..." />
+          <button id="clearBtn" type="button">Clear</button>
+        </div>
 
-      <label for="statusFilter">Status:</label>
-      <select id="statusFilter">
-        <option value="ALL">All</option>
-        <option value="Active">Active</option>
-        <option value="Closed">Closed</option>
-        <option value="Unknown">Unknown</option>
-      </select>
+        <div class="row">
+          <label for="teamFilter">Team:</label>
+          <select id="teamFilter">
+            <option value="ALL">All</option>
+            <option value="Okmulgee Team">Okmulgee Team</option>
+            <option value="Tulsa Team">Tulsa Team</option>
+            <option value="Unassigned">Unassigned</option>
+          </select>
+
+          <label for="statusFilter">Status:</label>
+          <select id="statusFilter">
+            <option value="ALL">All</option>
+            <option value="Active">Active</option>
+            <option value="Closed">Closed</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="permissionFilter">Permission:</label>
+          <select id="permissionFilter">
+            <option value="ALL">All</option>
+            <option value="Required">Required</option>
+            <option value="Not Required">Not Required</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+
+          <label for="entityFilter">Entity:</label>
+          <select id="entityFilter">
+            <option value="ALL">All</option>
+            <option value="Ghost">Ghost</option>
+            <option value="Demon">Demon</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="typeFilter">Type:</label>
+          <select id="typeFilter">
+            <option value="ALL">All</option>
+            <option value="Cemetery">Cemetery</option>
+            <option value="Structure (In Use)">Structure (In Use)</option>
+            <option value="Structure (Abandoned)">Structure (Abandoned)</option>
+            <option value="Park">Park</option>
+            <option value="Lake">Lake</option>
+            <option value="Road/Bridge">Road/Bridge</option>
+            <option value="Other">Other</option>
+            <option value="Unknown">Unknown</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- New Location Form -->
+      <div id="newLocationPanel">
+        <div class="row">
+          <strong>New Location</strong>
+          <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
+        </div>
+
+        <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
+
+        <form id="newLocationForm">
+          <div class="row">
+            <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
+            <select id="nl_team" class="small">
+              <option value="Unassigned">Unassigned</option>
+              <option value="Okmulgee Team">Okmulgee Team</option>
+              <option value="Tulsa Team">Tulsa Team</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <select id="nl_type" class="small">
+              <option value="Unknown">Type: Unknown</option>
+              <option value="Cemetery">Type: Cemetery</option>
+              <option value="Structure (In Use)">Type: Structure (In Use)</option>
+              <option value="Structure (Abandoned)">Type: Structure (Abandoned)</option>
+              <option value="Park">Type: Park</option>
+              <option value="Lake">Type: Lake</option>
+              <option value="Road/Bridge">Type: Road/Bridge</option>
+              <option value="Other">Type: Other</option>
+            </select>
+
+            <select id="nl_status" class="small">
+              <option value="Active">Active</option>
+              <option value="Closed">Closed</option>
+              <option value="Unknown">Unknown</option>
+            </select>
+
+            <select id="nl_permission" class="small">
+              <option value="Unknown">Permission: Unknown</option>
+              <option value="Required">Permission: Required</option>
+              <option value="Not Required">Permission: Not Required</option>
+            </select>
+
+            <select id="nl_entity" class="small">
+              <option value="Unknown">Entity: Unknown</option>
+              <option value="Ghost">Entity: Ghost</option>
+              <option value="Demon">Entity: Demon</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <input id="nl_lat" class="small" type="number" step="any" placeholder="Lat" required />
+            <input id="nl_lng" class="small" type="number" step="any" placeholder="Lng" required />
+            <button id="pickBtn" type="button">Pick from map</button>
+          </div>
+
+          <div class="row">
+            <textarea id="nl_details" placeholder="Details / notes (optional)"></textarea>
+          </div>
+
+          <div class="btnRow">
+            <button id="submitBtn" type="submit">Add Location</button>
+            <button id="cancelEditBtn" type="button" style="display:none;">Cancel Edit</button>
+          </div>
+
+          <div id="pickHint" class="hint" style="display:none;">
+            Click the map to set coordinates. Press Esc to cancel.
+          </div>
+        </form>
+      </div>
     </div>
-
-    <div class="row">
-      <label for="permissionFilter">Permission:</label>
-      <select id="permissionFilter">
-        <option value="ALL">All</option>
-        <option value="Required">Required</option>
-        <option value="Not Required">Not Required</option>
-        <option value="Unknown">Unknown</option>
-      </select>
-
-      <label for="entityFilter">Entity:</label>
-      <select id="entityFilter">
-        <option value="ALL">All</option>
-        <option value="Ghost">Ghost</option>
-        <option value="Demon">Demon</option>
-        <option value="Unknown">Unknown</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- New Location Form -->
-  <div id="newLocationPanel" class="panel">
-    <div class="row">
-      <strong>New Location</strong>
-      <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
-    </div>
-
-    <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
-
-    <form id="newLocationForm">
-      <div class="row">
-        <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
-        <select id="nl_team" class="small">
-          <option value="Unassigned">Unassigned</option>
-          <option value="Okmulgee Team">Okmulgee Team</option>
-          <option value="Tulsa Team">Tulsa Team</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <select id="nl_status" class="small">
-          <option value="Active">Active</option>
-          <option value="Closed">Closed</option>
-          <option value="Unknown">Unknown</option>
-        </select>
-
-        <select id="nl_permission" class="small">
-          <option value="Unknown">Permission: Unknown</option>
-          <option value="Required">Permission: Required</option>
-          <option value="Not Required">Permission: Not Required</option>
-        </select>
-
-        <select id="nl_entity" class="small">
-          <option value="Unknown">Entity: Unknown</option>
-          <option value="Ghost">Entity: Ghost</option>
-          <option value="Demon">Entity: Demon</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <input id="nl_lat" class="small" type="number" step="any" placeholder="Lat" required />
-        <input id="nl_lng" class="small" type="number" step="any" placeholder="Lng" required />
-        <button id="pickBtn" type="button">Pick from map</button>
-      </div>
-
-      <div class="row">
-        <textarea id="nl_details" placeholder="Details / notes (optional)"></textarea>
-      </div>
-
-      <div class="btnRow">
-        <button id="submitBtn" type="submit">Add Location</button>
-        <button id="cancelEditBtn" type="button" style="display:none;">Cancel Edit</button>
-      </div>
-
-      <div id="pickHint" class="hint" style="display:none;">
-        Click the map to set coordinates. Press Esc to cancel.
-      </div>
-    </form>
   </div>
 
   <div id="map"></div>
@@ -216,14 +285,19 @@
     const db = getFirestore(app);
     const LOCATIONS = "locations";
 
-    // ----- DOM REFS (IMPORTANT in module scripts) -----
+    // ----- DOM -----
     const statusText = document.getElementById("statusText");
+
+    const menuWrap = document.getElementById("menuWrap");
+    const menuToggle = document.getElementById("menuToggle");
+
     const searchEl = document.getElementById("search");
     const clearBtn = document.getElementById("clearBtn");
     const teamFilterEl = document.getElementById("teamFilter");
     const statusFilterEl = document.getElementById("statusFilter");
     const permissionFilterEl = document.getElementById("permissionFilter");
     const entityFilterEl = document.getElementById("entityFilter");
+    const typeFilterEl = document.getElementById("typeFilter");
 
     const editModeBanner = document.getElementById("editModeBanner");
     const cancelEditBtn = document.getElementById("cancelEditBtn");
@@ -232,6 +306,7 @@
     const form = document.getElementById("newLocationForm");
     const nl_name = document.getElementById("nl_name");
     const nl_team = document.getElementById("nl_team");
+    const nl_type = document.getElementById("nl_type");
     const nl_status = document.getElementById("nl_status");
     const nl_permission = document.getElementById("nl_permission");
     const nl_entity = document.getElementById("nl_entity");
@@ -242,6 +317,18 @@
     const pickHint = document.getElementById("pickHint");
 
     function setStatus(msg){ statusText.textContent = msg; }
+
+    // Collapsible menu
+    function setMenuCollapsed(collapsed){
+      menuWrap.classList.toggle("collapsed", collapsed);
+      menuToggle.textContent = collapsed ? "Open" : "Close";
+    }
+    menuToggle.addEventListener("click", () => {
+      const collapsed = menuWrap.classList.contains("collapsed");
+      setMenuCollapsed(!collapsed);
+    });
+    // On mobile, start collapsed; on desktop, open
+    setMenuCollapsed(window.matchMedia("(max-width: 600px)").matches);
 
     // ----- MAP -----
     const map = L.map('map').setView([35.4676, -97.5164], 7);
@@ -271,6 +358,7 @@
 
       return L.marker([loc.lat, loc.lng]).bindPopup(
         `<b>${loc.name}</b><br>
+         Type: ${loc.type}<br>
          Team: ${loc.team}<br>
          Status: ${loc.status}<br>
          Permission: ${loc.permission}<br>
@@ -285,6 +373,7 @@
       const statusValue = statusFilterEl.value;
       const permissionValue = permissionFilterEl.value;
       const entityValue = entityFilterEl.value;
+      const typeValue = typeFilterEl.value;
       const searchValue = searchEl.value.trim().toLowerCase();
 
       markerLayer.clearLayers();
@@ -294,9 +383,10 @@
         const statusOk = (statusValue === "ALL") || (loc.status === statusValue);
         const permissionOk = (permissionValue === "ALL") || (loc.permission === permissionValue);
         const entityOk = (entityValue === "ALL") || (loc.entity === entityValue);
+        const typeOk = (typeValue === "ALL") || (loc.type === typeValue);
         const searchOk = (searchValue === "") || (String(loc.name || "").toLowerCase().includes(searchValue));
 
-        if (teamOk && statusOk && permissionOk && entityOk && searchOk) {
+        if (teamOk && statusOk && permissionOk && entityOk && typeOk && searchOk) {
           marker.addTo(markerLayer);
         }
       });
@@ -318,6 +408,7 @@
 
           nl_name.value = loc.name || "";
           nl_team.value = loc.team || "Unassigned";
+          nl_type.value = `Type: ${loc.type || "Unknown"}`.replace("Type: Type: ", "Type: "); // safe
           nl_status.value = loc.status || "Unknown";
           nl_permission.value = loc.permission || "Unknown";
           nl_entity.value = loc.entity || "Unknown";
@@ -327,6 +418,7 @@
 
           setEditMode(id);
           alert("Editing mode enabled. Update the form and click Update Location.");
+          if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(false);
         });
       }
 
@@ -351,6 +443,7 @@
     statusFilterEl.addEventListener("change", applyFilters);
     permissionFilterEl.addEventListener("change", applyFilters);
     entityFilterEl.addEventListener("change", applyFilters);
+    typeFilterEl.addEventListener("change", applyFilters);
     searchEl.addEventListener("input", applyFilters);
 
     clearBtn.addEventListener("click", () => {
@@ -358,6 +451,7 @@
       statusFilterEl.value = "ALL";
       permissionFilterEl.value = "ALL";
       entityFilterEl.value = "ALL";
+      typeFilterEl.value = "ALL";
       searchEl.value = "";
       applyFilters();
     });
@@ -377,6 +471,7 @@
       nl_lat.value = e.latlng.lat.toFixed(6);
       nl_lng.value = e.latlng.lng.toFixed(6);
       setPicking(false);
+      if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(false);
     });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && picking) setPicking(false);
@@ -393,9 +488,12 @@
 
       const name = nl_name.value.trim();
       const team = nl_team.value;
+
+      const type = (nl_type.value || "Type: Unknown").replace("Type: ", "");
       const status = nl_status.value;
-      const permission = nl_permission.value.replace("Permission: ", "");
-      const entity = nl_entity.value.replace("Entity: ", "");
+      const permission = (nl_permission.value || "Unknown").replace("Permission: ", "");
+      const entity = (nl_entity.value || "Unknown").replace("Entity: ", "");
+
       const lat = Number(nl_lat.value);
       const lng = Number(nl_lng.value);
       const details = nl_details.value.trim();
@@ -404,7 +502,7 @@
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert("Valid latitude and longitude are required.");
 
       const payload = {
-        name, team, status, permission, entity, lat, lng, details,
+        name, team, type, status, permission, entity, lat, lng, details,
         updatedAt: serverTimestamp()
       };
 
@@ -419,13 +517,14 @@
           alert("Location added!");
         }
         form.reset();
+        if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(true);
       } catch (err) {
         console.error(err);
         alert("Save failed: " + (err?.message || err));
       }
     });
 
-    // Real-time listener (persistence)
+    // Real-time listener
     setStatus("Connecting to Firestore…");
     onSnapshot(
       collection(db, LOCATIONS),
@@ -434,17 +533,18 @@
 
         markers = [];
         snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
+          const d = docSnap.data();
           const loc = {
             id: docSnap.id,
-            name: data.name || "(Unnamed)",
-            team: data.team || "Unassigned",
-            status: data.status || "Unknown",
-            permission: data.permission || "Unknown",
-            entity: data.entity || "Unknown",
-            lat: Number(data.lat),
-            lng: Number(data.lng),
-            details: data.details || ""
+            name: d.name || "(Unnamed)",
+            type: d.type || "Unknown",
+            team: d.team || "Unassigned",
+            status: d.status || "Unknown",
+            permission: d.permission || "Unknown",
+            entity: d.entity || "Unknown",
+            lat: Number(d.lat),
+            lng: Number(d.lng),
+            details: d.details || ""
           };
           if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
             markers.push({ loc, marker: makeMarker(loc) });
@@ -459,7 +559,7 @@
       }
     );
 
-    // Counties overlay (optional)
+    // Counties overlay
     fetch("./data/counties_ok.geojson")
       .then(res => {
         if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
@@ -483,12 +583,7 @@
           style: feature => {
             const name = feature.properties.NAME;
             const team = jurisdiction[name] || "Unassigned";
-            return {
-              color: "#000",
-              weight: 2,
-              fillOpacity: 0.4,
-              fillColor: teamColors[team]
-            };
+            return { color: "#000", weight: 2, fillOpacity: 0.4, fillColor: teamColors[team] };
           },
           onEachFeature: (feature, layer) => {
             const name = feature.properties.NAME;
