@@ -85,22 +85,6 @@
 
     .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
 
-    #statusBar{
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      z-index: 1100;
-      background: rgba(255,255,255,0.95);
-      padding: 8px 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.2);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      max-width: 380px;
-      font-size: 13px;
-    }
-    #statusBar strong{ display:block; margin-bottom: 4px; }
-    #statusText{ white-space: pre-wrap; }
-
     /* Mobile: collapse menu by default and keep it smaller */
     @media (max-width: 600px){
       .panel{ width: calc(100vw - 20px); }
@@ -109,10 +93,7 @@
 </head>
 
 <body>
-  <div id="statusBar">
-    <strong>Firestore status</strong>
-    <div id="statusText">Loading…</div>
-  </div>
+  <!-- Firestore status panel removed -->
 
   <!-- Collapsible Menu -->
   <div id="menuWrap" class="panel collapsed">
@@ -285,9 +266,12 @@
     const db = getFirestore(app);
     const LOCATIONS = "locations";
 
-    // ----- DOM -----
-    const statusText = document.getElementById("statusText");
+    // ----- STATUS (panel removed; log to console instead) -----
+    function setStatus(msg){
+      console.log("[Firestore status]", msg);
+    }
 
+    // ----- DOM -----
     const menuWrap = document.getElementById("menuWrap");
     const menuToggle = document.getElementById("menuToggle");
 
@@ -315,8 +299,6 @@
     const nl_details = document.getElementById("nl_details");
     const pickBtn = document.getElementById("pickBtn");
     const pickHint = document.getElementById("pickHint");
-
-    function setStatus(msg){ statusText.textContent = msg; }
 
     // Collapsible menu
     function setMenuCollapsed(collapsed){
@@ -408,7 +390,7 @@
 
           nl_name.value = loc.name || "";
           nl_team.value = loc.team || "Unassigned";
-          nl_type.value = `Type: ${loc.type || "Unknown"}`.replace("Type: Type: ", "Type: "); // safe
+          nl_type.value = `Type: ${loc.type || "Unknown"}`.replace("Type: Type: ", "Type: ");
           nl_status.value = loc.status || "Unknown";
           nl_permission.value = loc.permission || "Unknown";
           nl_entity.value = loc.entity || "Unknown";
