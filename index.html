@@ -85,6 +85,15 @@
 
     .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
 
+    /* Little color dots for county toggles */
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      border: 1px solid rgba(0,0,0,.25);
+    }
+
     @media (max-width: 600px){
       .panel{ width: calc(100vw - 20px); }
     }
@@ -163,9 +172,20 @@
       <div style="margin-top:10px;">
         <div class="row">
           <strong>County highlights</strong>
-          <span class="hint">Thicker border + brighter fill for selected counties.</span>
+          <span class="hint">Toggle ON = thicker border + brighter fill. Toggle OFF = neutral.</span>
         </div>
-        <div class="row" id="countyHighlightControls"></div>
+
+        <div class="row" style="margin-bottom:4px;">
+          <span class="dot" style="background:#e31a1c;"></span>
+          <strong style="font-size:13px;">Red</strong>
+        </div>
+        <div class="row" id="countyHighlightControlsRed"></div>
+
+        <div class="row" style="margin:8px 0 4px;">
+          <span class="dot" style="background:#33a02c;"></span>
+          <strong style="font-size:13px;">Green</strong>
+        </div>
+        <div class="row" id="countyHighlightControlsGreen"></div>
       </div>
 
       <!-- New Location Form -->
@@ -274,8 +294,7 @@
 
     // ----- STATUS (no on-page panel) -----
     function setStatus(msg){
-      // If you want NO logs either, blank this out:
-      // return;
+      // If you want ZERO logs, comment out the next line:
       console.log("[Firestore]", msg);
     }
 
@@ -291,7 +310,8 @@
     const entityFilterEl = document.getElementById("entityFilter");
     const typeFilterEl = document.getElementById("typeFilter");
 
-    const countyHighlightControls = document.getElementById("countyHighlightControls");
+    const countyControlsRed = document.getElementById("countyHighlightControlsRed");
+    const countyControlsGreen = document.getElementById("countyHighlightControlsGreen");
 
     const editModeBanner = document.getElementById("editModeBanner");
     const cancelEditBtn = document.getElementById("cancelEditBtn");
@@ -550,29 +570,21 @@
       }
     );
 
-    // ----- COUNTY HIGHLIGHTS (border + brighter fill) -----
+    // ----- COUNTY HIGHLIGHTS (specific counties, red/green, toggle on/off) -----
 
-    // Only include the counties you want toggles for:
-    const HIGHLIGHT_COUNTIES = ["Tulsa", "Wagoner", "Okmulgee", "Muskogee"]; // edit this list anytime
+    const RED_COUNTIES = ["Tulsa","Wagoner","Rogers","Washington","Osage"];
+    const GREEN_COUNTIES = ["Creek","Okmulgee","Muskogee","McIntosh","Okfuskee"];
 
-    // Data stores
+    const RED_BASE = "#e31a1c";
+    const GREEN_BASE = "#33a02c";
+
+    // quick lookup sets
+    const redSet = new Set(RED_COUNTIES);
+    const greenSet = new Set(GREEN_COUNTIES);
+
     const countyLayersByName = {};     // { "Tulsa": layer, ... }
     const countyBaseStyleByName = {};  // { "Tulsa": styleObj, ... }
     const highlightState = {};         // { "Tulsa": true/false, ... }
-
-    // Your county->team mapping
-    const jurisdiction = {
-      "Tulsa": "Tulsa Team",
-      "Wagoner": "Tulsa Team",
-      "Okmulgee": "Okmulgee Team",
-      "Muskogee": "Okmulgee Team"
-    };
-
-    const teamColors = {
-      "Tulsa Team": "#1f78b4",
-      "Okmulgee Team": "#e31a1c",
-      "Unassigned": "#bdbdbd"
-    };
 
     function hexToRgb(hex){
       const h = (hex || "").replace("#", "").trim();
@@ -584,106 +596,125 @@
       const toHex = (v) => v.toString(16).padStart(2, "0");
       return "#" + toHex(r) + toHex(g) + toHex(b);
     }
-    // Mix color toward white by 'amt' (0..1). Higher = brighter.
+    // Mix toward white by amt (0..1). Higher = brighter.
     function brighten(hex, amt = 0.45){
       const rgb = hexToRgb(hex);
       if (!rgb) return hex;
       const mix = (c) => Math.round(c + (255 - c) * amt);
       return rgbToHex({ r: mix(rgb.r), g: mix(rgb.g), b: mix(rgb.b) });
     }
-
-    function computeBaseStyleForCounty(countyName){
-      const team = jurisdiction[countyName] || "Unassigned";
-      const fill = teamColors[team] || teamColors["Unassigned"];
-      return {
-        color: "#000",
-        weight: 2,
-        fillOpacity: 0.40,
-        fillColor: fill
-      };
+    // Mix toward black by amt (0..1). Higher = darker.
+    function darken(hex, amt = 0.25){
+      const rgb = hexToRgb(hex);
+      if (!rgb) return hex;
+      const mix = (c) => Math.round(c * (1 - amt));
+      return rgbToHex({ r: mix(rgb.r), g: mix(rgb.g), b: mix(rgb.b) });
     }
 
-    function computeHighlightStyleFromBase(baseStyle){
+    function countyGroup(name){
+      if (redSet.has(name)) return "red";
+      if (greenSet.has(name)) return "green";
+      return null;
+    }
+
+    function baseCountyStyle() {
+      // Neutral default look for ALL counties when not highlighted
+      return { color: "#000", weight: 2, fillOpacity: 0.08, fillColor: "#ffffff" };
+    }
+
+    function highlightStyleForGroup(group){
+      const base = group === "red" ? RED_BASE : GREEN_BASE;
       return {
-        color: "#ffd400",                 // highlight border
-        weight: 4,                        // thicker border
-        fillOpacity: 0.60,                // stronger fill
-        fillColor: brighten(baseStyle.fillColor, 0.45) // brighter version of base fill
+        color: darken(base, 0.30),       // thicker border in a darker shade
+        weight: 4,
+        fillOpacity: 0.60,
+        fillColor: brighten(base, 0.45)  // brighter fill
       };
     }
 
     function setCountyHighlighted(countyName, on){
       highlightState[countyName] = !!on;
+
       const layer = countyLayersByName[countyName];
       const base = countyBaseStyleByName[countyName];
-      if (!layer || !base) return; // if GeoJSON not loaded yet, state will apply after load
+      if (!layer || !base) return;
 
       if (on) {
-        layer.setStyle(computeHighlightStyleFromBase(base));
+        const grp = countyGroup(countyName);
+        if (!grp) {
+          // Not in either list: just do a slightly stronger neutral highlight
+          layer.setStyle({ color: "#000", weight: 4, fillOpacity: 0.18, fillColor: "#ffffff" });
+        } else {
+          layer.setStyle({ ...base, ...highlightStyleForGroup(grp) });
+        }
         layer.bringToFront();
       } else {
         layer.setStyle(base);
       }
     }
 
+    function addCountyCheckbox(containerEl, countyName, colorHex){
+      const id = `hl_${countyName.replace(/\s+/g, "_")}`;
+
+      const wrap = document.createElement("label");
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "6px";
+      wrap.style.marginRight = "10px";
+      wrap.style.cursor = "pointer";
+      wrap.style.userSelect = "none";
+      wrap.style.fontSize = "13px";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = id;
+      cb.checked = !!highlightState[countyName];
+      cb.addEventListener("change", () => setCountyHighlighted(countyName, cb.checked));
+
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = colorHex;
+
+      const text = document.createElement("span");
+      text.textContent = countyName;
+
+      wrap.appendChild(cb);
+      wrap.appendChild(dot);
+      wrap.appendChild(text);
+      containerEl.appendChild(wrap);
+    }
+
     function buildCountyToggleUI(){
-      if (!countyHighlightControls) return;
+      if (countyControlsRed) countyControlsRed.innerHTML = "";
+      if (countyControlsGreen) countyControlsGreen.innerHTML = "";
 
-      countyHighlightControls.innerHTML = "";
-      HIGHLIGHT_COUNTIES.forEach((name) => {
-        const id = `hl_${name.replace(/\s+/g, "_")}`;
-
-        const wrap = document.createElement("label");
-        wrap.style.display = "inline-flex";
-        wrap.style.alignItems = "center";
-        wrap.style.gap = "6px";
-        wrap.style.marginRight = "10px";
-        wrap.style.cursor = "pointer";
-        wrap.style.userSelect = "none";
-        wrap.style.fontSize = "13px";
-
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.id = id;
-        cb.checked = !!highlightState[name];
-        cb.addEventListener("change", () => setCountyHighlighted(name, cb.checked));
-
-        const text = document.createElement("span");
-        text.textContent = name;
-
-        wrap.appendChild(cb);
-        wrap.appendChild(text);
-        countyHighlightControls.appendChild(wrap);
-      });
+      RED_COUNTIES.forEach(name => addCountyCheckbox(countyControlsRed, name, RED_BASE));
+      GREEN_COUNTIES.forEach(name => addCountyCheckbox(countyControlsGreen, name, GREEN_BASE));
     }
 
     // Counties overlay + toggle system
+    buildCountyToggleUI();
+
     fetch("./data/counties_ok.geojson")
       .then(res => {
         if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
         return res.json();
       })
       .then(counties => {
-        buildCountyToggleUI();
-
         L.geoJSON(counties, {
-          style: feature => {
-            const name = feature?.properties?.NAME;
-            const base = computeBaseStyleForCounty(name);
-            return base;
-          },
+          style: () => baseCountyStyle(),
           onEachFeature: (feature, layer) => {
             const name = feature?.properties?.NAME;
             if (!name) return;
 
-            const team = jurisdiction[name] || "Unassigned";
-            const baseStyle = computeBaseStyleForCounty(name);
-
             countyLayersByName[name] = layer;
-            countyBaseStyleByName[name] = baseStyle;
+            countyBaseStyleByName[name] = baseCountyStyle();
+
+            const grp = countyGroup(name);
+            const grpLabel = grp ? grp.toUpperCase() : "NONE";
 
             layer.bindTooltip(`${name} County`);
-            layer.bindPopup(`<b>${name} County</b><br>Jurisdiction: ${team}`);
+            layer.bindPopup(`<b>${name} County</b><br>Highlight Group: ${grpLabel}`);
 
             // Apply any saved toggle state after load
             if (highlightState[name]) {
