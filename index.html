@@ -85,7 +85,6 @@
 
     .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
 
-    /* Mobile: collapse menu by default and keep it smaller */
     @media (max-width: 600px){
       .panel{ width: calc(100vw - 20px); }
     }
@@ -93,8 +92,6 @@
 </head>
 
 <body>
-  <!-- Firestore status panel removed -->
-
   <!-- Collapsible Menu -->
   <div id="menuWrap" class="panel collapsed">
     <div id="menuHeader">
@@ -162,8 +159,17 @@
         </div>
       </div>
 
+      <!-- County Highlight Toggles -->
+      <div style="margin-top:10px;">
+        <div class="row">
+          <strong>County highlights</strong>
+          <span class="hint">Thicker border + brighter fill for selected counties.</span>
+        </div>
+        <div class="row" id="countyHighlightControls"></div>
+      </div>
+
       <!-- New Location Form -->
-      <div id="newLocationPanel">
+      <div id="newLocationPanel" style="margin-top:10px;">
         <div class="row">
           <strong>New Location</strong>
           <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
@@ -171,15 +177,6 @@
 
         <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
 
-        <!-- County Highlight Toggles -->
-      <div style="margin-top:10px;">
-        <div class="row">
-          <strong>County highlights</strong>
-          <span class="hint">Toggle only the counties you want emphasized.</span>
-        </div>
-        <div class="row" id="countyHighlightControls"></div>
-      </div>
-        
         <form id="newLocationForm">
           <div class="row">
             <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
@@ -275,9 +272,11 @@
     const db = getFirestore(app);
     const LOCATIONS = "locations";
 
-    // ----- STATUS (panel removed; log to console instead) -----
+    // ----- STATUS (no on-page panel) -----
     function setStatus(msg){
-      console.log("[Firestore status]", msg);
+      // If you want NO logs either, blank this out:
+      // return;
+      console.log("[Firestore]", msg);
     }
 
     // ----- DOM -----
@@ -291,6 +290,8 @@
     const permissionFilterEl = document.getElementById("permissionFilter");
     const entityFilterEl = document.getElementById("entityFilter");
     const typeFilterEl = document.getElementById("typeFilter");
+
+    const countyHighlightControls = document.getElementById("countyHighlightControls");
 
     const editModeBanner = document.getElementById("editModeBanner");
     const cancelEditBtn = document.getElementById("cancelEditBtn");
@@ -318,7 +319,6 @@
       const collapsed = menuWrap.classList.contains("collapsed");
       setMenuCollapsed(!collapsed);
     });
-    // On mobile, start collapsed; on desktop, open
     setMenuCollapsed(window.matchMedia("(max-width: 600px)").matches);
 
     // ----- MAP -----
@@ -550,37 +550,145 @@
       }
     );
 
-    // Counties overlay
+    // ----- COUNTY HIGHLIGHTS (border + brighter fill) -----
+
+    // Only include the counties you want toggles for:
+    const HIGHLIGHT_COUNTIES = ["Tulsa", "Wagoner", "Okmulgee", "Muskogee"]; // edit this list anytime
+
+    // Data stores
+    const countyLayersByName = {};     // { "Tulsa": layer, ... }
+    const countyBaseStyleByName = {};  // { "Tulsa": styleObj, ... }
+    const highlightState = {};         // { "Tulsa": true/false, ... }
+
+    // Your county->team mapping
+    const jurisdiction = {
+      "Tulsa": "Tulsa Team",
+      "Wagoner": "Tulsa Team",
+      "Okmulgee": "Okmulgee Team",
+      "Muskogee": "Okmulgee Team"
+    };
+
+    const teamColors = {
+      "Tulsa Team": "#1f78b4",
+      "Okmulgee Team": "#e31a1c",
+      "Unassigned": "#bdbdbd"
+    };
+
+    function hexToRgb(hex){
+      const h = (hex || "").replace("#", "").trim();
+      if (h.length !== 6) return null;
+      const n = parseInt(h, 16);
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+    function rgbToHex({r,g,b}){
+      const toHex = (v) => v.toString(16).padStart(2, "0");
+      return "#" + toHex(r) + toHex(g) + toHex(b);
+    }
+    // Mix color toward white by 'amt' (0..1). Higher = brighter.
+    function brighten(hex, amt = 0.45){
+      const rgb = hexToRgb(hex);
+      if (!rgb) return hex;
+      const mix = (c) => Math.round(c + (255 - c) * amt);
+      return rgbToHex({ r: mix(rgb.r), g: mix(rgb.g), b: mix(rgb.b) });
+    }
+
+    function computeBaseStyleForCounty(countyName){
+      const team = jurisdiction[countyName] || "Unassigned";
+      const fill = teamColors[team] || teamColors["Unassigned"];
+      return {
+        color: "#000",
+        weight: 2,
+        fillOpacity: 0.40,
+        fillColor: fill
+      };
+    }
+
+    function computeHighlightStyleFromBase(baseStyle){
+      return {
+        color: "#ffd400",                 // highlight border
+        weight: 4,                        // thicker border
+        fillOpacity: 0.60,                // stronger fill
+        fillColor: brighten(baseStyle.fillColor, 0.45) // brighter version of base fill
+      };
+    }
+
+    function setCountyHighlighted(countyName, on){
+      highlightState[countyName] = !!on;
+      const layer = countyLayersByName[countyName];
+      const base = countyBaseStyleByName[countyName];
+      if (!layer || !base) return; // if GeoJSON not loaded yet, state will apply after load
+
+      if (on) {
+        layer.setStyle(computeHighlightStyleFromBase(base));
+        layer.bringToFront();
+      } else {
+        layer.setStyle(base);
+      }
+    }
+
+    function buildCountyToggleUI(){
+      if (!countyHighlightControls) return;
+
+      countyHighlightControls.innerHTML = "";
+      HIGHLIGHT_COUNTIES.forEach((name) => {
+        const id = `hl_${name.replace(/\s+/g, "_")}`;
+
+        const wrap = document.createElement("label");
+        wrap.style.display = "inline-flex";
+        wrap.style.alignItems = "center";
+        wrap.style.gap = "6px";
+        wrap.style.marginRight = "10px";
+        wrap.style.cursor = "pointer";
+        wrap.style.userSelect = "none";
+        wrap.style.fontSize = "13px";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = id;
+        cb.checked = !!highlightState[name];
+        cb.addEventListener("change", () => setCountyHighlighted(name, cb.checked));
+
+        const text = document.createElement("span");
+        text.textContent = name;
+
+        wrap.appendChild(cb);
+        wrap.appendChild(text);
+        countyHighlightControls.appendChild(wrap);
+      });
+    }
+
+    // Counties overlay + toggle system
     fetch("./data/counties_ok.geojson")
       .then(res => {
         if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
         return res.json();
       })
       .then(counties => {
-        const jurisdiction = {
-          "Tulsa": "Tulsa Team",
-          "Wagoner": "Tulsa Team",
-          "Okmulgee": "Okmulgee Team",
-          "Muskogee": "Okmulgee Team"
-        };
-
-        const teamColors = {
-          "Tulsa Team": "#1f78b4",
-          "Okmulgee Team": "#e31a1c",
-          "Unassigned": "#bdbdbd"
-        };
+        buildCountyToggleUI();
 
         L.geoJSON(counties, {
           style: feature => {
-            const name = feature.properties.NAME;
-            const team = jurisdiction[name] || "Unassigned";
-            return { color: "#000", weight: 2, fillOpacity: 0.4, fillColor: teamColors[team] };
+            const name = feature?.properties?.NAME;
+            const base = computeBaseStyleForCounty(name);
+            return base;
           },
           onEachFeature: (feature, layer) => {
-            const name = feature.properties.NAME;
+            const name = feature?.properties?.NAME;
+            if (!name) return;
+
             const team = jurisdiction[name] || "Unassigned";
+            const baseStyle = computeBaseStyleForCounty(name);
+
+            countyLayersByName[name] = layer;
+            countyBaseStyleByName[name] = baseStyle;
+
             layer.bindTooltip(`${name} County`);
             layer.bindPopup(`<b>${name} County</b><br>Jurisdiction: ${team}`);
+
+            // Apply any saved toggle state after load
+            if (highlightState[name]) {
+              setCountyHighlighted(name, true);
+            }
           }
         }).addTo(map);
       })
@@ -588,4 +696,3 @@
   </script>
 </body>
 </html>
-
