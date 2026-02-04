@@ -24,7 +24,6 @@
       max-width: calc(100vw - 20px);
     }
 
-    /* Collapsible container */
     #menuWrap{
       top: 10px;
       display: flex;
@@ -53,7 +52,6 @@
       cursor: pointer;
     }
 
-    /* Menu content collapses */
     .menuBody{ display: block; }
     .collapsed .menuBody{ display: none; }
 
@@ -82,10 +80,8 @@
     .grow{ flex: 1; min-width: 160px; }
     .btnRow{ display: flex; gap: 8px; flex-wrap: wrap; }
     .danger{ border-color: #d33 !important; color: #d33 !important; }
-
     .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
 
-    /* Little color dots for county toggles */
     .dot{
       width: 10px;
       height: 10px;
@@ -101,7 +97,6 @@
 </head>
 
 <body>
-  <!-- Collapsible Menu -->
   <div id="menuWrap" class="panel collapsed">
     <div id="menuHeader">
       <div id="menuTitle">Investigation Menu</div>
@@ -168,13 +163,8 @@
         </div>
       </div>
 
-      <!-- County Highlight Toggles -->
+      <!-- County Highlights (no header text as requested) -->
       <div style="margin-top:10px;">
-        <div class="row">
-          <strong>County highlights</strong>
-          <span class="hint">Toggle ON = thicker border + brighter fill. Toggle OFF = neutral.</span>
-        </div>
-
         <div class="row" style="margin-bottom:4px;">
           <span class="dot" style="background:#e31a1c;"></span>
           <strong style="font-size:13px;">Red</strong>
@@ -278,7 +268,6 @@
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-    // ----- FIREBASE CONFIG -----
     const firebaseConfig = {
       apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
       authDomain: "oklahoma-investigation-map.firebaseapp.com",
@@ -292,9 +281,7 @@
     const db = getFirestore(app);
     const LOCATIONS = "locations";
 
-    // ----- STATUS (no on-page panel) -----
     function setStatus(msg){
-      // If you want ZERO logs, comment out the next line:
       console.log("[Firestore]", msg);
     }
 
@@ -330,7 +317,6 @@
     const pickBtn = document.getElementById("pickBtn");
     const pickHint = document.getElementById("pickHint");
 
-    // Collapsible menu
     function setMenuCollapsed(collapsed){
       menuWrap.classList.toggle("collapsed", collapsed);
       menuToggle.textContent = collapsed ? "Open" : "Close";
@@ -349,7 +335,7 @@
     }).addTo(map);
 
     const markerLayer = L.layerGroup().addTo(map);
-    let markers = []; // [{ loc, marker }]
+    let markers = [];
     let editingId = null;
 
     function setEditMode(idOrNull) {
@@ -403,7 +389,6 @@
       });
     }
 
-    // Popup buttons
     map.on("popupopen", (e) => {
       const popupEl = e.popup.getElement();
       if (!popupEl) return;
@@ -449,8 +434,11 @@
       }
     });
 
-    // Filter events
-    teamFilterEl.addEventListener("change", applyFilters);
+    // Filter events (team changes will ALSO update county highlights)
+    teamFilterEl.addEventListener("change", () => {
+      applyFilters();
+      syncCountyHighlightsToTeamFilter();
+    });
     statusFilterEl.addEventListener("change", applyFilters);
     permissionFilterEl.addEventListener("change", applyFilters);
     entityFilterEl.addEventListener("change", applyFilters);
@@ -465,6 +453,7 @@
       typeFilterEl.value = "ALL";
       searchEl.value = "";
       applyFilters();
+      syncCountyHighlightsToTeamFilter();
     });
 
     // Pick coords mode
@@ -493,7 +482,6 @@
       form.reset();
     });
 
-    // Submit -> Firestore add/update
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -570,21 +558,24 @@
       }
     );
 
-    // ----- COUNTY HIGHLIGHTS (specific counties, red/green, toggle on/off) -----
-
+    // ----- COUNTY HIGHLIGHTS -----
     const RED_COUNTIES = ["Tulsa","Wagoner","Rogers","Washington","Osage"];
     const GREEN_COUNTIES = ["Creek","Okmulgee","Muskogee","McIntosh","Okfuskee"];
 
     const RED_BASE = "#e31a1c";
     const GREEN_BASE = "#33a02c";
 
-    // quick lookup sets
     const redSet = new Set(RED_COUNTIES);
     const greenSet = new Set(GREEN_COUNTIES);
 
-    const countyLayersByName = {};     // { "Tulsa": layer, ... }
-    const countyBaseStyleByName = {};  // { "Tulsa": styleObj, ... }
-    const highlightState = {};         // { "Tulsa": true/false, ... }
+    const countyLayersByName = {};
+    const countyBaseStyleByName = {};
+    const highlightState = {};
+    const checkboxByCounty = {};
+
+    // Default ON for both groups
+    RED_COUNTIES.forEach(c => highlightState[c] = true);
+    GREEN_COUNTIES.forEach(c => highlightState[c] = true);
 
     function hexToRgb(hex){
       const h = (hex || "").replace("#", "").trim();
@@ -596,14 +587,12 @@
       const toHex = (v) => v.toString(16).padStart(2, "0");
       return "#" + toHex(r) + toHex(g) + toHex(b);
     }
-    // Mix toward white by amt (0..1). Higher = brighter.
     function brighten(hex, amt = 0.45){
       const rgb = hexToRgb(hex);
       if (!rgb) return hex;
       const mix = (c) => Math.round(c + (255 - c) * amt);
       return rgbToHex({ r: mix(rgb.r), g: mix(rgb.g), b: mix(rgb.b) });
     }
-    // Mix toward black by amt (0..1). Higher = darker.
     function darken(hex, amt = 0.25){
       const rgb = hexToRgb(hex);
       if (!rgb) return hex;
@@ -618,17 +607,16 @@
     }
 
     function baseCountyStyle() {
-      // Neutral default look for ALL counties when not highlighted
       return { color: "#000", weight: 2, fillOpacity: 0.08, fillColor: "#ffffff" };
     }
 
     function highlightStyleForGroup(group){
       const base = group === "red" ? RED_BASE : GREEN_BASE;
       return {
-        color: darken(base, 0.30),       // thicker border in a darker shade
+        color: darken(base, 0.30),
         weight: 4,
         fillOpacity: 0.60,
-        fillColor: brighten(base, 0.45)  // brighter fill
+        fillColor: brighten(base, 0.45)
       };
     }
 
@@ -641,11 +629,10 @@
 
       if (on) {
         const grp = countyGroup(countyName);
-        if (!grp) {
-          // Not in either list: just do a slightly stronger neutral highlight
-          layer.setStyle({ color: "#000", weight: 4, fillOpacity: 0.18, fillColor: "#ffffff" });
-        } else {
+        if (grp) {
           layer.setStyle({ ...base, ...highlightStyleForGroup(grp) });
+        } else {
+          layer.setStyle({ color: "#000", weight: 4, fillOpacity: 0.18, fillColor: "#ffffff" });
         }
         layer.bringToFront();
       } else {
@@ -669,6 +656,9 @@
       cb.type = "checkbox";
       cb.id = id;
       cb.checked = !!highlightState[countyName];
+      checkboxByCounty[countyName] = cb;
+
+      // Keep manual toggles working too (but team dropdown will override on change)
       cb.addEventListener("change", () => setCountyHighlighted(countyName, cb.checked));
 
       const dot = document.createElement("span");
@@ -692,9 +682,38 @@
       GREEN_COUNTIES.forEach(name => addCountyCheckbox(countyControlsGreen, name, GREEN_BASE));
     }
 
-    // Counties overlay + toggle system
+    function setGroupVisibility({ redOn, greenOn }) {
+      RED_COUNTIES.forEach(c => {
+        highlightState[c] = !!redOn;
+        if (checkboxByCounty[c]) checkboxByCounty[c].checked = !!redOn;
+        setCountyHighlighted(c, !!redOn);
+      });
+      GREEN_COUNTIES.forEach(c => {
+        highlightState[c] = !!greenOn;
+        if (checkboxByCounty[c]) checkboxByCounty[c].checked = !!greenOn;
+        setCountyHighlighted(c, !!greenOn);
+      });
+    }
+
+    // This is the behavior you asked for:
+    function syncCountyHighlightsToTeamFilter(){
+      const v = teamFilterEl.value;
+
+      if (v === "Tulsa Team") {
+        setGroupVisibility({ redOn: true, greenOn: false });
+      } else if (v === "Okmulgee Team") {
+        setGroupVisibility({ redOn: false, greenOn: true });
+      } else if (v === "ALL") {
+        setGroupVisibility({ redOn: true, greenOn: true });
+      } else { // Unassigned
+        setGroupVisibility({ redOn: false, greenOn: false });
+      }
+    }
+
+    // Build UI + apply default state
     buildCountyToggleUI();
 
+    // Counties overlay
     fetch("./data/counties_ok.geojson")
       .then(res => {
         if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
@@ -712,16 +731,17 @@
 
             const grp = countyGroup(name);
             const grpLabel = grp ? grp.toUpperCase() : "NONE";
-
             layer.bindTooltip(`${name} County`);
-            layer.bindPopup(`<b>${name} County</b><br>Highlight Group: ${grpLabel}`);
+            layer.bindPopup(`<b>${name} County</b><br>Group: ${grpLabel}`);
 
-            // Apply any saved toggle state after load
             if (highlightState[name]) {
               setCountyHighlighted(name, true);
             }
           }
         }).addTo(map);
+
+        // Apply team-based highlight rules immediately on load (default team is ALL)
+        syncCountyHighlightsToTeamFilter();
       })
       .catch(err => console.error("GeoJSON load error:", err));
   </script>
