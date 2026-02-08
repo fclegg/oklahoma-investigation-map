@@ -221,8 +221,9 @@
           </div>
 
           <div class="hint">
-            Admin only: draw rectangles/polygons using the toolbar on the map (top-right). Click a section/hex to cycle status.
-            <br>Right-click a section to quickly rename map / change its number label.
+            Admin only: draw rectangles/polygons using the toolbar (top-right).
+            Click a section/hex to cycle status.
+            <br>Right-click a section to rename map / change its number.
           </div>
         </div>
 
@@ -231,7 +232,7 @@
         </div>
       </div>
 
-      <!-- County Highlights (no header text as requested) -->
+      <!-- County Highlights -->
       <div style="margin-top:10px;">
         <div class="row" style="margin-bottom:4px;">
           <span class="dot" style="background:#e31a1c;"></span>
@@ -373,15 +374,14 @@
     // ---------------- AUTH ----------------
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
-    // (Optional) nudges Google account picker toward your org domain
     provider.setCustomParameters({ hd: "prcofok.org" });
 
     const ALLOWED_DOMAIN = "@prcofok.org";
     const ADMIN_EMAILS = new Set(["fclegg@prcofok.org"]);
 
     let currentUser = null;
-    let isMember = false; // signed-in + correct domain
-    let isAdmin = false;  // fclegg@prcofok.org
+    let isMember = false;
+    let isAdmin = false;
 
     // ----- DOM -----
     const menuWrap = document.getElementById("menuWrap");
@@ -462,11 +462,9 @@
       try {
         const res = await signInWithPopup(auth, provider);
         const email = (res.user?.email || "").toLowerCase();
-
         if (!email.endsWith(ALLOWED_DOMAIN)) {
           await signOut(auth);
           alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
-          return;
         }
       } catch (err) {
         console.error(err);
@@ -480,22 +478,18 @@
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
-
       const email = (user?.email || "").toLowerCase();
       isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
       isAdmin = !!user && ADMIN_EMAILS.has(email);
 
       refreshAuthUI();
       setSectionEditingEnabled(isAdmin);
-
-      // Rebuild marker popups (admin buttons)
       applyFilters();
     });
 
     // ---------------- MAP ----------------
     const map = L.map('map').setView([35.4676, -97.5164], 7);
 
-    // Base layers (Street + Satellite)
     const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap contributors"
@@ -619,7 +613,7 @@
       }
     });
 
-    // Filter events (team changes will ALSO update county highlights)
+    // Filter events
     teamFilterEl.addEventListener("change", () => {
       applyFilters();
       syncCountyHighlightsToTeamFilter();
@@ -667,7 +661,7 @@
       form.reset();
     });
 
-    // Require sign-in (org account) to ADD pins; only admin can EDIT/DELETE pins
+    // Add/edit location
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -682,12 +676,10 @@
 
       const name = nl_name.value.trim();
       const team = nl_team.value;
-
       const type = nl_type.value || "Unknown";
       const status = nl_status.value || "Unknown";
       const permission = nl_permission.value || "Unknown";
       const entity = nl_entity.value || "Unknown";
-
       const lat = Number(nl_lat.value);
       const lng = Number(nl_lng.value);
       const details = nl_details.value.trim();
@@ -754,11 +746,11 @@
       }
     );
 
-    // ---------------- SECTION OVERLAYS (Firestore-safe rings) ----------------
+    // ---------------- SECTION OVERLAYS (NO NESTED ARRAYS) ----------------
     const STATUS_COLORS = {
-      uninvestigated: "#ffffff", // white
-      possible: "#ffeb3b",       // yellow
-      confirmed: "#33a02c"       // green
+      uninvestigated: "#ffffff",
+      possible: "#ffeb3b",
+      confirmed: "#33a02c"
     };
 
     function makeHexIcon(numberText, status) {
@@ -799,22 +791,39 @@
       return { color: "#ffff00", weight: 5, fillOpacity: 0 };
     }
 
-    // Convert a Leaflet polygon/rectangle layer into Firestore-safe rings:
-    // rings: [ [ {lat,lng}, {lat,lng}, ... ], [ ... ] ]
-    function layerToRingsLatLng(layer) {
+    // ✅ Firestore-safe: store rings as a MAP (object) instead of array-of-arrays
+    // ringsMap = { "0": [ {lat,lng}... ], "1": [ ... ] }
+    function layerToRingsMap(layer) {
       const ll = layer.getLatLngs();
       const rings = Array.isArray(ll?.[0]) ? ll : [ll];
-      return rings.map(ring => ring.map(p => ({ lat: Number(p.lat), lng: Number(p.lng) })));
+
+      const out = {};
+      rings.forEach((ring, idx) => {
+        out[String(idx)] = (ring || []).map(p => ({ lat: Number(p.lat), lng: Number(p.lng) }));
+      });
+      return out;
     }
 
-    // Live layers
+    // Allow reading both formats (if any old docs exist)
+    function ringsMapToLatLngRings(d) {
+      // New format
+      if (d && typeof d.ringsMap === "object" && d.ringsMap !== null) {
+        const keys = Object.keys(d.ringsMap).sort((a,b) => Number(a) - Number(b));
+        return keys.map(k => (d.ringsMap[k] || []).map(p => L.latLng(p.lat, p.lng)));
+      }
+
+      // Old (broken for Firestore) / or earlier rings array format (in case you imported)
+      if (Array.isArray(d?.rings)) {
+        return d.rings.map(ring => (ring || []).map(p => L.latLng(p.lat, p.lng)));
+      }
+
+      return null;
+    }
+
     const sectionPolys = L.featureGroup().addTo(map);
     const sectionHexes = L.layerGroup().addTo(map);
-
-    // id -> { poly, hex, mapName, number, status }
     const sectionById = new Map();
 
-    // Draw control (admin only)
     let drawControl = null;
     function setSectionEditingEnabled(enabled) {
       if (enabled) {
@@ -829,10 +838,7 @@
               marker: false,
               circlemarker: false
             },
-            edit: {
-              featureGroup: sectionPolys,
-              remove: true
-            }
+            edit: { featureGroup: sectionPolys, remove: true }
           });
           map.addControl(drawControl);
         }
@@ -844,7 +850,6 @@
       }
     }
 
-    // Filter dropdown setup
     function ensureSectionFilterOptions(mapNames) {
       const current = sectionMapFilter.value || "ALL";
       const names = Array.from(new Set(mapNames)).filter(Boolean).sort((a,b) => a.localeCompare(b));
@@ -881,7 +886,7 @@
       applySectionFilter();
     });
 
-    // Create section (admin)
+    // CREATE section
     map.on(L.Draw.Event.CREATED, async (e) => {
       if (!isAdmin) return;
 
@@ -900,15 +905,14 @@
       const number = numRaw ? String(numRaw) : "1";
       const status = sectionDefaultStatus.value || "uninvestigated";
 
-      // ✅ Firestore-safe structure (no nested arrays)
-      const rings = layerToRingsLatLng(layer);
+      const ringsMap = layerToRingsMap(layer); // ✅ NO nested arrays
 
       try {
         const docRef = await addDoc(collection(db, SECTIONS), {
           mapName,
           number,
           status,
-          rings,
+          ringsMap,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser?.email || ""
@@ -916,7 +920,6 @@
 
         layer.options._sectionId = docRef.id;
 
-        // auto-increment next number if it was numeric
         const n = Number(number);
         if (Number.isFinite(n)) sectionNextNumber.value = String(n + 1);
       } catch (err) {
@@ -926,7 +929,7 @@
       }
     });
 
-    // Edit geometry (admin)
+    // EDIT geometry
     map.on(L.Draw.Event.EDITED, async (e) => {
       if (!isAdmin) return;
 
@@ -937,9 +940,9 @@
         const id = layer.options._sectionId;
         if (!id) return;
 
-        const rings = layerToRingsLatLng(layer);
+        const ringsMap = layerToRingsMap(layer); // ✅ NO nested arrays
         updates.push(updateDoc(doc(db, SECTIONS, id), {
-          rings,
+          ringsMap,
           updatedAt: serverTimestamp()
         }));
       });
@@ -952,7 +955,7 @@
       }
     });
 
-    // Delete (admin)
+    // DELETE
     map.on(L.Draw.Event.DELETED, async (e) => {
       if (!isAdmin) return;
 
@@ -1034,9 +1037,7 @@
       const mapName = d.mapName || "Unnamed Map";
       const number = d.number || "";
       const status = d.status || "uninvestigated";
-      const rings = d.rings;
 
-      // Remove existing
       const existing = sectionById.get(id);
       if (existing) {
         if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
@@ -1044,14 +1045,12 @@
         sectionById.delete(id);
       }
 
-      if (!Array.isArray(rings) || rings.length === 0) return;
+      const latlngRings = ringsMapToLatLngRings(d);
+      if (!latlngRings || latlngRings.length === 0) return;
 
-      // Build Leaflet polygon from rings
-      const latlngRings = rings.map(ring => (ring || []).map(p => L.latLng(p.lat, p.lng)));
       const polyLayer = L.polygon(latlngRings, sectionPolyStyle());
       polyLayer.options._sectionId = id;
 
-      // Create hex at centroid
       const c = centroidOfLatLngs(polyLayer.getLatLngs());
       const hex = L.marker(c, {
         icon: makeHexIcon(number, status),
@@ -1059,23 +1058,17 @@
         zIndexOffset: 1000
       });
 
-      // Store record
       sectionById.set(id, { poly: polyLayer, hex, mapName, number, status });
-
-      // Interactions
       attachSectionInteractions(id, polyLayer, hex);
 
-      // Add to map (respect filter)
       const selected = sectionMapFilter.value || "ALL";
       const show = (selected === "ALL") || (mapName === selected);
-
       if (show) {
         sectionPolys.addLayer(polyLayer);
         sectionHexes.addLayer(hex);
       }
     }
 
-    // Real-time listener (sections)
     onSnapshot(collection(db, SECTIONS), (snap) => {
       const names = [];
       snap.forEach(docSnap => {
@@ -1118,7 +1111,6 @@
     const highlightState = {};
     const checkboxByCounty = {};
 
-    // Default ON for both groups
     RED_COUNTIES.forEach(c => highlightState[c] = true);
     GREEN_COUNTIES.forEach(c => highlightState[c] = true);
 
@@ -1202,7 +1194,6 @@
       cb.id = id;
       cb.checked = !!highlightState[countyName];
       checkboxByCounty[countyName] = cb;
-
       cb.addEventListener("change", () => setCountyHighlighted(countyName, cb.checked));
 
       const dot = document.createElement("span");
@@ -1221,7 +1212,6 @@
     function buildCountyToggleUI(){
       if (countyControlsRed) countyControlsRed.innerHTML = "";
       if (countyControlsGreen) countyControlsGreen.innerHTML = "";
-
       RED_COUNTIES.forEach(name => addCountyCheckbox(countyControlsRed, name, RED_BASE));
       GREEN_COUNTIES.forEach(name => addCountyCheckbox(countyControlsGreen, name, GREEN_BASE));
     }
@@ -1248,7 +1238,7 @@
         setGroupVisibility({ redOn: false, greenOn: true });
       } else if (v === "ALL") {
         setGroupVisibility({ redOn: true, greenOn: true });
-      } else { // Unassigned
+      } else {
         setGroupVisibility({ redOn: false, greenOn: false });
       }
     }
@@ -1270,14 +1260,8 @@
             countyLayersByName[name] = layer;
             countyBaseStyleByName[name] = baseCountyStyle();
 
-            const grp = countyGroup(name);
-            const grpLabel = grp ? grp.toUpperCase() : "NONE";
             layer.bindTooltip(`${name} County`);
-            layer.bindPopup(`<b>${name} County</b><br>Group: ${grpLabel}`);
-
-            if (highlightState[name]) {
-              setCountyHighlighted(name, true);
-            }
+            if (highlightState[name]) setCountyHighlighted(name, true);
           }
         }).addTo(map);
 
@@ -1285,7 +1269,6 @@
       })
       .catch(err => console.error("GeoJSON load error:", err));
 
-    // Init section map filter dropdown immediately
     sectionMapFilter.innerHTML = `<option value="ALL">All section maps</option>`;
   </script>
 
