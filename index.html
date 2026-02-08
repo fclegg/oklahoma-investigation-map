@@ -222,6 +222,7 @@
 
           <div class="hint">
             Admin only: draw rectangles/polygons using the toolbar on the map (top-right). Click a section/hex to cycle status.
+            <br>Right-click a section to quickly rename map / change its number label.
           </div>
         </div>
 
@@ -372,6 +373,8 @@
     // ---------------- AUTH ----------------
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+    // (Optional) nudges Google account picker toward your org domain
+    provider.setCustomParameters({ hd: "prcofok.org" });
 
     const ALLOWED_DOMAIN = "@prcofok.org";
     const ADMIN_EMAILS = new Set(["fclegg@prcofok.org"]);
@@ -400,7 +403,6 @@
     const countyControlsRed = document.getElementById("countyHighlightControlsRed");
     const countyControlsGreen = document.getElementById("countyHighlightControlsGreen");
 
-    const newLocationPanel = document.getElementById("newLocationPanel");
     const mustLoginNote = document.getElementById("mustLoginNote");
 
     const editModeBanner = document.getElementById("editModeBanner");
@@ -461,7 +463,6 @@
         const res = await signInWithPopup(auth, provider);
         const email = (res.user?.email || "").toLowerCase();
 
-        // Hard-block anything not your org domain
         if (!email.endsWith(ALLOWED_DOMAIN)) {
           await signOut(auth);
           alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
@@ -575,8 +576,6 @@
     map.on("popupopen", (e) => {
       const popupEl = e.popup.getElement();
       if (!popupEl) return;
-
-      // Only admin gets edit/delete buttons in the popup
       if (!isAdmin) return;
 
       const editBtn = popupEl.querySelector(".editPinBtn");
@@ -755,7 +754,7 @@
       }
     );
 
-    // ---------------- SECTION OVERLAYS ----------------
+    // ---------------- SECTION OVERLAYS (Firestore-safe rings) ----------------
     const STATUS_COLORS = {
       uninvestigated: "#ffffff", // white
       possible: "#ffeb3b",       // yellow
@@ -796,16 +795,23 @@
       return "uninvestigated";
     }
 
-    // Thick yellow lines like your screenshots
     function sectionPolyStyle() {
       return { color: "#ffff00", weight: 5, fillOpacity: 0 };
+    }
+
+    // Convert a Leaflet polygon/rectangle layer into Firestore-safe rings:
+    // rings: [ [ {lat,lng}, {lat,lng}, ... ], [ ... ] ]
+    function layerToRingsLatLng(layer) {
+      const ll = layer.getLatLngs();
+      const rings = Array.isArray(ll?.[0]) ? ll : [ll];
+      return rings.map(ring => ring.map(p => ({ lat: Number(p.lat), lng: Number(p.lng) })));
     }
 
     // Live layers
     const sectionPolys = L.featureGroup().addTo(map);
     const sectionHexes = L.layerGroup().addTo(map);
 
-    // id -> { poly, hex, mapName }
+    // id -> { poly, hex, mapName, number, status }
     const sectionById = new Map();
 
     // Draw control (admin only)
@@ -842,7 +848,6 @@
     function ensureSectionFilterOptions(mapNames) {
       const current = sectionMapFilter.value || "ALL";
       const names = Array.from(new Set(mapNames)).filter(Boolean).sort((a,b) => a.localeCompare(b));
-
       const opts = ["ALL", ...names];
 
       sectionMapFilter.innerHTML = "";
@@ -853,7 +858,6 @@
         sectionMapFilter.appendChild(o);
       });
 
-      // restore selection if possible
       sectionMapFilter.value = opts.includes(current) ? current : "ALL";
     }
 
@@ -872,7 +876,6 @@
     }
 
     sectionMapFilter.addEventListener("change", () => {
-      // nice convenience: if admin and they select a specific map, auto-fill name
       const v = sectionMapFilter.value;
       if (isAdmin && v && v !== "ALL") sectionMapName.value = v;
       applySectionFilter();
@@ -897,14 +900,15 @@
       const number = numRaw ? String(numRaw) : "1";
       const status = sectionDefaultStatus.value || "uninvestigated";
 
-      const geo = layer.toGeoJSON();
+      // ✅ Firestore-safe structure (no nested arrays)
+      const rings = layerToRingsLatLng(layer);
 
       try {
         const docRef = await addDoc(collection(db, SECTIONS), {
           mapName,
           number,
           status,
-          geometry: geo.geometry,
+          rings,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser?.email || ""
@@ -932,9 +936,10 @@
       layers.eachLayer((layer) => {
         const id = layer.options._sectionId;
         if (!id) return;
-        const geo = layer.toGeoJSON();
+
+        const rings = layerToRingsLatLng(layer);
         updates.push(updateDoc(doc(db, SECTIONS, id), {
-          geometry: geo.geometry,
+          rings,
           updatedAt: serverTimestamp()
         }));
       });
@@ -973,7 +978,6 @@
         const rec = sectionById.get(id);
         if (!rec) return;
 
-        // Admin click cycles status immediately
         if (isAdmin) {
           const next = cycleStatus(rec.status);
           try {
@@ -985,11 +989,9 @@
           return;
         }
 
-        // Non-admin: show info
         alert(`${rec.mapName}\nSection: ${rec.number}\nStatus: ${rec.status}`);
       });
 
-      // Admin: right-click / context menu to edit label quickly
       polyLayer.on("contextmenu", async () => {
         if (!isAdmin) return;
         const rec = sectionById.get(id);
@@ -1013,7 +1015,6 @@
         }
       });
 
-      // Admin click on hex also cycles status
       hexMarker.on("click", async () => {
         if (!isAdmin) return;
         const rec = sectionById.get(id);
@@ -1033,7 +1034,7 @@
       const mapName = d.mapName || "Unnamed Map";
       const number = d.number || "";
       const status = d.status || "uninvestigated";
-      const geom = d.geometry;
+      const rings = d.rings;
 
       // Remove existing
       const existing = sectionById.get(id);
@@ -1043,23 +1044,12 @@
         sectionById.delete(id);
       }
 
-      // Create polygon
-      const geojson = {
-        type: "Feature",
-        properties: { id, mapName, number, status },
-        geometry: geom
-      };
+      if (!Array.isArray(rings) || rings.length === 0) return;
 
-      const gj = L.geoJSON(geojson, {
-        style: sectionPolyStyle(),
-        onEachFeature: (feature, layer) => {
-          layer.options._sectionId = id;
-        }
-      });
-
-      let polyLayer = null;
-      gj.eachLayer(l => polyLayer = l);
-      if (!polyLayer) return;
+      // Build Leaflet polygon from rings
+      const latlngRings = rings.map(ring => (ring || []).map(p => L.latLng(p.lat, p.lng)));
+      const polyLayer = L.polygon(latlngRings, sectionPolyStyle());
+      polyLayer.options._sectionId = id;
 
       // Create hex at centroid
       const c = centroidOfLatLngs(polyLayer.getLatLngs());
@@ -1087,7 +1077,6 @@
 
     // Real-time listener (sections)
     onSnapshot(collection(db, SECTIONS), (snap) => {
-      // Keep the dropdown in sync with available map names
       const names = [];
       snap.forEach(docSnap => {
         const d = docSnap.data();
@@ -1108,8 +1097,7 @@
           return;
         }
 
-        const d = ch.doc.data();
-        rebuildSectionLayerFromDoc(id, d);
+        rebuildSectionLayerFromDoc(id, ch.doc.data());
       });
 
       applySectionFilter();
@@ -1265,10 +1253,8 @@
       }
     }
 
-    // Build UI + apply default state
     buildCountyToggleUI();
 
-    // Counties overlay
     fetch("./data/counties_ok.geojson")
       .then(res => {
         if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
@@ -1295,7 +1281,6 @@
           }
         }).addTo(map);
 
-        // Apply team-based highlight rules immediately on load (default team is ALL)
         syncCountyHighlightsToTeamFilter();
       })
       .catch(err => console.error("GeoJSON load error:", err));
