@@ -329,10 +329,32 @@
 
     // ----- MAP -----
     const map = L.map('map').setView([35.4676, -97.5164], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // --- Base layers (Street + Satellite) ---
+    const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    });
+    
+    const satellite = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 19,
+        attribution:
+          "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+      }
+    );
+    
+    // Pick which one loads by default:
+    streets.addTo(map);      // default = streets
+    // satellite.addTo(map); // (use this instead if you want satellite by default)
+    
+    // Layer switcher (top-right)
+    L.control.layers(
+      { "Streets": streets, "Satellite": satellite },
+      null,
+      { position: "topright" }
+    ).addTo(map);
+
 
     const markerLayer = L.layerGroup().addTo(map);
     let markers = [];
@@ -747,3 +769,4 @@
   </script>
 </body>
 </html>
+
