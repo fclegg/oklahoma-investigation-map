@@ -202,7 +202,9 @@
 
         <div class="row">
           <label for="sectionMapFilter">View:</label>
-          <select id="sectionMapFilter" class="grow"></select>
+          <select id="sectionMapFilter" class="grow">
+            <option value="ALL">All section maps</option>
+          </select>
         </div>
 
         <div id="sectionAdminTools" style="display:none;">
@@ -274,8 +276,8 @@
             <select id="nl_type" class="small">
               <option value="Unknown">Type: Unknown</option>
               <option value="Cemetery">Type: Cemetery</option>
-              <option value="Structure (In Use)">Type: Structure (In Use)</option>
-              <option value="Structure (Abandoned)">Type: Structure (Abandoned)</option>
+              <option value="Structure (In Use)">Structure (In Use)</option>
+              <option value="Structure (Abandoned)">Structure (Abandoned)</option>
               <option value="Park">Type: Park</option>
               <option value="Lake">Type: Lake</option>
               <option value="Road/Bridge">Type: Road/Bridge</option>
@@ -291,7 +293,7 @@
             <select id="nl_permission" class="small">
               <option value="Unknown">Permission: Unknown</option>
               <option value="Required">Permission: Required</option>
-              <option value="Not Required">Permission: Not Required</option>
+              <option value="Not Required">Not Required</option>
             </select>
 
             <select id="nl_entity" class="small">
@@ -478,6 +480,7 @@
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
+
       const email = (user?.email || "").toLowerCase();
       isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
       isAdmin = !!user && ADMIN_EMAILS.has(email);
@@ -746,7 +749,7 @@
       }
     );
 
-    // ---------------- SECTION OVERLAYS (NO NESTED ARRAYS) ----------------
+    // ---------------- SECTION OVERLAYS (Firestore-safe: flat points) ----------------
     const STATUS_COLORS = {
       uninvestigated: "#ffffff",
       possible: "#ffeb3b",
@@ -791,33 +794,56 @@
       return { color: "#ffff00", weight: 5, fillOpacity: 0 };
     }
 
-    // ✅ Firestore-safe: store rings as a MAP (object) instead of array-of-arrays
-    // ringsMap = { "0": [ {lat,lng}... ], "1": [ ... ] }
-    function layerToRingsMap(layer) {
+    // ✅ Firestore-safe geometry: flat array only
+    // points: [{ring:0,i:0,lat,lng}, ...]
+    function layerToPoints(layer) {
       const ll = layer.getLatLngs();
-      const rings = Array.isArray(ll?.[0]) ? ll : [ll];
 
-      const out = {};
-      rings.forEach((ring, idx) => {
-        out[String(idx)] = (ring || []).map(p => ({ lat: Number(p.lat), lng: Number(p.lng) }));
+      let rings = ll;
+      if (!Array.isArray(rings)) rings = [];
+      if (!Array.isArray(rings[0])) rings = [rings];
+
+      // If extra nesting sneaks in (rare), flatten one level
+      if (Array.isArray(rings[0]) && Array.isArray(rings[0][0]) && rings[0][0]?.lat === undefined) {
+        rings = rings.map(r => (Array.isArray(r[0]) ? r[0] : r));
+      }
+
+      const points = [];
+      rings.forEach((ring, ringIdx) => {
+        (ring || []).forEach((p, i) => {
+          const lat = Number(p?.lat);
+          const lng = Number(p?.lng);
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            points.push({ ring: ringIdx, i, lat, lng });
+          }
+        });
       });
-      return out;
+
+      return points;
     }
 
-    // Allow reading both formats (if any old docs exist)
-    function ringsMapToLatLngRings(d) {
-      // New format
-      if (d && typeof d.ringsMap === "object" && d.ringsMap !== null) {
-        const keys = Object.keys(d.ringsMap).sort((a,b) => Number(a) - Number(b));
-        return keys.map(k => (d.ringsMap[k] || []).map(p => L.latLng(p.lat, p.lng)));
+    function pointsToLatLngRings(points) {
+      if (!Array.isArray(points) || points.length === 0) return null;
+
+      const byRing = new Map();
+      for (const pt of points) {
+        const ring = Number(pt.ring);
+        const i = Number(pt.i);
+        const lat = Number(pt.lat);
+        const lng = Number(pt.lng);
+        if (!Number.isFinite(ring) || !Number.isFinite(i) || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        if (!byRing.has(ring)) byRing.set(ring, []);
+        byRing.get(ring).push({ i, lat, lng });
       }
 
-      // Old (broken for Firestore) / or earlier rings array format (in case you imported)
-      if (Array.isArray(d?.rings)) {
-        return d.rings.map(ring => (ring || []).map(p => L.latLng(p.lat, p.lng)));
-      }
+      const ringKeys = Array.from(byRing.keys()).sort((a,b) => a - b);
+      const rings = ringKeys.map(rk =>
+        byRing.get(rk)
+          .sort((a,b) => a.i - b.i)
+          .map(p => L.latLng(p.lat, p.lng))
+      );
 
-      return null;
+      return rings.length ? rings : null;
     }
 
     const sectionPolys = L.featureGroup().addTo(map);
@@ -886,7 +912,6 @@
       applySectionFilter();
     });
 
-    // CREATE section
     map.on(L.Draw.Event.CREATED, async (e) => {
       if (!isAdmin) return;
 
@@ -905,14 +930,14 @@
       const number = numRaw ? String(numRaw) : "1";
       const status = sectionDefaultStatus.value || "uninvestigated";
 
-      const ringsMap = layerToRingsMap(layer); // ✅ NO nested arrays
+      const points = layerToPoints(layer); // ✅ flat array only
 
       try {
         const docRef = await addDoc(collection(db, SECTIONS), {
           mapName,
           number,
           status,
-          ringsMap,
+          points, // ✅ no nested arrays
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser?.email || ""
@@ -929,7 +954,6 @@
       }
     });
 
-    // EDIT geometry
     map.on(L.Draw.Event.EDITED, async (e) => {
       if (!isAdmin) return;
 
@@ -940,9 +964,9 @@
         const id = layer.options._sectionId;
         if (!id) return;
 
-        const ringsMap = layerToRingsMap(layer); // ✅ NO nested arrays
+        const points = layerToPoints(layer);
         updates.push(updateDoc(doc(db, SECTIONS, id), {
-          ringsMap,
+          points,
           updatedAt: serverTimestamp()
         }));
       });
@@ -955,7 +979,6 @@
       }
     });
 
-    // DELETE
     map.on(L.Draw.Event.DELETED, async (e) => {
       if (!isAdmin) return;
 
@@ -1045,8 +1068,8 @@
         sectionById.delete(id);
       }
 
-      const latlngRings = ringsMapToLatLngRings(d);
-      if (!latlngRings || latlngRings.length === 0) return;
+      const latlngRings = pointsToLatLngRings(d.points);
+      if (!latlngRings) return;
 
       const polyLayer = L.polygon(latlngRings, sectionPolyStyle());
       polyLayer.options._sectionId = id;
@@ -1194,6 +1217,7 @@
       cb.id = id;
       cb.checked = !!highlightState[countyName];
       checkboxByCounty[countyName] = cb;
+
       cb.addEventListener("change", () => setCountyHighlighted(countyName, cb.checked));
 
       const dot = document.createElement("span");
@@ -1268,9 +1292,36 @@
         syncCountyHighlightsToTeamFilter();
       })
       .catch(err => console.error("GeoJSON load error:", err));
-
-    sectionMapFilter.innerHTML = `<option value="ALL">All section maps</option>`;
   </script>
 
+  <!--
+    FIRESTORE RULES (recommended)
+
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+
+        function isAdmin() {
+          return request.auth != null
+            && request.auth.token.email == "fclegg@prcofok.org";
+        }
+        function isMember() {
+          return request.auth != null
+            && request.auth.token.email.matches(".*@prcofok\\.org$");
+        }
+
+        match /locations/{docId} {
+          allow read: if true;
+          allow create: if isMember();
+          allow update, delete: if isAdmin();
+        }
+
+        match /section_overlays/{docId} {
+          allow read: if true;
+          allow create, update, delete: if isAdmin();
+        }
+      }
+    }
+  -->
 </body>
 </html>
