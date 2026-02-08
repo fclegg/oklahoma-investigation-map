@@ -6,6 +6,7 @@
   <title>Oklahoma Investigation Map</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
   <style>
     body { margin: 0; }
@@ -41,6 +42,7 @@
     #menuTitle{
       font-weight: 700;
       font-size: 14px;
+      white-space: nowrap;
     }
 
     #menuToggle{
@@ -90,8 +92,30 @@
       border: 1px solid rgba(0,0,0,.25);
     }
 
+    .authPill{
+      font-size: 12px;
+      color: #555;
+      border: 1px solid #ddd;
+      padding: 4px 8px;
+      border-radius: 999px;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .adminBadge{
+      font-size: 11px;
+      font-weight: 700;
+      color: #0a5;
+      border: 1px solid #0a5;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
     @media (max-width: 600px){
       .panel{ width: calc(100vw - 20px); }
+      .authPill{ max-width: 140px; }
     }
   </style>
 </head>
@@ -100,7 +124,14 @@
   <div id="menuWrap" class="panel collapsed">
     <div id="menuHeader">
       <div id="menuTitle">Investigation Menu</div>
-      <button id="menuToggle" type="button">Open</button>
+
+      <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
+        <span id="adminBadge" class="adminBadge" style="display:none;">ADMIN</span>
+        <span id="authState" class="authPill">Not signed in</span>
+        <button id="loginBtn" type="button">Sign in</button>
+        <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
+        <button id="menuToggle" type="button">Open</button>
+      </div>
     </div>
 
     <div class="menuBody">
@@ -163,6 +194,42 @@
         </div>
       </div>
 
+      <!-- Section Overlays -->
+      <div style="margin-top:10px;">
+        <div class="row" style="margin-bottom:2px;">
+          <strong>Section Overlays</strong>
+        </div>
+
+        <div class="row">
+          <label for="sectionMapFilter">View:</label>
+          <select id="sectionMapFilter" class="grow"></select>
+        </div>
+
+        <div id="sectionAdminTools" style="display:none;">
+          <div class="row">
+            <input id="sectionMapName" class="grow" type="text" placeholder="Map name for NEW sections (ex: Crown Hill Cemetery)" />
+            <input id="sectionNextNumber" class="small" type="number" min="1" step="1" placeholder="Next #" />
+          </div>
+
+          <div class="row">
+            <label for="sectionDefaultStatus">Default:</label>
+            <select id="sectionDefaultStatus" class="small">
+              <option value="uninvestigated">White (Uninvestigated)</option>
+              <option value="possible">Yellow (Possible)</option>
+              <option value="confirmed">Green (Confirmed)</option>
+            </select>
+          </div>
+
+          <div class="hint">
+            Admin only: draw rectangles/polygons using the toolbar on the map (top-right). Click a section/hex to cycle status.
+          </div>
+        </div>
+
+        <div class="hint">
+          Status colors: White = uninvestigated, Yellow = possible activity, Green = confirmed activity.
+        </div>
+      </div>
+
       <!-- County Highlights (no header text as requested) -->
       <div style="margin-top:10px;">
         <div class="row" style="margin-bottom:4px;">
@@ -183,6 +250,10 @@
         <div class="row">
           <strong>New Location</strong>
           <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
+        </div>
+
+        <div id="mustLoginNote" class="hint" style="display:none;">
+          Sign in with your @prcofok.org Google account to add locations.
         </div>
 
         <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
@@ -254,6 +325,7 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -268,6 +340,15 @@
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+    // ---------------- FIREBASE CONFIG ----------------
     const firebaseConfig = {
       apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
       authDomain: "oklahoma-investigation-map.firebaseapp.com",
@@ -279,15 +360,34 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // Collections
     const LOCATIONS = "locations";
+    const SECTIONS  = "section_overlays";
 
     function setStatus(msg){
       console.log("[Firestore]", msg);
     }
 
+    // ---------------- AUTH ----------------
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const ALLOWED_DOMAIN = "@prcofok.org";
+    const ADMIN_EMAILS = new Set(["fclegg@prcofok.org"]);
+
+    let currentUser = null;
+    let isMember = false; // signed-in + correct domain
+    let isAdmin = false;  // fclegg@prcofok.org
+
     // ----- DOM -----
     const menuWrap = document.getElementById("menuWrap");
     const menuToggle = document.getElementById("menuToggle");
+
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const authStateEl = document.getElementById("authState");
+    const adminBadgeEl = document.getElementById("adminBadge");
 
     const searchEl = document.getElementById("search");
     const clearBtn = document.getElementById("clearBtn");
@@ -299,6 +399,9 @@
 
     const countyControlsRed = document.getElementById("countyHighlightControlsRed");
     const countyControlsGreen = document.getElementById("countyHighlightControlsGreen");
+
+    const newLocationPanel = document.getElementById("newLocationPanel");
+    const mustLoginNote = document.getElementById("mustLoginNote");
 
     const editModeBanner = document.getElementById("editModeBanner");
     const cancelEditBtn = document.getElementById("cancelEditBtn");
@@ -317,6 +420,13 @@
     const pickBtn = document.getElementById("pickBtn");
     const pickHint = document.getElementById("pickHint");
 
+    // Section overlay DOM
+    const sectionMapFilter = document.getElementById("sectionMapFilter");
+    const sectionAdminTools = document.getElementById("sectionAdminTools");
+    const sectionMapName = document.getElementById("sectionMapName");
+    const sectionNextNumber = document.getElementById("sectionNextNumber");
+    const sectionDefaultStatus = document.getElementById("sectionDefaultStatus");
+
     function setMenuCollapsed(collapsed){
       menuWrap.classList.toggle("collapsed", collapsed);
       menuToggle.textContent = collapsed ? "Open" : "Close";
@@ -327,35 +437,86 @@
     });
     setMenuCollapsed(window.matchMedia("(max-width: 600px)").matches);
 
-    // ----- MAP -----
+    function refreshAuthUI() {
+      if (!currentUser) {
+        authStateEl.textContent = "Not signed in";
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+        adminBadgeEl.style.display = "none";
+        sectionAdminTools.style.display = "none";
+        mustLoginNote.style.display = "block";
+        return;
+      }
+
+      authStateEl.textContent = currentUser.email || "Signed in";
+      loginBtn.style.display = "none";
+      logoutBtn.style.display = "inline-block";
+      adminBadgeEl.style.display = isAdmin ? "inline-block" : "none";
+      sectionAdminTools.style.display = isAdmin ? "block" : "none";
+      mustLoginNote.style.display = isMember ? "none" : "block";
+    }
+
+    loginBtn.addEventListener("click", async () => {
+      try {
+        const res = await signInWithPopup(auth, provider);
+        const email = (res.user?.email || "").toLowerCase();
+
+        // Hard-block anything not your org domain
+        if (!email.endsWith(ALLOWED_DOMAIN)) {
+          await signOut(auth);
+          alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Sign-in failed: " + (err?.message || err));
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+
+      const email = (user?.email || "").toLowerCase();
+      isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
+      isAdmin = !!user && ADMIN_EMAILS.has(email);
+
+      refreshAuthUI();
+      setSectionEditingEnabled(isAdmin);
+
+      // Rebuild marker popups (admin buttons)
+      applyFilters();
+    });
+
+    // ---------------- MAP ----------------
     const map = L.map('map').setView([35.4676, -97.5164], 7);
-    // --- Base layers (Street + Satellite) ---
+
+    // Base layers (Street + Satellite)
     const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
+      attribution: "&copy; OpenStreetMap contributors"
     });
-    
+
     const satellite = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
       {
         maxZoom: 19,
-        attribution:
-          "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+        attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
       }
     );
-    
-    // Pick which one loads by default:
-    streets.addTo(map);      // default = streets
-    // satellite.addTo(map); // (use this instead if you want satellite by default)
-    
-    // Layer switcher (top-right)
+
+    streets.addTo(map);
+
     L.control.layers(
-      { "Streets": streets, "Satellite": satellite },
+      { Streets: streets, Satellite: satellite },
       null,
       { position: "topright" }
     ).addTo(map);
 
-
+    // Locations markers
     const markerLayer = L.layerGroup().addTo(map);
     let markers = [];
     let editingId = null;
@@ -369,11 +530,11 @@
     }
 
     function makeMarker(loc) {
-      const actions = `
+      const actions = isAdmin ? `
         <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" class="editPinBtn" data-id="${loc.id}">Edit</button>
           <button type="button" class="deletePinBtn danger" data-id="${loc.id}">Delete</button>
-        </div>`;
+        </div>` : "";
 
       return L.marker([loc.lat, loc.lng]).bindPopup(
         `<b>${loc.name}</b><br>
@@ -415,6 +576,9 @@
       const popupEl = e.popup.getElement();
       if (!popupEl) return;
 
+      // Only admin gets edit/delete buttons in the popup
+      if (!isAdmin) return;
+
       const editBtn = popupEl.querySelector(".editPinBtn");
       const deleteBtn = popupEl.querySelector(".deletePinBtn");
 
@@ -426,7 +590,7 @@
 
           nl_name.value = loc.name || "";
           nl_team.value = loc.team || "Unassigned";
-          nl_type.value = `Type: ${loc.type || "Unknown"}`.replace("Type: Type: ", "Type: ");
+          nl_type.value = loc.type || "Unknown";
           nl_status.value = loc.status || "Unknown";
           nl_permission.value = loc.permission || "Unknown";
           nl_entity.value = loc.entity || "Unknown";
@@ -504,16 +668,26 @@
       form.reset();
     });
 
+    // Require sign-in (org account) to ADD pins; only admin can EDIT/DELETE pins
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (!isMember) {
+        alert("Sign in with your @prcofok.org Google account to add locations.");
+        return;
+      }
+      if (editingId && !isAdmin) {
+        alert("Only admin can edit existing locations.");
+        return;
+      }
 
       const name = nl_name.value.trim();
       const team = nl_team.value;
 
-      const type = (nl_type.value || "Type: Unknown").replace("Type: ", "");
-      const status = nl_status.value;
-      const permission = (nl_permission.value || "Unknown").replace("Permission: ", "");
-      const entity = (nl_entity.value || "Unknown").replace("Entity: ", "");
+      const type = nl_type.value || "Unknown";
+      const status = nl_status.value || "Unknown";
+      const permission = nl_permission.value || "Unknown";
+      const entity = nl_entity.value || "Unknown";
 
       const lat = Number(nl_lat.value);
       const lng = Number(nl_lng.value);
@@ -534,6 +708,7 @@
           setEditMode(null);
         } else {
           payload.createdAt = serverTimestamp();
+          payload.createdBy = currentUser?.email || "";
           await addDoc(collection(db, LOCATIONS), payload);
           alert("Location added!");
         }
@@ -545,7 +720,7 @@
       }
     });
 
-    // Real-time listener
+    // Real-time listener (locations)
     setStatus("Connecting to Firestore…");
     onSnapshot(
       collection(db, LOCATIONS),
@@ -580,7 +755,367 @@
       }
     );
 
-    // ----- COUNTY HIGHLIGHTS -----
+    // ---------------- SECTION OVERLAYS ----------------
+    const STATUS_COLORS = {
+      uninvestigated: "#ffffff", // white
+      possible: "#ffeb3b",       // yellow
+      confirmed: "#33a02c"       // green
+    };
+
+    function makeHexIcon(numberText, status) {
+      const fill = STATUS_COLORS[status] || "#ffffff";
+      const text = String(numberText ?? "").trim();
+
+      const svg = `
+        <svg width="48" height="48" viewBox="0 0 100 100">
+          <polygon points="50,5 90,27 90,73 50,95 10,73 10,27"
+            fill="${fill}" stroke="#000" stroke-width="6" />
+          <text x="50" y="60" text-anchor="middle"
+            font-size="36" font-family="Arial" font-weight="700" fill="#000">${text}</text>
+        </svg>`;
+
+      return L.divIcon({
+        className: "",
+        html: svg,
+        iconSize: [48, 48],
+        iconAnchor: [24, 24]
+      });
+    }
+
+    function centroidOfLatLngs(latlngs) {
+      const ring = Array.isArray(latlngs?.[0]) ? latlngs[0] : latlngs;
+      let sumLat = 0, sumLng = 0;
+      const n = (ring && ring.length) ? ring.length : 1;
+      (ring || []).forEach(p => { sumLat += p.lat; sumLng += p.lng; });
+      return L.latLng(sumLat / n, sumLng / n);
+    }
+
+    function cycleStatus(s) {
+      if (s === "uninvestigated") return "possible";
+      if (s === "possible") return "confirmed";
+      return "uninvestigated";
+    }
+
+    // Thick yellow lines like your screenshots
+    function sectionPolyStyle() {
+      return { color: "#ffff00", weight: 5, fillOpacity: 0 };
+    }
+
+    // Live layers
+    const sectionPolys = L.featureGroup().addTo(map);
+    const sectionHexes = L.layerGroup().addTo(map);
+
+    // id -> { poly, hex, mapName }
+    const sectionById = new Map();
+
+    // Draw control (admin only)
+    let drawControl = null;
+    function setSectionEditingEnabled(enabled) {
+      if (enabled) {
+        if (!drawControl) {
+          drawControl = new L.Control.Draw({
+            position: "topright",
+            draw: {
+              polygon: true,
+              rectangle: true,
+              polyline: false,
+              circle: false,
+              marker: false,
+              circlemarker: false
+            },
+            edit: {
+              featureGroup: sectionPolys,
+              remove: true
+            }
+          });
+          map.addControl(drawControl);
+        }
+      } else {
+        if (drawControl) {
+          map.removeControl(drawControl);
+          drawControl = null;
+        }
+      }
+    }
+
+    // Filter dropdown setup
+    function ensureSectionFilterOptions(mapNames) {
+      const current = sectionMapFilter.value || "ALL";
+      const names = Array.from(new Set(mapNames)).filter(Boolean).sort((a,b) => a.localeCompare(b));
+
+      const opts = ["ALL", ...names];
+
+      sectionMapFilter.innerHTML = "";
+      opts.forEach(v => {
+        const o = document.createElement("option");
+        o.value = v;
+        o.textContent = (v === "ALL") ? "All section maps" : v;
+        sectionMapFilter.appendChild(o);
+      });
+
+      // restore selection if possible
+      sectionMapFilter.value = opts.includes(current) ? current : "ALL";
+    }
+
+    function applySectionFilter() {
+      const selected = sectionMapFilter.value || "ALL";
+      for (const [id, rec] of sectionById.entries()) {
+        const show = (selected === "ALL") || (rec.mapName === selected);
+        if (show) {
+          if (!sectionPolys.hasLayer(rec.poly)) sectionPolys.addLayer(rec.poly);
+          if (!sectionHexes.hasLayer(rec.hex)) sectionHexes.addLayer(rec.hex);
+        } else {
+          if (sectionPolys.hasLayer(rec.poly)) sectionPolys.removeLayer(rec.poly);
+          if (sectionHexes.hasLayer(rec.hex)) sectionHexes.removeLayer(rec.hex);
+        }
+      }
+    }
+
+    sectionMapFilter.addEventListener("change", () => {
+      // nice convenience: if admin and they select a specific map, auto-fill name
+      const v = sectionMapFilter.value;
+      if (isAdmin && v && v !== "ALL") sectionMapName.value = v;
+      applySectionFilter();
+    });
+
+    // Create section (admin)
+    map.on(L.Draw.Event.CREATED, async (e) => {
+      if (!isAdmin) return;
+
+      const layer = e.layer;
+      layer.setStyle(sectionPolyStyle());
+      sectionPolys.addLayer(layer);
+
+      const mapName = (sectionMapName.value || "").trim();
+      if (!mapName) {
+        alert("Enter a Map name in Section Overlays first (ex: Crown Hill Cemetery).");
+        sectionPolys.removeLayer(layer);
+        return;
+      }
+
+      const numRaw = (sectionNextNumber.value || "").trim();
+      const number = numRaw ? String(numRaw) : "1";
+      const status = sectionDefaultStatus.value || "uninvestigated";
+
+      const geo = layer.toGeoJSON();
+
+      try {
+        const docRef = await addDoc(collection(db, SECTIONS), {
+          mapName,
+          number,
+          status,
+          geometry: geo.geometry,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          createdBy: currentUser?.email || ""
+        });
+
+        layer.options._sectionId = docRef.id;
+
+        // auto-increment next number if it was numeric
+        const n = Number(number);
+        if (Number.isFinite(n)) sectionNextNumber.value = String(n + 1);
+      } catch (err) {
+        console.error(err);
+        alert("Save section failed: " + (err?.message || err));
+        sectionPolys.removeLayer(layer);
+      }
+    });
+
+    // Edit geometry (admin)
+    map.on(L.Draw.Event.EDITED, async (e) => {
+      if (!isAdmin) return;
+
+      const layers = e.layers;
+      const updates = [];
+
+      layers.eachLayer((layer) => {
+        const id = layer.options._sectionId;
+        if (!id) return;
+        const geo = layer.toGeoJSON();
+        updates.push(updateDoc(doc(db, SECTIONS, id), {
+          geometry: geo.geometry,
+          updatedAt: serverTimestamp()
+        }));
+      });
+
+      try {
+        await Promise.all(updates);
+      } catch (err) {
+        console.error(err);
+        alert("Update failed: " + (err?.message || err));
+      }
+    });
+
+    // Delete (admin)
+    map.on(L.Draw.Event.DELETED, async (e) => {
+      if (!isAdmin) return;
+
+      const layers = e.layers;
+      const deletes = [];
+
+      layers.eachLayer((layer) => {
+        const id = layer.options._sectionId;
+        if (!id) return;
+        deletes.push(deleteDoc(doc(db, SECTIONS, id)));
+      });
+
+      try {
+        await Promise.all(deletes);
+      } catch (err) {
+        console.error(err);
+        alert("Delete failed: " + (err?.message || err));
+      }
+    });
+
+    function attachSectionInteractions(id, polyLayer, hexMarker) {
+      polyLayer.on("click", async () => {
+        const rec = sectionById.get(id);
+        if (!rec) return;
+
+        // Admin click cycles status immediately
+        if (isAdmin) {
+          const next = cycleStatus(rec.status);
+          try {
+            await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() });
+          } catch (err) {
+            console.error(err);
+            alert("Status update failed: " + (err?.message || err));
+          }
+          return;
+        }
+
+        // Non-admin: show info
+        alert(`${rec.mapName}\nSection: ${rec.number}\nStatus: ${rec.status}`);
+      });
+
+      // Admin: right-click / context menu to edit label quickly
+      polyLayer.on("contextmenu", async () => {
+        if (!isAdmin) return;
+        const rec = sectionById.get(id);
+        if (!rec) return;
+
+        const newMapName = prompt("Map name:", rec.mapName);
+        if (!newMapName) return;
+
+        const newNumber = prompt("Section label/number:", rec.number);
+        if (!newNumber) return;
+
+        try {
+          await updateDoc(doc(db, SECTIONS, id), {
+            mapName: newMapName.trim(),
+            number: String(newNumber).trim(),
+            updatedAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error(err);
+          alert("Label update failed: " + (err?.message || err));
+        }
+      });
+
+      // Admin click on hex also cycles status
+      hexMarker.on("click", async () => {
+        if (!isAdmin) return;
+        const rec = sectionById.get(id);
+        if (!rec) return;
+
+        const next = cycleStatus(rec.status);
+        try {
+          await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() });
+        } catch (err) {
+          console.error(err);
+          alert("Status update failed: " + (err?.message || err));
+        }
+      });
+    }
+
+    function rebuildSectionLayerFromDoc(id, d) {
+      const mapName = d.mapName || "Unnamed Map";
+      const number = d.number || "";
+      const status = d.status || "uninvestigated";
+      const geom = d.geometry;
+
+      // Remove existing
+      const existing = sectionById.get(id);
+      if (existing) {
+        if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
+        if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
+        sectionById.delete(id);
+      }
+
+      // Create polygon
+      const geojson = {
+        type: "Feature",
+        properties: { id, mapName, number, status },
+        geometry: geom
+      };
+
+      const gj = L.geoJSON(geojson, {
+        style: sectionPolyStyle(),
+        onEachFeature: (feature, layer) => {
+          layer.options._sectionId = id;
+        }
+      });
+
+      let polyLayer = null;
+      gj.eachLayer(l => polyLayer = l);
+      if (!polyLayer) return;
+
+      // Create hex at centroid
+      const c = centroidOfLatLngs(polyLayer.getLatLngs());
+      const hex = L.marker(c, {
+        icon: makeHexIcon(number, status),
+        interactive: true,
+        zIndexOffset: 1000
+      });
+
+      // Store record
+      sectionById.set(id, { poly: polyLayer, hex, mapName, number, status });
+
+      // Interactions
+      attachSectionInteractions(id, polyLayer, hex);
+
+      // Add to map (respect filter)
+      const selected = sectionMapFilter.value || "ALL";
+      const show = (selected === "ALL") || (mapName === selected);
+
+      if (show) {
+        sectionPolys.addLayer(polyLayer);
+        sectionHexes.addLayer(hex);
+      }
+    }
+
+    // Real-time listener (sections)
+    onSnapshot(collection(db, SECTIONS), (snap) => {
+      // Keep the dropdown in sync with available map names
+      const names = [];
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        if (d.mapName) names.push(d.mapName);
+      });
+      ensureSectionFilterOptions(names);
+
+      snap.docChanges().forEach((ch) => {
+        const id = ch.doc.id;
+
+        if (ch.type === "removed") {
+          const existing = sectionById.get(id);
+          if (existing) {
+            if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
+            if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
+            sectionById.delete(id);
+          }
+          return;
+        }
+
+        const d = ch.doc.data();
+        rebuildSectionLayerFromDoc(id, d);
+      });
+
+      applySectionFilter();
+    });
+
+    // ---------------- COUNTY HIGHLIGHTS ----------------
     const RED_COUNTIES = ["Tulsa","Wagoner","Rogers","Washington","Osage"];
     const GREEN_COUNTIES = ["Creek","Okmulgee","Muskogee","McIntosh","Okfuskee"];
 
@@ -680,7 +1215,6 @@
       cb.checked = !!highlightState[countyName];
       checkboxByCounty[countyName] = cb;
 
-      // Keep manual toggles working too (but team dropdown will override on change)
       cb.addEventListener("change", () => setCountyHighlighted(countyName, cb.checked));
 
       const dot = document.createElement("span");
@@ -717,7 +1251,6 @@
       });
     }
 
-    // This is the behavior you asked for:
     function syncCountyHighlightsToTeamFilter(){
       const v = teamFilterEl.value;
 
@@ -766,7 +1299,10 @@
         syncCountyHighlightsToTeamFilter();
       })
       .catch(err => console.error("GeoJSON load error:", err));
+
+    // Init section map filter dropdown immediately
+    sectionMapFilter.innerHTML = `<option value="ALL">All section maps</option>`;
   </script>
+
 </body>
 </html>
-
