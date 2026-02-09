@@ -293,7 +293,7 @@
             <select id="nl_permission" class="small">
               <option value="Unknown">Permission: Unknown</option>
               <option value="Required">Permission: Required</option>
-              <option value="Not Required">Permission: Not Required</option>
+              <option value="Not Required">Not Required</option>
             </select>
 
             <select id="nl_entity" class="small">
@@ -369,6 +369,10 @@
     const LOCATIONS = "locations";
     const SECTIONS  = "section_overlays";
 
+    function setStatus(msg){
+      console.log("[Firestore]", msg);
+    }
+
     // ---------------- AUTH ----------------
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
@@ -380,10 +384,6 @@
     let currentUser = null;
     let isMember = false;
     let isAdmin = false;
-
-    function setStatus(msg){
-      console.log("[Firestore]", msg);
-    }
 
     // ----- DOM -----
     const menuWrap = document.getElementById("menuWrap");
@@ -514,7 +514,7 @@
       { position: "topright" }
     ).addTo(map);
 
-    // ---------------- LOCATIONS ----------------
+    // Locations markers
     const markerLayer = L.layerGroup().addTo(map);
     let markers = [];
     let editingId = null;
@@ -616,6 +616,7 @@
       }
     });
 
+    // Filter events
     teamFilterEl.addEventListener("change", () => {
       applyFilters();
       syncCountyHighlightsToTeamFilter();
@@ -663,6 +664,7 @@
       form.reset();
     });
 
+    // Add/edit location
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -688,7 +690,10 @@
       if (!name) return alert("Location name is required.");
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert("Valid latitude and longitude are required.");
 
-      const payload = { name, team, type, status, permission, entity, lat, lng, details, updatedAt: serverTimestamp() };
+      const payload = {
+        name, team, type, status, permission, entity, lat, lng, details,
+        updatedAt: serverTimestamp()
+      };
 
       try {
         if (editingId) {
@@ -709,6 +714,7 @@
       }
     });
 
+    // Real-time listener (locations)
     setStatus("Connecting to Firestore…");
     onSnapshot(
       collection(db, LOCATIONS),
@@ -743,94 +749,30 @@
       }
     );
 
-    // ---------------- SECTION OVERLAYS (zoom-scale + smooth fade) ----------------
+    // ---------------- SECTION OVERLAYS (Firestore-safe: flat points) ----------------
     const STATUS_COLORS = {
       uninvestigated: "#ffffff",
       possible: "#ffeb3b",
       confirmed: "#33a02c"
     };
 
-    // ---- HEX ICON ZOOM BEHAVIOR ----
-    const HEX_SHOW_MIN_ZOOM = 14;     // fade out below this zoom
-    const HEX_SIZE_AT_ZOOM = 18;      // "base" zoom for sizing
-    const HEX_BASE_PX = 48;           // icon size at base zoom
-    const HEX_MIN_PX = 18;            // smallest size
-    const HEX_MAX_PX = 64;            // largest size
-
-    // ---- Smooth fade settings ----
-    const HEX_FADE_MS = 220;
-    const HEX_FADE_STEPS = 12;
-    const HEX_MIN_OPACITY = 0.0;
-    const HEX_MAX_OPACITY = 1.0;
-
-    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-
-    function hexSizeForZoom(z){
-      const scale = Math.pow(1.15, z - HEX_SIZE_AT_ZOOM);
-      return Math.round(clamp(HEX_BASE_PX * scale, HEX_MIN_PX, HEX_MAX_PX));
-    }
-
-    function shouldShowHexesAtZoom(z){
-      return z >= HEX_SHOW_MIN_ZOOM;
-    }
-
-    function animateOpacity(marker, to, ms = HEX_FADE_MS, steps = HEX_FADE_STEPS) {
-      if (marker._fadeTimer) {
-        clearInterval(marker._fadeTimer);
-        marker._fadeTimer = null;
-      }
-
-      const from = Number(marker.options.opacity ?? 1);
-      const target = Number(to);
-      if (!Number.isFinite(from) || !Number.isFinite(target)) return;
-
-      if (Math.abs(from - target) < 0.01) {
-        marker.setOpacity(target);
-        marker.options.opacity = target;
-        return;
-      }
-
-      const stepTime = Math.max(16, Math.round(ms / steps));
-      let step = 0;
-
-      marker._fadeTimer = setInterval(() => {
-        step += 1;
-        const t = step / steps;
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-        const val = from + (target - from) * eased;
-        marker.setOpacity(val);
-        marker.options.opacity = val;
-
-        if (step >= steps) {
-          clearInterval(marker._fadeTimer);
-          marker._fadeTimer = null;
-          marker.setOpacity(target);
-          marker.options.opacity = target;
-        }
-      }, stepTime);
-    }
-
-    function makeHexIcon(numberText, status, sizePx) {
+    function makeHexIcon(numberText, status) {
       const fill = STATUS_COLORS[status] || "#ffffff";
       const text = String(numberText ?? "").trim();
 
-      const fontSize = Math.round(sizePx * 0.75);
       const svg = `
-        <svg width="${sizePx}" height="${sizePx}" viewBox="0 0 100 100">
+        <svg width="48" height="48" viewBox="0 0 100 100">
           <polygon points="50,5 90,27 90,73 50,95 10,73 10,27"
             fill="${fill}" stroke="#000" stroke-width="6" />
           <text x="50" y="60" text-anchor="middle"
-            font-size="${fontSize}" font-family="Arial" font-weight="700" fill="#000">${text}</text>
+            font-size="36" font-family="Arial" font-weight="700" fill="#000">${text}</text>
         </svg>`;
-
-      const half = Math.round(sizePx / 2);
 
       return L.divIcon({
         className: "",
         html: svg,
-        iconSize: [sizePx, sizePx],
-        iconAnchor: [half, half]
+        iconSize: [48, 48],
+        iconAnchor: [24, 24]
       });
     }
 
@@ -853,6 +795,7 @@
     }
 
     // ✅ Firestore-safe geometry: flat array only
+    // points: [{ring:0,i:0,lat,lng}, ...]
     function layerToPoints(layer) {
       const ll = layer.getLatLngs();
 
@@ -860,6 +803,7 @@
       if (!Array.isArray(rings)) rings = [];
       if (!Array.isArray(rings[0])) rings = [rings];
 
+      // If extra nesting sneaks in (rare), flatten one level
       if (Array.isArray(rings[0]) && Array.isArray(rings[0][0]) && rings[0][0]?.lat === undefined) {
         rings = rings.map(r => (Array.isArray(r[0]) ? r[0] : r));
       }
@@ -966,23 +910,7 @@
       const v = sectionMapFilter.value;
       if (isAdmin && v && v !== "ALL") sectionMapName.value = v;
       applySectionFilter();
-      refreshAllHexIconsForZoom(); // keep correct opacity/size after filtering
     });
-
-    function refreshAllHexIconsForZoom(){
-      const z = map.getZoom();
-      const shouldShow = shouldShowHexesAtZoom(z);
-      const sizePx = hexSizeForZoom(z);
-      const targetOpacity = shouldShow ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
-
-      for (const rec of sectionById.values()) {
-        rec.hex.setIcon(makeHexIcon(rec.number, rec.status, sizePx));
-        animateOpacity(rec.hex, targetOpacity);
-      }
-    }
-
-    // Smooth updates after zoom ends
-    map.on("zoomend", refreshAllHexIconsForZoom);
 
     map.on(L.Draw.Event.CREATED, async (e) => {
       if (!isAdmin) return;
@@ -1002,11 +930,14 @@
       const number = numRaw ? String(numRaw) : "1";
       const status = sectionDefaultStatus.value || "uninvestigated";
 
-      const points = layerToPoints(layer);
+      const points = layerToPoints(layer); // ✅ flat array only
 
       try {
         const docRef = await addDoc(collection(db, SECTIONS), {
-          mapName, number, status, points,
+          mapName,
+          number,
+          status,
+          points, // ✅ no nested arrays
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser?.email || ""
@@ -1144,16 +1075,10 @@
       polyLayer.options._sectionId = id;
 
       const c = centroidOfLatLngs(polyLayer.getLatLngs());
-
-      const z = map.getZoom();
-      const sizePx = hexSizeForZoom(z);
-      const startOpacity = shouldShowHexesAtZoom(z) ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
-
       const hex = L.marker(c, {
-        icon: makeHexIcon(number, status, sizePx),
+        icon: makeHexIcon(number, status),
         interactive: true,
-        zIndexOffset: 1000,
-        opacity: startOpacity
+        zIndexOffset: 1000
       });
 
       sectionById.set(id, { poly: polyLayer, hex, mapName, number, status });
@@ -1192,7 +1117,6 @@
       });
 
       applySectionFilter();
-      refreshAllHexIconsForZoom();
     });
 
     // ---------------- COUNTY HIGHLIGHTS ----------------
