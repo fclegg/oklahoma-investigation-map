@@ -84,14 +84,6 @@
     .danger{ border-color: #d33 !important; color: #d33 !important; }
     .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
 
-    .dot{
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      display: inline-block;
-      border: 1px solid rgba(0,0,0,.25);
-    }
-
     .authPill{
       font-size: 12px;
       color: #555;
@@ -234,21 +226,6 @@
         </div>
       </div>
 
-      <!-- County Highlights -->
-      <div style="margin-top:10px;">
-        <div class="row" style="margin-bottom:4px;">
-          <span class="dot" style="background:#e31a1c;"></span>
-          <strong style="font-size:13px;">Red</strong>
-        </div>
-        <div class="row" id="countyHighlightControlsRed"></div>
-
-        <div class="row" style="margin:8px 0 4px;">
-          <span class="dot" style="background:#33a02c;"></span>
-          <strong style="font-size:13px;">Green</strong>
-        </div>
-        <div class="row" id="countyHighlightControlsGreen"></div>
-      </div>
-
       <!-- New Location Form -->
       <div id="newLocationPanel" style="margin-top:10px;">
         <div class="row">
@@ -293,7 +270,7 @@
             <select id="nl_permission" class="small">
               <option value="Unknown">Permission: Unknown</option>
               <option value="Required">Permission: Required</option>
-              <option value="Not Required">Not Required</option>
+              <option value="Not Required">Permission: Not Required</option>
             </select>
 
             <select id="nl_entity" class="small">
@@ -369,10 +346,6 @@
     const LOCATIONS = "locations";
     const SECTIONS  = "section_overlays";
 
-    function setStatus(msg){
-      console.log("[Firestore]", msg);
-    }
-
     // ---------------- AUTH ----------------
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
@@ -384,6 +357,10 @@
     let currentUser = null;
     let isMember = false;
     let isAdmin = false;
+
+    function setStatus(msg){
+      console.log("[Firestore]", msg);
+    }
 
     // ----- DOM -----
     const menuWrap = document.getElementById("menuWrap");
@@ -401,9 +378,6 @@
     const permissionFilterEl = document.getElementById("permissionFilter");
     const entityFilterEl = document.getElementById("entityFilter");
     const typeFilterEl = document.getElementById("typeFilter");
-
-    const countyControlsRed = document.getElementById("countyHighlightControlsRed");
-    const countyControlsGreen = document.getElementById("countyHighlightControlsGreen");
 
     const mustLoginNote = document.getElementById("mustLoginNote");
 
@@ -514,7 +488,7 @@
       { position: "topright" }
     ).addTo(map);
 
-    // Locations markers
+    // ---------------- LOCATIONS ----------------
     const markerLayer = L.layerGroup().addTo(map);
     let markers = [];
     let editingId = null;
@@ -616,11 +590,7 @@
       }
     });
 
-    // Filter events
-    teamFilterEl.addEventListener("change", () => {
-      applyFilters();
-      syncCountyHighlightsToTeamFilter();
-    });
+    teamFilterEl.addEventListener("change", () => { applyFilters(); });
     statusFilterEl.addEventListener("change", applyFilters);
     permissionFilterEl.addEventListener("change", applyFilters);
     entityFilterEl.addEventListener("change", applyFilters);
@@ -635,7 +605,6 @@
       typeFilterEl.value = "ALL";
       searchEl.value = "";
       applyFilters();
-      syncCountyHighlightsToTeamFilter();
     });
 
     // Pick coords mode
@@ -664,7 +633,6 @@
       form.reset();
     });
 
-    // Add/edit location
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -690,10 +658,7 @@
       if (!name) return alert("Location name is required.");
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert("Valid latitude and longitude are required.");
 
-      const payload = {
-        name, team, type, status, permission, entity, lat, lng, details,
-        updatedAt: serverTimestamp()
-      };
+      const payload = { name, team, type, status, permission, entity, lat, lng, details, updatedAt: serverTimestamp() };
 
       try {
         if (editingId) {
@@ -714,66 +679,99 @@
       }
     });
 
-    // Real-time listener (locations)
-    setStatus("Connecting to Firestore…");
-    onSnapshot(
-      collection(db, LOCATIONS),
-      (snapshot) => {
-        setStatus(`Connected.\nCollection: ${LOCATIONS}\nDocs loaded: ${snapshot.size}`);
+    onSnapshot(collection(db, LOCATIONS), (snapshot) => {
+      markers = [];
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        const loc = {
+          id: docSnap.id,
+          name: d.name || "(Unnamed)",
+          type: d.type || "Unknown",
+          team: d.team || "Unassigned",
+          status: d.status || "Unknown",
+          permission: d.permission || "Unknown",
+          entity: d.entity || "Unknown",
+          lat: Number(d.lat),
+          lng: Number(d.lng),
+          details: d.details || ""
+        };
+        if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+          markers.push({ loc, marker: makeMarker(loc) });
+        }
+      });
+      applyFilters();
+    });
 
-        markers = [];
-        snapshot.forEach((docSnap) => {
-          const d = docSnap.data();
-          const loc = {
-            id: docSnap.id,
-            name: d.name || "(Unnamed)",
-            type: d.type || "Unknown",
-            team: d.team || "Unassigned",
-            status: d.status || "Unknown",
-            permission: d.permission || "Unknown",
-            entity: d.entity || "Unknown",
-            lat: Number(d.lat),
-            lng: Number(d.lng),
-            details: d.details || ""
-          };
-          if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-            markers.push({ loc, marker: makeMarker(loc) });
-          }
-        });
+    // ---------------- SECTION OVERLAYS (zoom-scale + smooth fade) ----------------
+    const STATUS_COLORS = { uninvestigated: "#ffffff", possible: "#ffeb3b", confirmed: "#33a02c" };
 
-        applyFilters();
-      },
-      (err) => {
-        console.error(err);
-        setStatus("Listener error:\n" + (err?.message || err));
+    const HEX_SHOW_MIN_ZOOM = 14;
+    const HEX_SIZE_AT_ZOOM = 18;
+    const HEX_BASE_PX = 48;
+    const HEX_MIN_PX = 18;
+    const HEX_MAX_PX = 64;
+
+    const HEX_FADE_MS = 220;
+    const HEX_FADE_STEPS = 12;
+    const HEX_MIN_OPACITY = 0.0;
+    const HEX_MAX_OPACITY = 1.0;
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+    function hexSizeForZoom(z){
+      const scale = Math.pow(1.15, z - HEX_SIZE_AT_ZOOM);
+      return Math.round(clamp(HEX_BASE_PX * scale, HEX_MIN_PX, HEX_MAX_PX));
+    }
+    function shouldShowHexesAtZoom(z){ return z >= HEX_SHOW_MIN_ZOOM; }
+
+    function animateOpacity(marker, to, ms = HEX_FADE_MS, steps = HEX_FADE_STEPS) {
+      if (marker._fadeTimer) { clearInterval(marker._fadeTimer); marker._fadeTimer = null; }
+
+      const from = Number(marker.options.opacity ?? 1);
+      const target = Number(to);
+      if (!Number.isFinite(from) || !Number.isFinite(target)) return;
+
+      if (Math.abs(from - target) < 0.01) {
+        marker.setOpacity(target);
+        marker.options.opacity = target;
+        return;
       }
-    );
 
-    // ---------------- SECTION OVERLAYS (Firestore-safe: flat points) ----------------
-    const STATUS_COLORS = {
-      uninvestigated: "#ffffff",
-      possible: "#ffeb3b",
-      confirmed: "#33a02c"
-    };
+      const stepTime = Math.max(16, Math.round(ms / steps));
+      let step = 0;
 
-    function makeHexIcon(numberText, status) {
+      marker._fadeTimer = setInterval(() => {
+        step += 1;
+        const t = step / steps;
+        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        const val = from + (target - from) * eased;
+        marker.setOpacity(val);
+        marker.options.opacity = val;
+
+        if (step >= steps) {
+          clearInterval(marker._fadeTimer);
+          marker._fadeTimer = null;
+          marker.setOpacity(target);
+          marker.options.opacity = target;
+        }
+      }, stepTime);
+    }
+
+    function makeHexIcon(numberText, status, sizePx) {
       const fill = STATUS_COLORS[status] || "#ffffff";
       const text = String(numberText ?? "").trim();
+      const fontSize = Math.round(sizePx * 0.75);
 
       const svg = `
-        <svg width="48" height="48" viewBox="0 0 100 100">
+        <svg width="${sizePx}" height="${sizePx}" viewBox="0 0 100 100">
           <polygon points="50,5 90,27 90,73 50,95 10,73 10,27"
             fill="${fill}" stroke="#000" stroke-width="6" />
           <text x="50" y="60" text-anchor="middle"
-            font-size="36" font-family="Arial" font-weight="700" fill="#000">${text}</text>
+            font-size="${fontSize}" font-family="Arial" font-weight="700" fill="#000">${text}</text>
         </svg>`;
 
-      return L.divIcon({
-        className: "",
-        html: svg,
-        iconSize: [48, 48],
-        iconAnchor: [24, 24]
-      });
+      const half = Math.round(sizePx / 2);
+      return L.divIcon({ className: "", html: svg, iconSize: [sizePx, sizePx], iconAnchor: [half, half] });
     }
 
     function centroidOfLatLngs(latlngs) {
@@ -783,27 +781,14 @@
       (ring || []).forEach(p => { sumLat += p.lat; sumLng += p.lng; });
       return L.latLng(sumLat / n, sumLng / n);
     }
+    function cycleStatus(s) { return s === "uninvestigated" ? "possible" : s === "possible" ? "confirmed" : "uninvestigated"; }
+    function sectionPolyStyle() { return { color: "#ffff00", weight: 5, fillOpacity: 0 }; }
 
-    function cycleStatus(s) {
-      if (s === "uninvestigated") return "possible";
-      if (s === "possible") return "confirmed";
-      return "uninvestigated";
-    }
-
-    function sectionPolyStyle() {
-      return { color: "#ffff00", weight: 5, fillOpacity: 0 };
-    }
-
-    // ✅ Firestore-safe geometry: flat array only
-    // points: [{ring:0,i:0,lat,lng}, ...]
     function layerToPoints(layer) {
       const ll = layer.getLatLngs();
-
       let rings = ll;
       if (!Array.isArray(rings)) rings = [];
       if (!Array.isArray(rings[0])) rings = [rings];
-
-      // If extra nesting sneaks in (rare), flatten one level
       if (Array.isArray(rings[0]) && Array.isArray(rings[0][0]) && rings[0][0]?.lat === undefined) {
         rings = rings.map(r => (Array.isArray(r[0]) ? r[0] : r));
       }
@@ -813,12 +798,9 @@
         (ring || []).forEach((p, i) => {
           const lat = Number(p?.lat);
           const lng = Number(p?.lng);
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            points.push({ ring: ringIdx, i, lat, lng });
-          }
+          if (Number.isFinite(lat) && Number.isFinite(lng)) points.push({ ring: ringIdx, i, lat, lng });
         });
       });
-
       return points;
     }
 
@@ -827,10 +809,7 @@
 
       const byRing = new Map();
       for (const pt of points) {
-        const ring = Number(pt.ring);
-        const i = Number(pt.i);
-        const lat = Number(pt.lat);
-        const lng = Number(pt.lng);
+        const ring = Number(pt.ring), i = Number(pt.i), lat = Number(pt.lat), lng = Number(pt.lng);
         if (!Number.isFinite(ring) || !Number.isFinite(i) || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
         if (!byRing.has(ring)) byRing.set(ring, []);
         byRing.get(ring).push({ i, lat, lng });
@@ -838,11 +817,8 @@
 
       const ringKeys = Array.from(byRing.keys()).sort((a,b) => a - b);
       const rings = ringKeys.map(rk =>
-        byRing.get(rk)
-          .sort((a,b) => a.i - b.i)
-          .map(p => L.latLng(p.lat, p.lng))
+        byRing.get(rk).sort((a,b) => a.i - b.i).map(p => L.latLng(p.lat, p.lng))
       );
-
       return rings.length ? rings : null;
     }
 
@@ -856,23 +832,13 @@
         if (!drawControl) {
           drawControl = new L.Control.Draw({
             position: "topright",
-            draw: {
-              polygon: true,
-              rectangle: true,
-              polyline: false,
-              circle: false,
-              marker: false,
-              circlemarker: false
-            },
+            draw: { polygon: true, rectangle: true, polyline: false, circle: false, marker: false, circlemarker: false },
             edit: { featureGroup: sectionPolys, remove: true }
           });
           map.addControl(drawControl);
         }
       } else {
-        if (drawControl) {
-          map.removeControl(drawControl);
-          drawControl = null;
-        }
+        if (drawControl) { map.removeControl(drawControl); drawControl = null; }
       }
     }
 
@@ -910,7 +876,21 @@
       const v = sectionMapFilter.value;
       if (isAdmin && v && v !== "ALL") sectionMapName.value = v;
       applySectionFilter();
+      refreshAllHexIconsForZoom();
     });
+
+    function refreshAllHexIconsForZoom(){
+      const z = map.getZoom();
+      const shouldShow = shouldShowHexesAtZoom(z);
+      const sizePx = hexSizeForZoom(z);
+      const targetOpacity = shouldShow ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
+
+      for (const rec of sectionById.values()) {
+        rec.hex.setIcon(makeHexIcon(rec.number, rec.status, sizePx));
+        animateOpacity(rec.hex, targetOpacity);
+      }
+    }
+    map.on("zoomend", refreshAllHexIconsForZoom);
 
     map.on(L.Draw.Event.CREATED, async (e) => {
       if (!isAdmin) return;
@@ -920,24 +900,17 @@
       sectionPolys.addLayer(layer);
 
       const mapName = (sectionMapName.value || "").trim();
-      if (!mapName) {
-        alert("Enter a Map name in Section Overlays first (ex: Crown Hill Cemetery).");
-        sectionPolys.removeLayer(layer);
-        return;
-      }
+      if (!mapName) { alert("Enter a Map name first (ex: Crown Hill Cemetery)."); sectionPolys.removeLayer(layer); return; }
 
       const numRaw = (sectionNextNumber.value || "").trim();
       const number = numRaw ? String(numRaw) : "1";
       const status = sectionDefaultStatus.value || "uninvestigated";
 
-      const points = layerToPoints(layer); // ✅ flat array only
+      const points = layerToPoints(layer);
 
       try {
         const docRef = await addDoc(collection(db, SECTIONS), {
-          mapName,
-          number,
-          status,
-          points, // ✅ no nested arrays
+          mapName, number, status, points,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser?.email || ""
@@ -965,18 +938,11 @@
         if (!id) return;
 
         const points = layerToPoints(layer);
-        updates.push(updateDoc(doc(db, SECTIONS, id), {
-          points,
-          updatedAt: serverTimestamp()
-        }));
+        updates.push(updateDoc(doc(db, SECTIONS, id), { points, updatedAt: serverTimestamp() }));
       });
 
-      try {
-        await Promise.all(updates);
-      } catch (err) {
-        console.error(err);
-        alert("Update failed: " + (err?.message || err));
-      }
+      try { await Promise.all(updates); }
+      catch (err) { console.error(err); alert("Update failed: " + (err?.message || err)); }
     });
 
     map.on(L.Draw.Event.DELETED, async (e) => {
@@ -991,12 +957,8 @@
         deletes.push(deleteDoc(doc(db, SECTIONS, id)));
       });
 
-      try {
-        await Promise.all(deletes);
-      } catch (err) {
-        console.error(err);
-        alert("Delete failed: " + (err?.message || err));
-      }
+      try { await Promise.all(deletes); }
+      catch (err) { console.error(err); alert("Delete failed: " + (err?.message || err)); }
     });
 
     function attachSectionInteractions(id, polyLayer, hexMarker) {
@@ -1006,15 +968,10 @@
 
         if (isAdmin) {
           const next = cycleStatus(rec.status);
-          try {
-            await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() });
-          } catch (err) {
-            console.error(err);
-            alert("Status update failed: " + (err?.message || err));
-          }
+          try { await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() }); }
+          catch (err) { console.error(err); alert("Status update failed: " + (err?.message || err)); }
           return;
         }
-
         alert(`${rec.mapName}\nSection: ${rec.number}\nStatus: ${rec.status}`);
       });
 
@@ -1047,12 +1004,8 @@
         if (!rec) return;
 
         const next = cycleStatus(rec.status);
-        try {
-          await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() });
-        } catch (err) {
-          console.error(err);
-          alert("Status update failed: " + (err?.message || err));
-        }
+        try { await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() }); }
+        catch (err) { console.error(err); alert("Status update failed: " + (err?.message || err)); }
       });
     }
 
@@ -1075,10 +1028,16 @@
       polyLayer.options._sectionId = id;
 
       const c = centroidOfLatLngs(polyLayer.getLatLngs());
+
+      const z = map.getZoom();
+      const sizePx = hexSizeForZoom(z);
+      const startOpacity = shouldShowHexesAtZoom(z) ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
+
       const hex = L.marker(c, {
-        icon: makeHexIcon(number, status),
+        icon: makeHexIcon(number, status, sizePx),
         interactive: true,
-        zIndexOffset: 1000
+        zIndexOffset: 1000,
+        opacity: startOpacity
       });
 
       sectionById.set(id, { poly: polyLayer, hex, mapName, number, status });
@@ -1117,181 +1076,8 @@
       });
 
       applySectionFilter();
+      refreshAllHexIconsForZoom();
     });
-
-    // ---------------- COUNTY HIGHLIGHTS ----------------
-    const RED_COUNTIES = ["Tulsa","Wagoner","Rogers","Washington","Osage"];
-    const GREEN_COUNTIES = ["Creek","Okmulgee","Muskogee","McIntosh","Okfuskee"];
-
-    const RED_BASE = "#e31a1c";
-    const GREEN_BASE = "#33a02c";
-
-    const redSet = new Set(RED_COUNTIES);
-    const greenSet = new Set(GREEN_COUNTIES);
-
-    const countyLayersByName = {};
-    const countyBaseStyleByName = {};
-    const highlightState = {};
-    const checkboxByCounty = {};
-
-    RED_COUNTIES.forEach(c => highlightState[c] = true);
-    GREEN_COUNTIES.forEach(c => highlightState[c] = true);
-
-    function hexToRgb(hex){
-      const h = (hex || "").replace("#", "").trim();
-      if (h.length !== 6) return null;
-      const n = parseInt(h, 16);
-      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
-    }
-    function rgbToHex({r,g,b}){
-      const toHex = (v) => v.toString(16).padStart(2, "0");
-      return "#" + toHex(r) + toHex(g) + toHex(b);
-    }
-    function brighten(hex, amt = 0.45){
-      const rgb = hexToRgb(hex);
-      if (!rgb) return hex;
-      const mix = (c) => Math.round(c + (255 - c) * amt);
-      return rgbToHex({ r: mix(rgb.r), g: mix(rgb.g), b: mix(rgb.b) });
-    }
-    function darken(hex, amt = 0.25){
-      const rgb = hexToRgb(hex);
-      if (!rgb) return hex;
-      const mix = (c) => Math.round(c * (1 - amt));
-      return rgbToHex({ r: mix(rgb.r), g: mix(rgb.g), b: mix(rgb.b) });
-    }
-
-    function countyGroup(name){
-      if (redSet.has(name)) return "red";
-      if (greenSet.has(name)) return "green";
-      return null;
-    }
-
-    function baseCountyStyle() {
-      return { color: "#000", weight: 2, fillOpacity: 0.08, fillColor: "#ffffff" };
-    }
-
-    function highlightStyleForGroup(group){
-      const base = group === "red" ? RED_BASE : GREEN_BASE;
-      return {
-        color: darken(base, 0.30),
-        weight: 4,
-        fillOpacity: 0.60,
-        fillColor: brighten(base, 0.45)
-      };
-    }
-
-    function setCountyHighlighted(countyName, on){
-      highlightState[countyName] = !!on;
-
-      const layer = countyLayersByName[countyName];
-      const base = countyBaseStyleByName[countyName];
-      if (!layer || !base) return;
-
-      if (on) {
-        const grp = countyGroup(countyName);
-        if (grp) {
-          layer.setStyle({ ...base, ...highlightStyleForGroup(grp) });
-        } else {
-          layer.setStyle({ color: "#000", weight: 4, fillOpacity: 0.18, fillColor: "#ffffff" });
-        }
-        layer.bringToFront();
-      } else {
-        layer.setStyle(base);
-      }
-    }
-
-    function addCountyCheckbox(containerEl, countyName, colorHex){
-      const id = `hl_${countyName.replace(/\s+/g, "_")}`;
-
-      const wrap = document.createElement("label");
-      wrap.style.display = "inline-flex";
-      wrap.style.alignItems = "center";
-      wrap.style.gap = "6px";
-      wrap.style.marginRight = "10px";
-      wrap.style.cursor = "pointer";
-      wrap.style.userSelect = "none";
-      wrap.style.fontSize = "13px";
-
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.id = id;
-      cb.checked = !!highlightState[countyName];
-      checkboxByCounty[countyName] = cb;
-
-      cb.addEventListener("change", () => setCountyHighlighted(countyName, cb.checked));
-
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      dot.style.background = colorHex;
-
-      const text = document.createElement("span");
-      text.textContent = countyName;
-
-      wrap.appendChild(cb);
-      wrap.appendChild(dot);
-      wrap.appendChild(text);
-      containerEl.appendChild(wrap);
-    }
-
-    function buildCountyToggleUI(){
-      if (countyControlsRed) countyControlsRed.innerHTML = "";
-      if (countyControlsGreen) countyControlsGreen.innerHTML = "";
-      RED_COUNTIES.forEach(name => addCountyCheckbox(countyControlsRed, name, RED_BASE));
-      GREEN_COUNTIES.forEach(name => addCountyCheckbox(countyControlsGreen, name, GREEN_BASE));
-    }
-
-    function setGroupVisibility({ redOn, greenOn }) {
-      RED_COUNTIES.forEach(c => {
-        highlightState[c] = !!redOn;
-        if (checkboxByCounty[c]) checkboxByCounty[c].checked = !!redOn;
-        setCountyHighlighted(c, !!redOn);
-      });
-      GREEN_COUNTIES.forEach(c => {
-        highlightState[c] = !!greenOn;
-        if (checkboxByCounty[c]) checkboxByCounty[c].checked = !!greenOn;
-        setCountyHighlighted(c, !!greenOn);
-      });
-    }
-
-    function syncCountyHighlightsToTeamFilter(){
-      const v = teamFilterEl.value;
-
-      if (v === "Tulsa Team") {
-        setGroupVisibility({ redOn: true, greenOn: false });
-      } else if (v === "Okmulgee Team") {
-        setGroupVisibility({ redOn: false, greenOn: true });
-      } else if (v === "ALL") {
-        setGroupVisibility({ redOn: true, greenOn: true });
-      } else {
-        setGroupVisibility({ redOn: false, greenOn: false });
-      }
-    }
-
-    buildCountyToggleUI();
-
-    fetch("./data/counties_ok.geojson")
-      .then(res => {
-        if (!res.ok) throw new Error("Counties file not found: ./data/counties_ok.geojson");
-        return res.json();
-      })
-      .then(counties => {
-        L.geoJSON(counties, {
-          style: () => baseCountyStyle(),
-          onEachFeature: (feature, layer) => {
-            const name = feature?.properties?.NAME;
-            if (!name) return;
-
-            countyLayersByName[name] = layer;
-            countyBaseStyleByName[name] = baseCountyStyle();
-
-            layer.bindTooltip(`${name} County`);
-            if (highlightState[name]) setCountyHighlighted(name, true);
-          }
-        }).addTo(map);
-
-        syncCountyHighlightsToTeamFilter();
-      })
-      .catch(err => console.error("GeoJSON load error:", err));
   </script>
 
   <!--
