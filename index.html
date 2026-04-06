@@ -5,13 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Oklahoma Investigation Map</title>
 
-  <link rel="styleshee<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Oklahoma Investigation Map</title>
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
@@ -333,83 +326,19 @@
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
     const OKLAHOMA_COUNTIES = [
-      "Adair County",
-      "Alfalfa County",
-      "Atoka County",
-      "Beaver County",
-      "Beckham County",
-      "Blaine County",
-      "Bryan County",
-      "Caddo County",
-      "Canadian County",
-      "Carter County",
-      "Cherokee County",
-      "Choctaw County",
-      "Cimarron County",
-      "Cleveland County",
-      "Coal County",
-      "Comanche County",
-      "Cotton County",
-      "Craig County",
-      "Creek County",
-      "Custer County",
-      "Delaware County",
-      "Dewey County",
-      "Ellis County",
-      "Garfield County",
-      "Garvin County",
-      "Grady County",
-      "Grant County",
-      "Greer County",
-      "Harmon County",
-      "Harper County",
-      "Haskell County",
-      "Hughes County",
-      "Jackson County",
-      "Jefferson County",
-      "Johnston County",
-      "Kay County",
-      "Kingfisher County",
-      "Kiowa County",
-      "Latimer County",
-      "Le Flore County",
-      "Lincoln County",
-      "Logan County",
-      "Love County",
-      "Major County",
-      "Marshall County",
-      "Mayes County",
-      "McClain County",
-      "McCurtain County",
-      "McIntosh County",
-      "Murray County",
-      "Muskogee County",
-      "Noble County",
-      "Nowata County",
-      "Okfuskee County",
-      "Oklahoma County",
-      "Okmulgee County",
-      "Osage County",
-      "Ottawa County",
-      "Pawnee County",
-      "Payne County",
-      "Pittsburg County",
-      "Pontotoc County",
-      "Pottawatomie County",
-      "Pushmataha County",
-      "Roger Mills County",
-      "Rogers County",
-      "Seminole County",
-      "Sequoyah County",
-      "Stephens County",
-      "Texas County",
-      "Tillman County",
-      "Tulsa County",
-      "Wagoner County",
-      "Washington County",
-      "Washita County",
-      "Woods County",
-      "Woodward County"
+      "Adair County","Alfalfa County","Atoka County","Beaver County","Beckham County","Blaine County",
+      "Bryan County","Caddo County","Canadian County","Carter County","Cherokee County","Choctaw County",
+      "Cimarron County","Cleveland County","Coal County","Comanche County","Cotton County","Craig County",
+      "Creek County","Custer County","Delaware County","Dewey County","Ellis County","Garfield County",
+      "Garvin County","Grady County","Grant County","Greer County","Harmon County","Harper County",
+      "Haskell County","Hughes County","Jackson County","Jefferson County","Johnston County","Kay County",
+      "Kingfisher County","Kiowa County","Latimer County","Le Flore County","Lincoln County","Logan County",
+      "Love County","Major County","Marshall County","Mayes County","McClain County","McCurtain County",
+      "McIntosh County","Murray County","Muskogee County","Noble County","Nowata County","Okfuskee County",
+      "Oklahoma County","Okmulgee County","Osage County","Ottawa County","Pawnee County","Payne County",
+      "Pittsburg County","Pontotoc County","Pottawatomie County","Pushmataha County","Roger Mills County",
+      "Rogers County","Seminole County","Sequoyah County","Stephens County","Texas County","Tillman County",
+      "Tulsa County","Wagoner County","Washington County","Washita County","Woods County","Woodward County"
     ];
 
     function populateCountySelect(selectEl, includeAll = false, includeUnassigned = false) {
@@ -439,20 +368,20 @@
 
     // ---------------- FIREBASE CONFIG ----------------
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
+      authDomain: "oklahoma-investigation-map.firebaseapp.com",
+      projectId: "oklahoma-investigation-map",
+      storageBucket: "oklahoma-investigation-map.firebasestorage.app",
+      messagingSenderId: "809288424180",
+      appId: "1:809288424180:web:6b6989762ea7db99151ca1"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    console.log("Firebase initialized");
 
-    // Collections
     const LOCATIONS = "locations";
-    const SECTIONS  = "section_overlays";
+    const SECTIONS = "section_overlays";
 
     // ---------------- AUTH ----------------
     const auth = getAuth(app);
@@ -502,7 +431,6 @@
     const pickBtn = document.getElementById("pickBtn");
     const pickHint = document.getElementById("pickHint");
 
-    // Section overlay DOM
     const sectionMapFilter = document.getElementById("sectionMapFilter");
     const sectionAdminTools = document.getElementById("sectionAdminTools");
     const sectionMapName = document.getElementById("sectionMapName");
@@ -512,7 +440,7 @@
     populateCountySelect(countyFilterEl, true, true);
     populateCountySelect(nl_county, false, true);
 
-    function setMenuCollapsed(collapsed){
+    function setMenuCollapsed(collapsed) {
       menuWrap.classList.toggle("collapsed", collapsed);
       menuToggle.textContent = collapsed ? "Open" : "Close";
     }
@@ -655,8 +583,7 @@
 
     map.on("popupopen", (e) => {
       const popupEl = e.popup.getElement();
-      if (!popupEl) return;
-      if (!isAdmin) return;
+      if (!popupEl || !isAdmin) return;
 
       const editBtn = popupEl.querySelector(".editPinBtn");
       const deleteBtn = popupEl.querySelector(".deletePinBtn");
@@ -770,7 +697,9 @@
       const details = nl_details.value.trim();
 
       if (!name) return alert("Location name is required.");
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert("Valid latitude and longitude are required.");
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        return alert("Valid latitude and longitude are required.");
+      }
 
       const payload = {
         name,
@@ -807,34 +736,47 @@
       }
     });
 
-    onSnapshot(collection(db, LOCATIONS), (snapshot) => {
-      markers = [];
+    onSnapshot(
+      collection(db, LOCATIONS),
+      (snapshot) => {
+        console.log("Firestore connected. Docs found:", snapshot.size);
 
-      snapshot.forEach((docSnap) => {
-        const d = docSnap.data();
+        markers = [];
 
-        const loc = {
-          id: docSnap.id,
-          name: d.name || "(Unnamed)",
-          type: d.type || "Unknown",
-          county: d.county || d.team || "Unassigned",
-          status: d.status || "Unknown",
-          permission: d.permission || "Unknown",
-          entity: d.entity || "Unknown",
-          lat: Number(d.lat),
-          lng: Number(d.lng),
-          details: d.details || ""
-        };
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          console.log("Location doc:", docSnap.id, d);
 
-        if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-          markers.push({ loc, marker: makeMarker(loc) });
-        }
-      });
+          const loc = {
+            id: docSnap.id,
+            name: d.name || "(Unnamed)",
+            type: d.type || "Unknown",
+            county: d.county || d.team || "Unassigned",
+            status: d.status || "Unknown",
+            permission: d.permission || "Unknown",
+            entity: d.entity || "Unknown",
+            lat: Number(d.lat),
+            lng: Number(d.lng),
+            details: d.details || ""
+          };
 
-      applyFilters();
-    });
+          if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+            markers.push({ loc, marker: makeMarker(loc) });
+          } else {
+            console.warn("Invalid lat/lng for doc:", docSnap.id, d.lat, d.lng);
+          }
+        });
 
-    // ---------------- SECTION OVERLAYS (zoom-scale + smooth fade) ----------------
+        console.log("Markers loaded:", markers.length);
+        applyFilters();
+      },
+      (error) => {
+        console.error("Firestore onSnapshot error:", error);
+        alert("Firestore error: " + error.message);
+      }
+    );
+
+    // ---------------- SECTION OVERLAYS ----------------
     const STATUS_COLORS = { uninvestigated: "#ffffff", possible: "#ffeb3b", confirmed: "#33a02c" };
 
     const HEX_SHOW_MIN_ZOOM = 14;
@@ -850,12 +792,14 @@
 
     function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
-    function hexSizeForZoom(z){
+    function hexSizeForZoom(z) {
       const scale = Math.pow(1.15, z - HEX_SIZE_AT_ZOOM);
       return Math.round(clamp(HEX_BASE_PX * scale, HEX_MIN_PX, HEX_MAX_PX));
     }
 
-    function shouldShowHexesAtZoom(z){ return z >= HEX_SHOW_MIN_ZOOM; }
+    function shouldShowHexesAtZoom(z) {
+      return z >= HEX_SHOW_MIN_ZOOM;
+    }
 
     function animateOpacity(marker, to, ms = HEX_FADE_MS, steps = HEX_FADE_STEPS) {
       if (marker._fadeTimer) {
@@ -1034,7 +978,7 @@
       refreshAllHexIconsForZoom();
     });
 
-    function refreshAllHexIconsForZoom(){
+    function refreshAllHexIconsForZoom() {
       const z = map.getZoom();
       const shouldShow = shouldShowHexesAtZoom(z);
       const sizePx = hexSizeForZoom(z);
@@ -1256,1081 +1200,8 @@
 
       applySectionFilter();
       refreshAllHexIconsForZoom();
-    });
-  </script>
-</body>
-</html>t" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-
-  <style>
-    body { margin: 0; }
-    #map { height: 100vh; width: 100%; }
-
-    .panel{
-      position: absolute;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.2);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      width: 440px;
-      max-width: calc(100vw - 20px);
-    }
-
-    #menuWrap{
-      top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #menuHeader{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    #menuTitle{
-      font-weight: 700;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    #menuToggle{
-      padding: 6px 10px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .menuBody{ display: block; }
-    .collapsed .menuBody{ display: none; }
-
-    .row{
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-
-    input, select, button, textarea{
-      padding: 6px 8px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #fff;
-      font-family: inherit;
-    }
-    textarea { width: 100%; min-height: 60px; resize: vertical; }
-    #search{ flex: 1; min-width: 200px; }
-    label { font-size: 13px; }
-
-    .hint{ font-size: 12px; color: #555; margin-top: 4px; line-height: 1.25; }
-    .small{ width: 130px; }
-    .grow{ flex: 1; min-width: 160px; }
-    .btnRow{ display: flex; gap: 8px; flex-wrap: wrap; }
-    .danger{ border-color: #d33 !important; color: #d33 !important; }
-    .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
-
-    .authPill{
-      font-size: 12px;
-      color: #555;
-      border: 1px solid #ddd;
-      padding: 4px 8px;
-      border-radius: 999px;
-      max-width: 220px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .adminBadge{
-      font-size: 11px;
-      font-weight: 700;
-      color: #0a5;
-      border: 1px solid #0a5;
-      padding: 2px 6px;
-      border-radius: 999px;
-    }
-
-    @media (max-width: 600px){
-      .panel{ width: calc(100vw - 20px); }
-      .authPill{ max-width: 140px; }
-    }
-  </style>
-</head>
-
-<body>
-  <div id="menuWrap" class="panel collapsed">
-    <div id="menuHeader">
-      <div id="menuTitle">Investigation Menu</div>
-
-      <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
-        <span id="adminBadge" class="adminBadge" style="display:none;">ADMIN</span>
-        <span id="authState" class="authPill">Not signed in</span>
-        <button id="loginBtn" type="button">Sign in</button>
-        <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
-        <button id="menuToggle" type="button">Open</button>
-      </div>
-    </div>
-
-    <div class="menuBody">
-      <!-- Filters -->
-      <div id="controls">
-        <div class="row">
-          <input id="search" type="text" placeholder="Search location name..." />
-          <button id="clearBtn" type="button">Clear</button>
-        </div>
-
-        <div class="row">
-          <label for="teamFilter">Team:</label>
-          <select id="teamFilter">
-            <option value="ALL">All</option>
-            <option value="Okmulgee Team">Okmulgee Team</option>
-            <option value="Tulsa Team">Tulsa Team</option>
-            <option value="Unassigned">Unassigned</option>
-          </select>
-
-          <label for="statusFilter">Status:</label>
-          <select id="statusFilter">
-            <option value="ALL">All</option>
-            <option value="Active">Active</option>
-            <option value="Closed">Closed</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <label for="permissionFilter">Permission:</label>
-          <select id="permissionFilter">
-            <option value="ALL">All</option>
-            <option value="Required">Required</option>
-            <option value="Not Required">Not Required</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-
-          <label for="entityFilter">Entity:</label>
-          <select id="entityFilter">
-            <option value="ALL">All</option>
-            <option value="Ghost">Ghost</option>
-            <option value="Demon">Demon</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <label for="typeFilter">Type:</label>
-          <select id="typeFilter">
-            <option value="ALL">All</option>
-            <option value="Cemetery">Cemetery</option>
-            <option value="Structure (In Use)">Structure (In Use)</option>
-            <option value="Structure (Abandoned)">Structure (Abandoned)</option>
-            <option value="Park">Park</option>
-            <option value="Lake">Lake</option>
-            <option value="Road/Bridge">Road/Bridge</option>
-            <option value="Other">Other</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Section Overlays -->
-      <div style="margin-top:10px;">
-        <div class="row" style="margin-bottom:2px;">
-          <strong>Section Overlays</strong>
-        </div>
-
-        <div class="row">
-          <label for="sectionMapFilter">View:</label>
-          <select id="sectionMapFilter" class="grow">
-            <option value="ALL">All section maps</option>
-          </select>
-        </div>
-
-        <div id="sectionAdminTools" style="display:none;">
-          <div class="row">
-            <input id="sectionMapName" class="grow" type="text" placeholder="Map name for NEW sections (ex: Crown Hill Cemetery)" />
-            <input id="sectionNextNumber" class="small" type="number" min="1" step="1" placeholder="Next #" />
-          </div>
-
-          <div class="row">
-            <label for="sectionDefaultStatus">Default:</label>
-            <select id="sectionDefaultStatus" class="small">
-              <option value="uninvestigated">White (Uninvestigated)</option>
-              <option value="possible">Yellow (Possible)</option>
-              <option value="confirmed">Green (Confirmed)</option>
-            </select>
-          </div>
-
-          <div class="hint">
-            Admin only: draw rectangles/polygons using the toolbar (top-right).
-            Click a section/hex to cycle status.
-            <br>Right-click a section to rename map / change its number.
-          </div>
-        </div>
-
-        <div class="hint">
-          Status colors: White = uninvestigated, Yellow = possible activity, Green = confirmed activity.
-        </div>
-      </div>
-
-      <!-- New Location Form -->
-      <div id="newLocationPanel" style="margin-top:10px;">
-        <div class="row">
-          <strong>New Location</strong>
-          <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
-        </div>
-
-        <div id="mustLoginNote" class="hint" style="display:none;">
-          Sign in with your @prcofok.org Google account to add locations.
-        </div>
-
-        <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
-
-        <form id="newLocationForm">
-          <div class="row">
-            <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
-            <select id="nl_team" class="small">
-              <option value="Unassigned">Unassigned</option>
-              <option value="Okmulgee Team">Okmulgee Team</option>
-              <option value="Tulsa Team">Tulsa Team</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <select id="nl_type" class="small">
-              <option value="Unknown">Type: Unknown</option>
-              <option value="Cemetery">Type: Cemetery</option>
-              <option value="Structure (In Use)">Structure (In Use)</option>
-              <option value="Structure (Abandoned)">Structure (Abandoned)</option>
-              <option value="Park">Type: Park</option>
-              <option value="Lake">Type: Lake</option>
-              <option value="Road/Bridge">Type: Road/Bridge</option>
-              <option value="Other">Type: Other</option>
-            </select>
-
-            <select id="nl_status" class="small">
-              <option value="Active">Active</option>
-              <option value="Closed">Closed</option>
-              <option value="Unknown">Unknown</option>
-            </select>
-
-            <select id="nl_permission" class="small">
-              <option value="Unknown">Permission: Unknown</option>
-              <option value="Required">Permission: Required</option>
-              <option value="Not Required">Permission: Not Required</option>
-            </select>
-
-            <select id="nl_entity" class="small">
-              <option value="Unknown">Entity: Unknown</option>
-              <option value="Ghost">Entity: Ghost</option>
-              <option value="Demon">Entity: Demon</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <input id="nl_lat" class="small" type="number" step="any" placeholder="Lat" required />
-            <input id="nl_lng" class="small" type="number" step="any" placeholder="Lng" required />
-            <button id="pickBtn" type="button">Pick from map</button>
-          </div>
-
-          <div class="row">
-            <textarea id="nl_details" placeholder="Details / notes (optional)"></textarea>
-          </div>
-
-          <div class="btnRow">
-            <button id="submitBtn" type="submit">Add Location</button>
-            <button id="cancelEditBtn" type="button" style="display:none;">Cancel Edit</button>
-          </div>
-
-          <div id="pickHint" class="hint" style="display:none;">
-            Click the map to set coordinates. Press Esc to cancel.
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <div id="map"></div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      onSnapshot,
-      doc,
-      updateDoc,
-      deleteDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-    import {
-      getAuth,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-
-    // ---------------- FIREBASE CONFIG ----------------
-    const firebaseConfig = {
-      apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
-      authDomain: "oklahoma-investigation-map.firebaseapp.com",
-      projectId: "oklahoma-investigation-map",
-      storageBucket: "oklahoma-investigation-map.firebasestorage.app",
-      messagingSenderId: "809288424180",
-      appId: "1:809288424180:web:6b6989762ea7db99151ca1"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Collections
-    const LOCATIONS = "locations";
-    const SECTIONS  = "section_overlays";
-
-    // ---------------- AUTH ----------------
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ hd: "prcofok.org" });
-
-    const ALLOWED_DOMAIN = "@prcofok.org";
-    const ADMIN_EMAILS = new Set(["fclegg@prcofok.org"]);
-
-    let currentUser = null;
-    let isMember = false;
-    let isAdmin = false;
-
-    function setStatus(msg){
-      console.log("[Firestore]", msg);
-    }
-
-    // ----- DOM -----
-    const menuWrap = document.getElementById("menuWrap");
-    const menuToggle = document.getElementById("menuToggle");
-
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const authStateEl = document.getElementById("authState");
-    const adminBadgeEl = document.getElementById("adminBadge");
-
-    const searchEl = document.getElementById("search");
-    const clearBtn = document.getElementById("clearBtn");
-    const teamFilterEl = document.getElementById("teamFilter");
-    const statusFilterEl = document.getElementById("statusFilter");
-    const permissionFilterEl = document.getElementById("permissionFilter");
-    const entityFilterEl = document.getElementById("entityFilter");
-    const typeFilterEl = document.getElementById("typeFilter");
-
-    const mustLoginNote = document.getElementById("mustLoginNote");
-
-    const editModeBanner = document.getElementById("editModeBanner");
-    const cancelEditBtn = document.getElementById("cancelEditBtn");
-    const submitBtn = document.getElementById("submitBtn");
-
-    const form = document.getElementById("newLocationForm");
-    const nl_name = document.getElementById("nl_name");
-    const nl_team = document.getElementById("nl_team");
-    const nl_type = document.getElementById("nl_type");
-    const nl_status = document.getElementById("nl_status");
-    const nl_permission = document.getElementById("nl_permission");
-    const nl_entity = document.getElementById("nl_entity");
-    const nl_lat = document.getElementById("nl_lat");
-    const nl_lng = document.getElementById("nl_lng");
-    const nl_details = document.getElementById("nl_details");
-    const pickBtn = document.getElementById("pickBtn");
-    const pickHint = document.getElementById("pickHint");
-
-    // Section overlay DOM
-    const sectionMapFilter = document.getElementById("sectionMapFilter");
-    const sectionAdminTools = document.getElementById("sectionAdminTools");
-    const sectionMapName = document.getElementById("sectionMapName");
-    const sectionNextNumber = document.getElementById("sectionNextNumber");
-    const sectionDefaultStatus = document.getElementById("sectionDefaultStatus");
-
-    function setMenuCollapsed(collapsed){
-      menuWrap.classList.toggle("collapsed", collapsed);
-      menuToggle.textContent = collapsed ? "Open" : "Close";
-    }
-    menuToggle.addEventListener("click", () => {
-      const collapsed = menuWrap.classList.contains("collapsed");
-      setMenuCollapsed(!collapsed);
-    });
-    setMenuCollapsed(window.matchMedia("(max-width: 600px)").matches);
-
-    function refreshAuthUI() {
-      if (!currentUser) {
-        authStateEl.textContent = "Not signed in";
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-        adminBadgeEl.style.display = "none";
-        sectionAdminTools.style.display = "none";
-        mustLoginNote.style.display = "block";
-        return;
-      }
-
-      authStateEl.textContent = currentUser.email || "Signed in";
-      loginBtn.style.display = "none";
-      logoutBtn.style.display = "inline-block";
-      adminBadgeEl.style.display = isAdmin ? "inline-block" : "none";
-      sectionAdminTools.style.display = isAdmin ? "block" : "none";
-      mustLoginNote.style.display = isMember ? "none" : "block";
-    }
-
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const res = await signInWithPopup(auth, provider);
-        const email = (res.user?.email || "").toLowerCase();
-        if (!email.endsWith(ALLOWED_DOMAIN)) {
-          await signOut(auth);
-          alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Sign-in failed: " + (err?.message || err));
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-
-      const email = (user?.email || "").toLowerCase();
-      isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
-      isAdmin = !!user && ADMIN_EMAILS.has(email);
-
-      refreshAuthUI();
-      setSectionEditingEnabled(isAdmin);
-      applyFilters();
-    });
-
-    // ---------------- MAP ----------------
-    const map = L.map('map').setView([35.4676, -97.5164], 7);
-
-    const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
-    });
-
-    const satellite = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      {
-        maxZoom: 19,
-        attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-      }
-    );
-
-    streets.addTo(map);
-
-    L.control.layers(
-      { Streets: streets, Satellite: satellite },
-      null,
-      { position: "topright" }
-    ).addTo(map);
-
-    // ---------------- LOCATIONS ----------------
-    const markerLayer = L.layerGroup().addTo(map);
-    let markers = [];
-    let editingId = null;
-
-    function setEditMode(idOrNull) {
-      editingId = idOrNull;
-      const on = !!editingId;
-      editModeBanner.style.display = on ? "block" : "none";
-      cancelEditBtn.style.display = on ? "inline-block" : "none";
-      submitBtn.textContent = on ? "Update Location" : "Add Location";
-    }
-
-    function makeMarker(loc) {
-      const actions = isAdmin ? `
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" class="editPinBtn" data-id="${loc.id}">Edit</button>
-          <button type="button" class="deletePinBtn danger" data-id="${loc.id}">Delete</button>
-        </div>` : "";
-
-      return L.marker([loc.lat, loc.lng]).bindPopup(
-        `<b>${loc.name}</b><br>
-         Type: ${loc.type}<br>
-         Team: ${loc.team}<br>
-         Status: ${loc.status}<br>
-         Permission: ${loc.permission}<br>
-         Entity: ${loc.entity}<br><br>
-         ${loc.details ? loc.details : ""}
-         ${actions}`
-      );
-    }
-
-    function applyFilters() {
-      const teamValue = teamFilterEl.value;
-      const statusValue = statusFilterEl.value;
-      const permissionValue = permissionFilterEl.value;
-      const entityValue = entityFilterEl.value;
-      const typeValue = typeFilterEl.value;
-      const searchValue = searchEl.value.trim().toLowerCase();
-
-      markerLayer.clearLayers();
-
-      markers.forEach(({ loc, marker }) => {
-        const teamOk = (teamValue === "ALL") || (loc.team === teamValue);
-        const statusOk = (statusValue === "ALL") || (loc.status === statusValue);
-        const permissionOk = (permissionValue === "ALL") || (loc.permission === permissionValue);
-        const entityOk = (entityValue === "ALL") || (loc.entity === entityValue);
-        const typeOk = (typeValue === "ALL") || (loc.type === typeValue);
-        const searchOk = (searchValue === "") || (String(loc.name || "").toLowerCase().includes(searchValue));
-
-        if (teamOk && statusOk && permissionOk && entityOk && typeOk && searchOk) {
-          marker.addTo(markerLayer);
-        }
-      });
-    }
-
-    map.on("popupopen", (e) => {
-      const popupEl = e.popup.getElement();
-      if (!popupEl) return;
-      if (!isAdmin) return;
-
-      const editBtn = popupEl.querySelector(".editPinBtn");
-      const deleteBtn = popupEl.querySelector(".deletePinBtn");
-
-      if (editBtn) {
-        editBtn.addEventListener("click", () => {
-          const id = editBtn.dataset.id;
-          const loc = markers.find(m => m.loc.id === id)?.loc;
-          if (!loc) return alert("Could not find that pin.");
-
-          nl_name.value = loc.name || "";
-          nl_team.value = loc.team || "Unassigned";
-          nl_type.value = loc.type || "Unknown";
-          nl_status.value = loc.status || "Unknown";
-          nl_permission.value = loc.permission || "Unknown";
-          nl_entity.value = loc.entity || "Unknown";
-          nl_lat.value = Number(loc.lat).toFixed(6);
-          nl_lng.value = Number(loc.lng).toFixed(6);
-          nl_details.value = loc.details || "";
-
-          setEditMode(id);
-          alert("Editing mode enabled. Update the form and click Update Location.");
-          if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(false);
-        });
-      }
-
-      if (deleteBtn) {
-        deleteBtn.addEventListener("click", async () => {
-          const id = deleteBtn.dataset.id;
-          if (!confirm("Delete this pin? This cannot be undone.")) return;
-
-          try {
-            await deleteDoc(doc(db, LOCATIONS, id));
-            if (editingId === id) setEditMode(null);
-          } catch (err) {
-            console.error(err);
-            alert("Delete failed: " + (err?.message || err));
-          }
-        });
-      }
-    });
-
-    teamFilterEl.addEventListener("change", () => { applyFilters(); });
-    statusFilterEl.addEventListener("change", applyFilters);
-    permissionFilterEl.addEventListener("change", applyFilters);
-    entityFilterEl.addEventListener("change", applyFilters);
-    typeFilterEl.addEventListener("change", applyFilters);
-    searchEl.addEventListener("input", applyFilters);
-
-    clearBtn.addEventListener("click", () => {
-      teamFilterEl.value = "ALL";
-      statusFilterEl.value = "ALL";
-      permissionFilterEl.value = "ALL";
-      entityFilterEl.value = "ALL";
-      typeFilterEl.value = "ALL";
-      searchEl.value = "";
-      applyFilters();
-    });
-
-    // Pick coords mode
-    let picking = false;
-    function setPicking(on) {
-      picking = on;
-      pickHint.style.display = on ? "block" : "none";
-      pickBtn.textContent = on ? "Picking…" : "Pick from map";
-      pickBtn.disabled = on;
-      map.getContainer().style.cursor = on ? "crosshair" : "";
-    }
-    pickBtn.addEventListener("click", () => setPicking(true));
-    map.on("click", (e) => {
-      if (!picking) return;
-      nl_lat.value = e.latlng.lat.toFixed(6);
-      nl_lng.value = e.latlng.lng.toFixed(6);
-      setPicking(false);
-      if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(false);
-    });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && picking) setPicking(false);
-    });
-
-    cancelEditBtn.addEventListener("click", () => {
-      setEditMode(null);
-      form.reset();
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!isMember) {
-        alert("Sign in with your @prcofok.org Google account to add locations.");
-        return;
-      }
-      if (editingId && !isAdmin) {
-        alert("Only admin can edit existing locations.");
-        return;
-      }
-
-      const name = nl_name.value.trim();
-      const team = nl_team.value;
-      const type = nl_type.value || "Unknown";
-      const status = nl_status.value || "Unknown";
-      const permission = nl_permission.value || "Unknown";
-      const entity = nl_entity.value || "Unknown";
-      const lat = Number(nl_lat.value);
-      const lng = Number(nl_lng.value);
-      const details = nl_details.value.trim();
-
-      if (!name) return alert("Location name is required.");
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert("Valid latitude and longitude are required.");
-
-      const payload = { name, team, type, status, permission, entity, lat, lng, details, updatedAt: serverTimestamp() };
-
-      try {
-        if (editingId) {
-          await updateDoc(doc(db, LOCATIONS, editingId), payload);
-          alert("Location updated!");
-          setEditMode(null);
-        } else {
-          payload.createdAt = serverTimestamp();
-          payload.createdBy = currentUser?.email || "";
-          await addDoc(collection(db, LOCATIONS), payload);
-          alert("Location added!");
-        }
-        form.reset();
-        if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(true);
-      } catch (err) {
-        console.error(err);
-        alert("Save failed: " + (err?.message || err));
-      }
-    });
-
-    onSnapshot(collection(db, LOCATIONS), (snapshot) => {
-      markers = [];
-      snapshot.forEach((docSnap) => {
-        const d = docSnap.data();
-        const loc = {
-          id: docSnap.id,
-          name: d.name || "(Unnamed)",
-          type: d.type || "Unknown",
-          team: d.team || "Unassigned",
-          status: d.status || "Unknown",
-          permission: d.permission || "Unknown",
-          entity: d.entity || "Unknown",
-          lat: Number(d.lat),
-          lng: Number(d.lng),
-          details: d.details || ""
-        };
-        if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-          markers.push({ loc, marker: makeMarker(loc) });
-        }
-      });
-      applyFilters();
-    });
-
-    // ---------------- SECTION OVERLAYS (zoom-scale + smooth fade) ----------------
-    const STATUS_COLORS = { uninvestigated: "#ffffff", possible: "#ffeb3b", confirmed: "#33a02c" };
-
-    const HEX_SHOW_MIN_ZOOM = 14;
-    const HEX_SIZE_AT_ZOOM = 18;
-    const HEX_BASE_PX = 48;
-    const HEX_MIN_PX = 18;
-    const HEX_MAX_PX = 64;
-
-    const HEX_FADE_MS = 220;
-    const HEX_FADE_STEPS = 12;
-    const HEX_MIN_OPACITY = 0.0;
-    const HEX_MAX_OPACITY = 1.0;
-
-    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
-    function hexSizeForZoom(z){
-      const scale = Math.pow(1.15, z - HEX_SIZE_AT_ZOOM);
-      return Math.round(clamp(HEX_BASE_PX * scale, HEX_MIN_PX, HEX_MAX_PX));
-    }
-    function shouldShowHexesAtZoom(z){ return z >= HEX_SHOW_MIN_ZOOM; }
-
-    function animateOpacity(marker, to, ms = HEX_FADE_MS, steps = HEX_FADE_STEPS) {
-      if (marker._fadeTimer) { clearInterval(marker._fadeTimer); marker._fadeTimer = null; }
-
-      const from = Number(marker.options.opacity ?? 1);
-      const target = Number(to);
-      if (!Number.isFinite(from) || !Number.isFinite(target)) return;
-
-      if (Math.abs(from - target) < 0.01) {
-        marker.setOpacity(target);
-        marker.options.opacity = target;
-        return;
-      }
-
-      const stepTime = Math.max(16, Math.round(ms / steps));
-      let step = 0;
-
-      marker._fadeTimer = setInterval(() => {
-        step += 1;
-        const t = step / steps;
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-        const val = from + (target - from) * eased;
-        marker.setOpacity(val);
-        marker.options.opacity = val;
-
-        if (step >= steps) {
-          clearInterval(marker._fadeTimer);
-          marker._fadeTimer = null;
-          marker.setOpacity(target);
-          marker.options.opacity = target;
-        }
-      }, stepTime);
-    }
-
-    function makeHexIcon(numberText, status, sizePx) {
-      const fill = STATUS_COLORS[status] || "#ffffff";
-      const text = String(numberText ?? "").trim();
-      const fontSize = Math.round(sizePx * 0.75);
-
-      const svg = `
-        <svg width="${sizePx}" height="${sizePx}" viewBox="0 0 100 100">
-          <polygon points="50,5 90,27 90,73 50,95 10,73 10,27"
-            fill="${fill}" stroke="#000" stroke-width="6" />
-          <text x="50" y="60" text-anchor="middle"
-            font-size="${fontSize}" font-family="Arial" font-weight="700" fill="#000">${text}</text>
-        </svg>`;
-
-      const half = Math.round(sizePx / 2);
-      return L.divIcon({ className: "", html: svg, iconSize: [sizePx, sizePx], iconAnchor: [half, half] });
-    }
-
-    function centroidOfLatLngs(latlngs) {
-      const ring = Array.isArray(latlngs?.[0]) ? latlngs[0] : latlngs;
-      let sumLat = 0, sumLng = 0;
-      const n = (ring && ring.length) ? ring.length : 1;
-      (ring || []).forEach(p => { sumLat += p.lat; sumLng += p.lng; });
-      return L.latLng(sumLat / n, sumLng / n);
-    }
-    function cycleStatus(s) { return s === "uninvestigated" ? "possible" : s === "possible" ? "confirmed" : "uninvestigated"; }
-    function sectionPolyStyle() { return { color: "#ffff00", weight: 5, fillOpacity: 0 }; }
-
-    function layerToPoints(layer) {
-      const ll = layer.getLatLngs();
-      let rings = ll;
-      if (!Array.isArray(rings)) rings = [];
-      if (!Array.isArray(rings[0])) rings = [rings];
-      if (Array.isArray(rings[0]) && Array.isArray(rings[0][0]) && rings[0][0]?.lat === undefined) {
-        rings = rings.map(r => (Array.isArray(r[0]) ? r[0] : r));
-      }
-
-      const points = [];
-      rings.forEach((ring, ringIdx) => {
-        (ring || []).forEach((p, i) => {
-          const lat = Number(p?.lat);
-          const lng = Number(p?.lng);
-          if (Number.isFinite(lat) && Number.isFinite(lng)) points.push({ ring: ringIdx, i, lat, lng });
-        });
-      });
-      return points;
-    }
-
-    function pointsToLatLngRings(points) {
-      if (!Array.isArray(points) || points.length === 0) return null;
-
-      const byRing = new Map();
-      for (const pt of points) {
-        const ring = Number(pt.ring), i = Number(pt.i), lat = Number(pt.lat), lng = Number(pt.lng);
-        if (!Number.isFinite(ring) || !Number.isFinite(i) || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-        if (!byRing.has(ring)) byRing.set(ring, []);
-        byRing.get(ring).push({ i, lat, lng });
-      }
-
-      const ringKeys = Array.from(byRing.keys()).sort((a,b) => a - b);
-      const rings = ringKeys.map(rk =>
-        byRing.get(rk).sort((a,b) => a.i - b.i).map(p => L.latLng(p.lat, p.lng))
-      );
-      return rings.length ? rings : null;
-    }
-
-    const sectionPolys = L.featureGroup().addTo(map);
-    const sectionHexes = L.layerGroup().addTo(map);
-    const sectionById = new Map();
-
-    let drawControl = null;
-    function setSectionEditingEnabled(enabled) {
-      if (enabled) {
-        if (!drawControl) {
-          drawControl = new L.Control.Draw({
-            position: "topright",
-            draw: { polygon: true, rectangle: true, polyline: false, circle: false, marker: false, circlemarker: false },
-            edit: { featureGroup: sectionPolys, remove: true }
-          });
-          map.addControl(drawControl);
-        }
-      } else {
-        if (drawControl) { map.removeControl(drawControl); drawControl = null; }
-      }
-    }
-
-    function ensureSectionFilterOptions(mapNames) {
-      const current = sectionMapFilter.value || "ALL";
-      const names = Array.from(new Set(mapNames)).filter(Boolean).sort((a,b) => a.localeCompare(b));
-      const opts = ["ALL", ...names];
-
-      sectionMapFilter.innerHTML = "";
-      opts.forEach(v => {
-        const o = document.createElement("option");
-        o.value = v;
-        o.textContent = (v === "ALL") ? "All section maps" : v;
-        sectionMapFilter.appendChild(o);
-      });
-
-      sectionMapFilter.value = opts.includes(current) ? current : "ALL";
-    }
-
-    function applySectionFilter() {
-      const selected = sectionMapFilter.value || "ALL";
-      for (const [id, rec] of sectionById.entries()) {
-        const show = (selected === "ALL") || (rec.mapName === selected);
-        if (show) {
-          if (!sectionPolys.hasLayer(rec.poly)) sectionPolys.addLayer(rec.poly);
-          if (!sectionHexes.hasLayer(rec.hex)) sectionHexes.addLayer(rec.hex);
-        } else {
-          if (sectionPolys.hasLayer(rec.poly)) sectionPolys.removeLayer(rec.poly);
-          if (sectionHexes.hasLayer(rec.hex)) sectionHexes.removeLayer(rec.hex);
-        }
-      }
-    }
-
-    sectionMapFilter.addEventListener("change", () => {
-      const v = sectionMapFilter.value;
-      if (isAdmin && v && v !== "ALL") sectionMapName.value = v;
-      applySectionFilter();
-      refreshAllHexIconsForZoom();
-    });
-
-    function refreshAllHexIconsForZoom(){
-      const z = map.getZoom();
-      const shouldShow = shouldShowHexesAtZoom(z);
-      const sizePx = hexSizeForZoom(z);
-      const targetOpacity = shouldShow ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
-
-      for (const rec of sectionById.values()) {
-        rec.hex.setIcon(makeHexIcon(rec.number, rec.status, sizePx));
-        animateOpacity(rec.hex, targetOpacity);
-      }
-    }
-    map.on("zoomend", refreshAllHexIconsForZoom);
-
-    map.on(L.Draw.Event.CREATED, async (e) => {
-      if (!isAdmin) return;
-
-      const layer = e.layer;
-      layer.setStyle(sectionPolyStyle());
-      sectionPolys.addLayer(layer);
-
-      const mapName = (sectionMapName.value || "").trim();
-      if (!mapName) { alert("Enter a Map name first (ex: Crown Hill Cemetery)."); sectionPolys.removeLayer(layer); return; }
-
-      const numRaw = (sectionNextNumber.value || "").trim();
-      const number = numRaw ? String(numRaw) : "1";
-      const status = sectionDefaultStatus.value || "uninvestigated";
-
-      const points = layerToPoints(layer);
-
-      try {
-        const docRef = await addDoc(collection(db, SECTIONS), {
-          mapName, number, status, points,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          createdBy: currentUser?.email || ""
-        });
-
-        layer.options._sectionId = docRef.id;
-
-        const n = Number(number);
-        if (Number.isFinite(n)) sectionNextNumber.value = String(n + 1);
-      } catch (err) {
-        console.error(err);
-        alert("Save section failed: " + (err?.message || err));
-        sectionPolys.removeLayer(layer);
-      }
-    });
-
-    map.on(L.Draw.Event.EDITED, async (e) => {
-      if (!isAdmin) return;
-
-      const layers = e.layers;
-      const updates = [];
-
-      layers.eachLayer((layer) => {
-        const id = layer.options._sectionId;
-        if (!id) return;
-
-        const points = layerToPoints(layer);
-        updates.push(updateDoc(doc(db, SECTIONS, id), { points, updatedAt: serverTimestamp() }));
-      });
-
-      try { await Promise.all(updates); }
-      catch (err) { console.error(err); alert("Update failed: " + (err?.message || err)); }
-    });
-
-    map.on(L.Draw.Event.DELETED, async (e) => {
-      if (!isAdmin) return;
-
-      const layers = e.layers;
-      const deletes = [];
-
-      layers.eachLayer((layer) => {
-        const id = layer.options._sectionId;
-        if (!id) return;
-        deletes.push(deleteDoc(doc(db, SECTIONS, id)));
-      });
-
-      try { await Promise.all(deletes); }
-      catch (err) { console.error(err); alert("Delete failed: " + (err?.message || err)); }
-    });
-
-    function attachSectionInteractions(id, polyLayer, hexMarker) {
-      polyLayer.on("click", async () => {
-        const rec = sectionById.get(id);
-        if (!rec) return;
-
-        if (isAdmin) {
-          const next = cycleStatus(rec.status);
-          try { await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() }); }
-          catch (err) { console.error(err); alert("Status update failed: " + (err?.message || err)); }
-          return;
-        }
-        alert(`${rec.mapName}\nSection: ${rec.number}\nStatus: ${rec.status}`);
-      });
-
-      polyLayer.on("contextmenu", async () => {
-        if (!isAdmin) return;
-        const rec = sectionById.get(id);
-        if (!rec) return;
-
-        const newMapName = prompt("Map name:", rec.mapName);
-        if (!newMapName) return;
-
-        const newNumber = prompt("Section label/number:", rec.number);
-        if (!newNumber) return;
-
-        try {
-          await updateDoc(doc(db, SECTIONS, id), {
-            mapName: newMapName.trim(),
-            number: String(newNumber).trim(),
-            updatedAt: serverTimestamp()
-          });
-        } catch (err) {
-          console.error(err);
-          alert("Label update failed: " + (err?.message || err));
-        }
-      });
-
-      hexMarker.on("click", async () => {
-        if (!isAdmin) return;
-        const rec = sectionById.get(id);
-        if (!rec) return;
-
-        const next = cycleStatus(rec.status);
-        try { await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() }); }
-        catch (err) { console.error(err); alert("Status update failed: " + (err?.message || err)); }
-      });
-    }
-
-    function rebuildSectionLayerFromDoc(id, d) {
-      const mapName = d.mapName || "Unnamed Map";
-      const number = d.number || "";
-      const status = d.status || "uninvestigated";
-
-      const existing = sectionById.get(id);
-      if (existing) {
-        if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
-        if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
-        sectionById.delete(id);
-      }
-
-      const latlngRings = pointsToLatLngRings(d.points);
-      if (!latlngRings) return;
-
-      const polyLayer = L.polygon(latlngRings, sectionPolyStyle());
-      polyLayer.options._sectionId = id;
-
-      const c = centroidOfLatLngs(polyLayer.getLatLngs());
-
-      const z = map.getZoom();
-      const sizePx = hexSizeForZoom(z);
-      const startOpacity = shouldShowHexesAtZoom(z) ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
-
-      const hex = L.marker(c, {
-        icon: makeHexIcon(number, status, sizePx),
-        interactive: true,
-        zIndexOffset: 1000,
-        opacity: startOpacity
-      });
-
-      sectionById.set(id, { poly: polyLayer, hex, mapName, number, status });
-      attachSectionInteractions(id, polyLayer, hex);
-
-      const selected = sectionMapFilter.value || "ALL";
-      const show = (selected === "ALL") || (mapName === selected);
-      if (show) {
-        sectionPolys.addLayer(polyLayer);
-        sectionHexes.addLayer(hex);
-      }
-    }
-
-    onSnapshot(collection(db, SECTIONS), (snap) => {
-      const names = [];
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
-        if (d.mapName) names.push(d.mapName);
-      });
-      ensureSectionFilterOptions(names);
-
-      snap.docChanges().forEach((ch) => {
-        const id = ch.doc.id;
-
-        if (ch.type === "removed") {
-          const existing = sectionById.get(id);
-          if (existing) {
-            if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
-            if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
-            sectionById.delete(id);
-          }
-          return;
-        }
-
-        rebuildSectionLayerFromDoc(id, ch.doc.data());
-      });
-
-      applySectionFilter();
-      refreshAllHexIconsForZoom();
+    }, (error) => {
+      console.error("Section overlay snapshot error:", error);
     });
   </script>
 
@@ -2345,6 +1216,7 @@
           return request.auth != null
             && request.auth.token.email == "fclegg@prcofok.org";
         }
+
         function isMember() {
           return request.auth != null
             && request.auth.token.email.matches(".*@prcofok\\.org$");
