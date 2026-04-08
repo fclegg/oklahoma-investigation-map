@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,7 +12,7 @@
     body { margin: 0; }
     #map { height: 100vh; width: 100%; }
 
-    .panel{
+    .panel {
       position: absolute;
       left: 10px;
       z-index: 1000;
@@ -25,27 +25,27 @@
       max-width: calc(100vw - 20px);
     }
 
-    #menuWrap{
+    #menuWrap {
       top: 10px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    #menuHeader{
+    #menuHeader {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
     }
 
-    #menuTitle{
+    #menuTitle {
       font-weight: 700;
       font-size: 14px;
       white-space: nowrap;
     }
 
-    #menuToggle{
+    #menuToggle {
       padding: 6px 10px;
       border: 1px solid #ccc;
       border-radius: 10px;
@@ -54,10 +54,10 @@
       cursor: pointer;
     }
 
-    .menuBody{ display: block; }
-    .collapsed .menuBody{ display: none; }
+    .menuBody { display: block; }
+    .collapsed .menuBody { display: none; }
 
-    .row{
+    .row {
       display: flex;
       gap: 8px;
       align-items: center;
@@ -65,7 +65,7 @@
       flex-wrap: wrap;
     }
 
-    input, select, button, textarea{
+    input, select, button, textarea {
       padding: 6px 8px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -74,18 +74,38 @@
       font-family: inherit;
     }
 
-    textarea { width: 100%; min-height: 60px; resize: vertical; }
-    #search{ flex: 1; min-width: 200px; }
+    textarea {
+      width: 100%;
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    #search {
+      flex: 1;
+      min-width: 200px;
+    }
+
     label { font-size: 13px; }
 
-    .hint{ font-size: 12px; color: #555; margin-top: 4px; line-height: 1.25; }
-    .small{ width: 130px; }
-    .grow{ flex: 1; min-width: 160px; }
-    .btnRow{ display: flex; gap: 8px; flex-wrap: wrap; }
-    .danger{ border-color: #d33 !important; color: #d33 !important; }
-    .editMode{ font-size: 12px; color: #0a5; margin-top: 4px; display: none; }
+    .hint {
+      font-size: 12px;
+      color: #555;
+      margin-top: 4px;
+      line-height: 1.25;
+    }
 
-    .authPill{
+    .small { width: 130px; }
+    .grow { flex: 1; min-width: 160px; }
+    .btnRow { display: flex; gap: 8px; flex-wrap: wrap; }
+    .danger { border-color: #d33 !important; color: #d33 !important; }
+    .editMode {
+      font-size: 12px;
+      color: #0a5;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .authPill {
       font-size: 12px;
       color: #555;
       border: 1px solid #ddd;
@@ -97,7 +117,7 @@
       white-space: nowrap;
     }
 
-    .adminBadge{
+    .adminBadge {
       font-size: 11px;
       font-weight: 700;
       color: #0a5;
@@ -106,13 +126,12 @@
       border-radius: 999px;
     }
 
-    @media (max-width: 600px){
-      .panel{ width: calc(100vw - 20px); }
-      .authPill{ max-width: 140px; }
+    @media (max-width: 600px) {
+      .panel { width: calc(100vw - 20px); }
+      .authPill { max-width: 140px; }
     }
   </style>
 </head>
-
 <body>
   <div id="menuWrap" class="panel collapsed">
     <div id="menuHeader">
@@ -128,7 +147,6 @@
     </div>
 
     <div class="menuBody">
-      <!-- Filters -->
       <div id="controls">
         <div class="row">
           <input id="search" type="text" placeholder="Search location name..." />
@@ -184,7 +202,6 @@
         </div>
       </div>
 
-      <!-- Section Overlays -->
       <div style="margin-top:10px;">
         <div class="row" style="margin-bottom:2px;">
           <strong>Section Overlays</strong>
@@ -224,7 +241,6 @@
         </div>
       </div>
 
-      <!-- New Location Form -->
       <div id="newLocationPanel" style="margin-top:10px;">
         <div class="row">
           <strong>New Location</strong>
@@ -366,7 +382,6 @@
       });
     }
 
-    // ---------------- FIREBASE CONFIG ----------------
     const firebaseConfig = {
       apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
       authDomain: "oklahoma-investigation-map.firebaseapp.com",
@@ -378,12 +393,10 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    console.log("Firebase initialized");
 
     const LOCATIONS = "locations";
     const SECTIONS = "section_overlays";
 
-    // ---------------- AUTH ----------------
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ hd: "prcofok.org" });
@@ -395,7 +408,6 @@
     let isMember = false;
     let isAdmin = false;
 
-    // ----- DOM -----
     const menuWrap = document.getElementById("menuWrap");
     const menuToggle = document.getElementById("menuToggle");
 
@@ -471,37 +483,6 @@
       mustLoginNote.style.display = isMember ? "none" : "block";
     }
 
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const res = await signInWithPopup(auth, provider);
-        const email = (res.user?.email || "").toLowerCase();
-        if (!email.endsWith(ALLOWED_DOMAIN)) {
-          await signOut(auth);
-          alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Sign-in failed: " + (err?.message || err));
-      }
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-
-      const email = (user?.email || "").toLowerCase();
-      isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
-      isAdmin = !!user && ADMIN_EMAILS.has(email);
-
-      refreshAuthUI();
-      setSectionEditingEnabled(isAdmin);
-      applyFilters();
-    });
-
-    // ---------------- MAP ----------------
     const map = L.map("map").setView([35.4676, -97.5164], 7);
 
     const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -525,10 +506,10 @@
       { position: "topright" }
     ).addTo(map);
 
-    // ---------------- LOCATIONS ----------------
     const markerLayer = L.layerGroup().addTo(map);
     let markers = [];
     let editingId = null;
+    let locationDocs = [];
 
     function setEditMode(idOrNull) {
       editingId = idOrNull;
@@ -557,6 +538,18 @@
       );
     }
 
+    function rebuildMarkersFromDocs() {
+      markers = [];
+
+      locationDocs.forEach((loc) => {
+        if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
+          markers.push({ loc, marker: makeMarker(loc) });
+        }
+      });
+
+      applyFilters();
+    }
+
     function applyFilters() {
       const countyValue = countyFilterEl.value;
       const statusValue = statusFilterEl.value;
@@ -581,6 +574,36 @@
       });
     }
 
+    loginBtn.addEventListener("click", async () => {
+      try {
+        const res = await signInWithPopup(auth, provider);
+        const email = (res.user?.email || "").toLowerCase();
+        if (!email.endsWith(ALLOWED_DOMAIN)) {
+          await signOut(auth);
+          alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Sign-in failed: " + (err?.message || err));
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+
+      const email = (user?.email || "").toLowerCase();
+      isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
+      isAdmin = !!user && ADMIN_EMAILS.has(email);
+
+      refreshAuthUI();
+      setSectionEditingEnabled(isAdmin);
+      rebuildMarkersFromDocs();
+    });
+
     map.on("popupopen", (e) => {
       const popupEl = e.popup.getElement();
       if (!popupEl || !isAdmin) return;
@@ -595,7 +618,7 @@
           if (!loc) return alert("Could not find that pin.");
 
           nl_name.value = loc.name || "";
-          nl_county.value = loc.county || "Unassigned";
+          nl_county.value = OKLAHOMA_COUNTIES.includes(loc.county) ? loc.county : "Unassigned";
           nl_type.value = loc.type || "Unknown";
           nl_status.value = loc.status || "Unknown";
           nl_permission.value = loc.permission || "Unknown";
@@ -643,7 +666,6 @@
       applyFilters();
     });
 
-    // Pick coords mode
     let picking = false;
 
     function setPicking(on) {
@@ -739,19 +761,16 @@
     onSnapshot(
       collection(db, LOCATIONS),
       (snapshot) => {
-        console.log("Firestore connected. Docs found:", snapshot.size);
-
-        markers = [];
+        locationDocs = [];
 
         snapshot.forEach((docSnap) => {
           const d = docSnap.data();
-          console.log("Location doc:", docSnap.id, d);
 
           const loc = {
             id: docSnap.id,
             name: d.name || "(Unnamed)",
             type: d.type || "Unknown",
-            county: d.county || d.team || "Unassigned",
+            county: d.county || "Unassigned",
             status: d.status || "Unknown",
             permission: d.permission || "Unknown",
             entity: d.entity || "Unknown",
@@ -761,14 +780,11 @@
           };
 
           if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-            markers.push({ loc, marker: makeMarker(loc) });
-          } else {
-            console.warn("Invalid lat/lng for doc:", docSnap.id, d.lat, d.lng);
+            locationDocs.push(loc);
           }
         });
 
-        console.log("Markers loaded:", markers.length);
-        applyFilters();
+        rebuildMarkersFromDocs();
       },
       (error) => {
         console.error("Firestore onSnapshot error:", error);
@@ -776,8 +792,11 @@
       }
     );
 
-    // ---------------- SECTION OVERLAYS ----------------
-    const STATUS_COLORS = { uninvestigated: "#ffffff", possible: "#ffeb3b", confirmed: "#33a02c" };
+    const STATUS_COLORS = {
+      uninvestigated: "#ffffff",
+      possible: "#ffeb3b",
+      confirmed: "#33a02c"
+    };
 
     const HEX_SHOW_MIN_ZOOM = 14;
     const HEX_SIZE_AT_ZOOM = 18;
@@ -790,7 +809,9 @@
     const HEX_MIN_OPACITY = 0.0;
     const HEX_MAX_OPACITY = 1.0;
 
-    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
 
     function hexSizeForZoom(z) {
       const scale = Math.pow(1.15, z - HEX_SIZE_AT_ZOOM);
@@ -852,14 +873,23 @@
         </svg>`;
 
       const half = Math.round(sizePx / 2);
-      return L.divIcon({ className: "", html: svg, iconSize: [sizePx, sizePx], iconAnchor: [half, half] });
+      return L.divIcon({
+        className: "",
+        html: svg,
+        iconSize: [sizePx, sizePx],
+        iconAnchor: [half, half]
+      });
     }
 
     function centroidOfLatLngs(latlngs) {
       const ring = Array.isArray(latlngs?.[0]) ? latlngs[0] : latlngs;
-      let sumLat = 0, sumLng = 0;
+      let sumLat = 0;
+      let sumLng = 0;
       const n = (ring && ring.length) ? ring.length : 1;
-      (ring || []).forEach(p => { sumLat += p.lat; sumLng += p.lng; });
+      (ring || []).forEach((p) => {
+        sumLat += p.lat;
+        sumLng += p.lng;
+      });
       return L.latLng(sumLat / n, sumLng / n);
     }
 
@@ -874,10 +904,12 @@
     function layerToPoints(layer) {
       const ll = layer.getLatLngs();
       let rings = ll;
+
       if (!Array.isArray(rings)) rings = [];
       if (!Array.isArray(rings[0])) rings = [rings];
+
       if (Array.isArray(rings[0]) && Array.isArray(rings[0][0]) && rings[0][0]?.lat === undefined) {
-        rings = rings.map(r => (Array.isArray(r[0]) ? r[0] : r));
+        rings = rings.map((r) => (Array.isArray(r[0]) ? r[0] : r));
       }
 
       const points = [];
@@ -885,9 +917,12 @@
         (ring || []).forEach((p, i) => {
           const lat = Number(p?.lat);
           const lng = Number(p?.lng);
-          if (Number.isFinite(lat) && Number.isFinite(lng)) points.push({ ring: ringIdx, i, lat, lng });
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            points.push({ ring: ringIdx, i, lat, lng });
+          }
         });
       });
+
       return points;
     }
 
@@ -895,16 +930,22 @@
       if (!Array.isArray(points) || points.length === 0) return null;
 
       const byRing = new Map();
+
       for (const pt of points) {
-        const ring = Number(pt.ring), i = Number(pt.i), lat = Number(pt.lat), lng = Number(pt.lng);
+        const ring = Number(pt.ring);
+        const i = Number(pt.i);
+        const lat = Number(pt.lat);
+        const lng = Number(pt.lng);
+
         if (!Number.isFinite(ring) || !Number.isFinite(i) || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
         if (!byRing.has(ring)) byRing.set(ring, []);
         byRing.get(ring).push({ i, lat, lng });
       }
 
-      const ringKeys = Array.from(byRing.keys()).sort((a,b) => a - b);
-      const rings = ringKeys.map(rk =>
-        byRing.get(rk).sort((a,b) => a.i - b.i).map(p => L.latLng(p.lat, p.lng))
+      const ringKeys = Array.from(byRing.keys()).sort((a, b) => a - b);
+      const rings = ringKeys.map((rk) =>
+        byRing.get(rk).sort((a, b) => a.i - b.i).map((p) => L.latLng(p.lat, p.lng))
       );
 
       return rings.length ? rings : null;
@@ -929,7 +970,10 @@
               marker: false,
               circlemarker: false
             },
-            edit: { featureGroup: sectionPolys, remove: true }
+            edit: {
+              featureGroup: sectionPolys,
+              remove: true
+            }
           });
           map.addControl(drawControl);
         }
@@ -943,11 +987,14 @@
 
     function ensureSectionFilterOptions(mapNames) {
       const current = sectionMapFilter.value || "ALL";
-      const names = Array.from(new Set(mapNames)).filter(Boolean).sort((a,b) => a.localeCompare(b));
-      const opts = ["ALL", ...names];
+      const names = Array.from(new Set(mapNames))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
 
+      const opts = ["ALL", ...names];
       sectionMapFilter.innerHTML = "";
-      opts.forEach(v => {
+
+      opts.forEach((v) => {
         const o = document.createElement("option");
         o.value = v;
         o.textContent = (v === "ALL") ? "All section maps" : v;
@@ -959,8 +1006,10 @@
 
     function applySectionFilter() {
       const selected = sectionMapFilter.value || "ALL";
+
       for (const [id, rec] of sectionById.entries()) {
         const show = (selected === "ALL") || (rec.mapName === selected);
+
         if (show) {
           if (!sectionPolys.hasLayer(rec.poly)) sectionPolys.addLayer(rec.poly);
           if (!sectionHexes.hasLayer(rec.hex)) sectionHexes.addLayer(rec.hex);
@@ -1167,73 +1216,48 @@
 
       const selected = sectionMapFilter.value || "ALL";
       const show = (selected === "ALL") || (mapName === selected);
+
       if (show) {
         sectionPolys.addLayer(polyLayer);
         sectionHexes.addLayer(hex);
       }
     }
 
-    onSnapshot(collection(db, SECTIONS), (snap) => {
-      const names = [];
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
-        if (d.mapName) names.push(d.mapName);
-      });
+    onSnapshot(
+      collection(db, SECTIONS),
+      (snap) => {
+        const names = [];
 
-      ensureSectionFilterOptions(names);
+        snap.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d.mapName) names.push(d.mapName);
+        });
 
-      snap.docChanges().forEach((ch) => {
-        const id = ch.doc.id;
+        ensureSectionFilterOptions(names);
 
-        if (ch.type === "removed") {
-          const existing = sectionById.get(id);
-          if (existing) {
-            if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
-            if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
-            sectionById.delete(id);
+        snap.docChanges().forEach((ch) => {
+          const id = ch.doc.id;
+
+          if (ch.type === "removed") {
+            const existing = sectionById.get(id);
+            if (existing) {
+              if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
+              if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
+              sectionById.delete(id);
+            }
+            return;
           }
-          return;
-        }
 
-        rebuildSectionLayerFromDoc(id, ch.doc.data());
-      });
+          rebuildSectionLayerFromDoc(id, ch.doc.data());
+        });
 
-      applySectionFilter();
-      refreshAllHexIconsForZoom();
-    }, (error) => {
-      console.error("Section overlay snapshot error:", error);
-    });
-  </script>
-
-  <!--
-    FIRESTORE RULES (recommended)
-
-    rules_version = '2';
-    service cloud.firestore {
-      match /databases/{database}/documents {
-
-        function isAdmin() {
-          return request.auth != null
-            && request.auth.token.email == "fclegg@prcofok.org";
-        }
-
-        function isMember() {
-          return request.auth != null
-            && request.auth.token.email.matches(".*@prcofok\\.org$");
-        }
-
-        match /locations/{docId} {
-          allow read: if true;
-          allow create: if isMember();
-          allow update, delete: if isAdmin();
-        }
-
-        match /section_overlays/{docId} {
-          allow read: if true;
-          allow create, update, delete: if isAdmin();
-        }
+        applySectionFilter();
+        refreshAllHexIconsForZoom();
+      },
+      (error) => {
+        console.error("Section overlay snapshot error:", error);
       }
-    }
-  -->
+    );
+  </script>
 </body>
 </html>
