@@ -126,9 +126,178 @@
       border-radius: 999px;
     }
 
+    /* Full-screen list overlay */
+    #listViewOverlay {
+      position: absolute;
+      inset: 0;
+      z-index: 900;
+      background: rgba(255,255,255,0.97);
+      display: none;
+      overflow: auto;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    #listViewInner {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    #listViewHeader {
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.98);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      z-index: 2;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #listViewHeaderTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #closeListBtn {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .countySection {
+      margin-bottom: 26px;
+    }
+
+    .countyTitle {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #222;
+    }
+
+    .listHeader,
+    .listRow {
+      display: grid;
+      grid-template-columns: 280px 150px 120px 140px 120px 140px 140px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .listHeader {
+      font-weight: 700;
+      font-size: 13px;
+      color: #333;
+      padding: 8px 10px;
+      background: #f1f1f1;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      position: sticky;
+      top: 74px;
+      z-index: 1;
+    }
+
+    .listRow {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #eee;
+      margin-bottom: 6px;
+      background: #fff;
+    }
+
+    .locationNameBtn {
+      appearance: none;
+      border: none;
+      background: none;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      color: #0b57d0;
+      cursor: pointer;
+      text-align: left;
+      text-decoration: underline;
+    }
+
+    .notesPopover {
+      position: absolute;
+      max-width: 320px;
+      min-width: 220px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      z-index: 3000;
+      display: none;
+    }
+
+    .notesPopoverTitle {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .notesPopoverClose {
+      float: right;
+      border: none;
+      background: none;
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      margin-left: 8px;
+    }
+
+    .muted {
+      color: #777;
+      font-style: italic;
+    }
+
+    @media (max-width: 1100px) {
+      .listHeader,
+      .listRow {
+        grid-template-columns: 240px 130px 110px 130px 110px 120px 120px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      #listViewInner {
+        padding: 16px;
+      }
+
+      .listHeader,
+      .listRow {
+        grid-template-columns: 220px 120px 100px 120px 100px 110px 110px;
+        gap: 8px;
+        font-size: 12px;
+      }
+    }
+
     @media (max-width: 600px) {
       .panel { width: calc(100vw - 20px); }
       .authPill { max-width: 140px; }
+
+      #listViewInner {
+        padding: 12px;
+      }
+
+      .listHeader,
+      .listRow {
+        grid-template-columns: 180px 110px 90px 110px 90px 100px 100px;
+        gap: 8px;
+        font-size: 11px;
+      }
+
+      .countyTitle {
+        font-size: 18px;
+      }
     }
   </style>
 </head>
@@ -317,6 +486,24 @@
 
   <div id="map"></div>
 
+  <div id="listViewOverlay">
+    <div id="listViewInner">
+      <div id="listViewHeader">
+        <div id="listViewHeaderTop">
+          <div>
+            <h2 style="margin:0;">Haunted Locations List</h2>
+            <div class="hint" style="margin-top:4px;">Grouped by county and sorted alphabetically. Click a location name to view notes.</div>
+          </div>
+          <button id="closeListBtn" type="button">Close List</button>
+        </div>
+      </div>
+
+      <div id="listViewContent"></div>
+    </div>
+  </div>
+
+  <div id="notesPopover" class="notesPopover"></div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
@@ -449,6 +636,11 @@
     const sectionNextNumber = document.getElementById("sectionNextNumber");
     const sectionDefaultStatus = document.getElementById("sectionDefaultStatus");
 
+    const listViewOverlay = document.getElementById("listViewOverlay");
+    const listViewContent = document.getElementById("listViewContent");
+    const closeListBtn = document.getElementById("closeListBtn");
+    const notesPopover = document.getElementById("notesPopover");
+
     populateCountySelect(countyFilterEl, true, true);
     populateCountySelect(nl_county, false, true);
 
@@ -500,9 +692,16 @@
 
     streets.addTo(map);
 
-    L.control.layers(
-      { Streets: streets, Satellite: satellite },
-      null,
+    const listOverlayLayer = L.layerGroup();
+
+    const layersControl = L.control.layers(
+      {
+        "Streets": streets,
+        "Satellite": satellite
+      },
+      {
+        "List": listOverlayLayer
+      },
       { position: "topright" }
     ).addTo(map);
 
@@ -548,6 +747,7 @@
       });
 
       applyFilters();
+      renderListView();
     }
 
     function applyFilters() {
@@ -573,6 +773,170 @@
         }
       });
     }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function normalizeCounty(county) {
+      return county && county !== "Unassigned" ? county : "Unassigned";
+    }
+
+    function renderListView() {
+      const grouped = new Map();
+
+      locationDocs.forEach((loc) => {
+        const county = normalizeCounty(loc.county);
+        if (!grouped.has(county)) grouped.set(county, []);
+        grouped.get(county).push(loc);
+      });
+
+      const countyNames = Array.from(grouped.keys()).sort((a, b) => a.localeCompare(b));
+
+      if (countyNames.length === 0) {
+        listViewContent.innerHTML = `<div class="muted">No locations found.</div>`;
+        return;
+      }
+
+      let html = "";
+
+      countyNames.forEach((county) => {
+        const items = grouped.get(county).slice().sort((a, b) => a.name.localeCompare(b.name));
+
+        html += `
+          <section class="countySection">
+            <div class="countyTitle">${escapeHtml(county)}</div>
+
+            <div class="listHeader">
+              <div>Location Name</div>
+              <div>Type</div>
+              <div>Status</div>
+              <div>Permission</div>
+              <div>Entity</div>
+              <div>Latitude</div>
+              <div>Longitude</div>
+            </div>
+        `;
+
+        items.forEach((loc) => {
+          html += `
+            <div class="listRow">
+              <div>
+                <button
+                  type="button"
+                  class="locationNameBtn"
+                  data-name="${escapeHtml(loc.name)}"
+                  data-notes="${escapeHtml(loc.details || "")}"
+                >
+                  ${escapeHtml(loc.name)}
+                </button>
+              </div>
+              <div>${escapeHtml(loc.type || "Unknown")}</div>
+              <div>${escapeHtml(loc.status || "Unknown")}</div>
+              <div>${escapeHtml(loc.permission || "Unknown")}</div>
+              <div>${escapeHtml(loc.entity || "Unknown")}</div>
+              <div>${Number.isFinite(loc.lat) ? loc.lat.toFixed(6) : ""}</div>
+              <div>${Number.isFinite(loc.lng) ? loc.lng.toFixed(6) : ""}</div>
+            </div>
+          `;
+        });
+
+        html += `</section>`;
+      });
+
+      listViewContent.innerHTML = html;
+      wireLocationNoteButtons();
+    }
+
+    function showNotesPopover(buttonEl, name, notes) {
+      const rect = buttonEl.getBoundingClientRect();
+      const notesText = notes && notes.trim() ? notes : "No notes available.";
+
+      notesPopover.innerHTML = `
+        <button type="button" class="notesPopoverClose" aria-label="Close notes">&times;</button>
+        <div class="notesPopoverTitle">${escapeHtml(name)}</div>
+        <div>${escapeHtml(notesText)}</div>
+      `;
+
+      notesPopover.style.display = "block";
+
+      const popoverWidth = 320;
+      const left = Math.min(window.scrollX + rect.right + 10, window.scrollX + window.innerWidth - popoverWidth - 16);
+      const top = window.scrollY + rect.top;
+
+      notesPopover.style.left = `${Math.max(16, left)}px`;
+      notesPopover.style.top = `${Math.max(16, top)}px`;
+
+      const closeBtn = notesPopover.querySelector(".notesPopoverClose");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", hideNotesPopover);
+      }
+    }
+
+    function hideNotesPopover() {
+      notesPopover.style.display = "none";
+      notesPopover.innerHTML = "";
+    }
+
+    function wireLocationNoteButtons() {
+      document.querySelectorAll(".locationNameBtn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          const sameButton = notesPopover.dataset.anchorName === btn.dataset.name && notesPopover.style.display === "block";
+          if (sameButton) {
+            hideNotesPopover();
+            notesPopover.dataset.anchorName = "";
+            return;
+          }
+
+          notesPopover.dataset.anchorName = btn.dataset.name || "";
+          showNotesPopover(btn, btn.dataset.name || "Location", btn.dataset.notes || "");
+        });
+      });
+    }
+
+    function openListView() {
+      renderListView();
+      listViewOverlay.style.display = "block";
+    }
+
+    function closeListView() {
+      listViewOverlay.style.display = "none";
+      hideNotesPopover();
+      map.removeLayer(listOverlayLayer);
+    }
+
+    closeListBtn.addEventListener("click", closeListView);
+
+    map.on("overlayadd", (e) => {
+      if (e.layer === listOverlayLayer) {
+        openListView();
+      }
+    });
+
+    map.on("overlayremove", (e) => {
+      if (e.layer === listOverlayLayer) {
+        closeListView();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!notesPopover.contains(e.target) && !e.target.closest(".locationNameBtn")) {
+        hideNotesPopover();
+        notesPopover.dataset.anchorName = "";
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      hideNotesPopover();
+      notesPopover.dataset.anchorName = "";
+    });
 
     loginBtn.addEventListener("click", async () => {
       try {
@@ -687,7 +1051,11 @@
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && picking) setPicking(false);
+      if (e.key === "Escape") {
+        if (picking) setPicking(false);
+        hideNotesPopover();
+        notesPopover.dataset.anchorName = "";
+      }
     });
 
     cancelEditBtn.addEventListener("click", () => {
