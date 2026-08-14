@@ -2,37 +2,116 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+
+  <meta
+    name="theme-color"
+    content="#ffffff"
+  />
+
   <title>Oklahoma Investigation Map</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
 
   <style>
+
+    /* =========================================================
+       GLOBAL
+    ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
     body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+      background: #fff;
+    }
+
+    body {
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior: none;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    select {
+      touch-action: manipulation;
     }
 
     #map {
-      height: 100vh;
+      position: absolute;
+      inset: 0;
       width: 100%;
+      height: 100%;
     }
+
+
+    /* =========================================================
+       MAIN MENU
+    ========================================================= */
 
     .panel {
       position: absolute;
       left: 10px;
+      top: 10px;
+
       z-index: 1000;
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.2);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
       width: 440px;
       max-width: calc(100vw - 20px);
+
+      background: rgba(255, 255, 255, 0.97);
+
+      padding: 10px;
+
+      border-radius: 10px;
+
+      box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.20);
+
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
     }
 
     #menuWrap {
-      top: 10px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -42,22 +121,42 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+
       gap: 10px;
+
+      min-height: 34px;
     }
 
     #menuTitle {
       font-weight: 700;
       font-size: 14px;
+
       white-space: nowrap;
     }
 
+    #menuHeaderRight {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      gap: 6px;
+
+      min-width: 0;
+    }
+
     #menuToggle {
-      padding: 6px 10px;
+      padding: 7px 10px;
+
       border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 9px;
+
       background: #fff;
+
       font-size: 13px;
+
       cursor: pointer;
+
+      min-height: 34px;
     }
 
     .menuBody {
@@ -68,11 +167,20 @@
       display: none;
     }
 
+
+    /* =========================================================
+       GENERAL CONTROLS
+    ========================================================= */
+
     .row {
       display: flex;
+
       gap: 8px;
+
       align-items: center;
+
       margin-bottom: 8px;
+
       flex-wrap: wrap;
     }
 
@@ -80,38 +188,66 @@
     select,
     button,
     textarea {
-      padding: 6px 8px;
+      padding: 7px 9px;
+
       border: 1px solid #ccc;
+
       border-radius: 8px;
+
       font-size: 14px;
+
       background: #fff;
-      font-family: inherit;
+
+      min-height: 34px;
+    }
+
+    input,
+    select,
+    textarea {
+      min-width: 0;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus,
+    button:focus-visible {
+      outline: 2px solid rgba(0, 100, 255, 0.25);
+      outline-offset: 1px;
     }
 
     textarea {
       width: 100%;
-      min-height: 60px;
+
+      min-height: 70px;
+
       resize: vertical;
     }
 
     #search {
       flex: 1;
+
       min-width: 200px;
     }
 
     label {
       font-size: 13px;
+
+      white-space: nowrap;
     }
 
     .hint {
       font-size: 12px;
+
       color: #555;
+
       margin-top: 4px;
-      line-height: 1.25;
+
+      line-height: 1.35;
     }
 
     .small {
       width: 130px;
+      max-width: 100%;
     }
 
     .grow {
@@ -121,8 +257,14 @@
 
     .btnRow {
       display: flex;
+
       gap: 8px;
+
       flex-wrap: wrap;
+    }
+
+    .btnRow button {
+      min-height: 36px;
     }
 
     .danger {
@@ -132,215 +274,836 @@
 
     .editMode {
       font-size: 12px;
+
       color: #0a5;
+
       margin-top: 4px;
+
       display: none;
     }
 
+
+    /* =========================================================
+       AUTH UI
+    ========================================================= */
+
     .authPill {
       font-size: 12px;
+
       color: #555;
+
       border: 1px solid #ddd;
-      padding: 4px 8px;
+
+      padding: 5px 8px;
+
       border-radius: 999px;
+
       max-width: 220px;
+
       overflow: hidden;
+
       text-overflow: ellipsis;
+
       white-space: nowrap;
     }
 
     .adminBadge {
       font-size: 11px;
+
       font-weight: 700;
+
       color: #0a5;
+
       border: 1px solid #0a5;
-      padding: 2px 6px;
+
+      padding: 3px 7px;
+
       border-radius: 999px;
     }
 
-    /* Full-screen List view */
+
+    /* =========================================================
+       LEAFLET MOBILE CONTROL IMPROVEMENTS
+    ========================================================= */
+
+    .leaflet-control-layers {
+      border-radius: 9px !important;
+    }
+
+    .leaflet-control-layers-toggle {
+      width: 38px !important;
+      height: 38px !important;
+    }
+
+    .leaflet-bar a {
+      width: 38px !important;
+      height: 38px !important;
+
+      line-height: 38px !important;
+    }
+
+
+    /* =========================================================
+       LIST VIEW
+    ========================================================= */
 
     #listViewOverlay {
-      position: absolute;
+      position: fixed;
+
       inset: 0;
-      z-index: 900;
-      background: rgba(255,255,255,0.97);
+
+      z-index: 2000;
+
+      background: rgba(255, 255, 255, 0.98);
+
       display: none;
-      overflow: auto;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+      overflow-y: auto;
+
+      overflow-x: hidden;
+
+      -webkit-overflow-scrolling: touch;
+
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+      padding-bottom:
+        env(safe-area-inset-bottom);
     }
 
     #listViewInner {
+      width: 100%;
+
       max-width: 1500px;
+
       margin: 0 auto;
+
       padding: 24px;
     }
 
     #listViewHeader {
       position: sticky;
+
       top: 0;
-      background: rgba(255,255,255,0.98);
+
+      background: rgba(255, 255, 255, 0.98);
+
+      padding-top: 4px;
+
       padding-bottom: 12px;
+
       margin-bottom: 16px;
-      z-index: 2;
+
+      z-index: 20;
+
       border-bottom: 1px solid #ddd;
     }
 
     #listViewHeaderTop {
       display: flex;
+
       justify-content: space-between;
+
       align-items: center;
+
       gap: 12px;
+
       flex-wrap: wrap;
     }
 
+    #listViewHeader h2 {
+      font-size: 24px;
+    }
+
     #closeListBtn {
-      padding: 8px 12px;
+      padding: 9px 14px;
+
       border: 1px solid #ccc;
+
       border-radius: 8px;
+
       background: #fff;
+
       cursor: pointer;
+
+      min-height: 38px;
     }
 
     .countySection {
-      margin-bottom: 26px;
+      margin-bottom: 30px;
     }
 
     .countyTitle {
       font-size: 22px;
+
       font-weight: 700;
+
       margin-bottom: 10px;
+
       padding-bottom: 6px;
+
       border-bottom: 2px solid #222;
     }
 
     .listHeader,
     .listRow {
       display: grid;
-      grid-template-columns: 280px 150px 120px 140px 120px 140px 140px;
+
+      grid-template-columns:
+        280px
+        150px
+        120px
+        140px
+        120px
+        140px
+        140px;
+
       gap: 12px;
+
       align-items: start;
     }
 
     .listHeader {
       font-weight: 700;
+
       font-size: 13px;
+
       color: #333;
+
       padding: 8px 10px;
+
       background: #f1f1f1;
+
       border-radius: 8px;
+
       margin-bottom: 6px;
+
       position: sticky;
+
       top: 74px;
-      z-index: 1;
+
+      z-index: 10;
     }
 
     .listRow {
       padding: 10px;
+
       border-radius: 8px;
+
       border: 1px solid #eee;
+
       margin-bottom: 6px;
+
       background: #fff;
+
+      word-break: break-word;
     }
 
     .locationNameBtn {
       appearance: none;
+
       border: none;
+
       background: none;
+
       padding: 0;
+
       margin: 0;
+
+      min-height: auto;
+
       font: inherit;
+
       color: #0b57d0;
+
       cursor: pointer;
+
       text-align: left;
+
       text-decoration: underline;
+
+      word-break: break-word;
     }
 
+
+    /* =========================================================
+       NOTES POPOVER
+    ========================================================= */
+
     .notesPopover {
-      position: absolute;
+      position: fixed;
+
       max-width: 320px;
+
       min-width: 220px;
+
       background: #fff;
+
       border: 1px solid #ccc;
+
       border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18);
+
       padding: 10px 12px;
+
       font-size: 13px;
+
       line-height: 1.4;
+
       z-index: 3000;
+
       display: none;
+
+      max-height: 70vh;
+
+      overflow-y: auto;
     }
 
     .notesPopoverTitle {
       font-weight: 700;
+
       margin-bottom: 6px;
+
+      padding-right: 20px;
     }
 
     .notesPopoverClose {
       float: right;
+
       border: none;
+
       background: none;
-      font-size: 16px;
+
+      font-size: 20px;
+
       cursor: pointer;
+
       line-height: 1;
+
       padding: 0;
+
       margin-left: 8px;
+
+      min-height: auto;
     }
 
     .muted {
       color: #777;
+
       font-style: italic;
     }
 
+
+    /* =========================================================
+       TABLET
+    ========================================================= */
+
     @media (max-width: 1100px) {
+
       .listHeader,
       .listRow {
-        grid-template-columns: 240px 130px 110px 130px 110px 120px 120px;
+        grid-template-columns:
+          240px
+          130px
+          110px
+          130px
+          110px
+          120px
+          120px;
+
         font-size: 13px;
       }
+
     }
 
+
+    /* =========================================================
+       SMALL TABLET
+    ========================================================= */
+
     @media (max-width: 900px) {
+
       #listViewInner {
         padding: 16px;
       }
 
       .listHeader,
       .listRow {
-        grid-template-columns: 220px 120px 100px 120px 100px 110px 110px;
+        grid-template-columns:
+          220px
+          120px
+          100px
+          120px
+          100px
+          110px
+          110px;
+
         gap: 8px;
+
         font-size: 12px;
       }
+
     }
 
+
+    /* =========================================================
+       PHONE
+    ========================================================= */
+
     @media (max-width: 600px) {
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+
+        overflow: hidden;
+      }
+
+      #map {
+        height: 100dvh;
+        min-height: 100vh;
+      }
+
+
+      /* -------------------------
+         MENU
+      ------------------------- */
+
       .panel {
-        width: calc(100vw - 20px);
+        left: 8px;
+
+        top:
+          calc(8px + env(safe-area-inset-top));
+
+        width:
+          calc(100vw - 16px);
+
+        max-width:
+          calc(100vw - 16px);
+
+        padding: 9px;
+
+        border-radius: 10px;
+      }
+
+      #menuHeader {
+        align-items: center;
+
+        gap: 6px;
+      }
+
+      #menuTitle {
+        font-size: 13px;
+      }
+
+      #menuHeaderRight {
+        gap: 4px;
       }
 
       .authPill {
-        max-width: 140px;
+        max-width: 105px;
+
+        font-size: 11px;
+
+        padding: 4px 6px;
+      }
+
+      .adminBadge {
+        font-size: 9px;
+
+        padding: 3px 5px;
+      }
+
+      #loginBtn,
+      #logoutBtn {
+        padding: 7px 8px;
+
+        min-height: 34px;
+
+        font-size: 12px;
+      }
+
+      #menuToggle {
+        min-height: 34px;
+
+        padding: 7px 9px;
+
+        font-size: 12px;
+      }
+
+
+      /* -------------------------
+         FORM CONTROLS
+      ------------------------- */
+
+      .row {
+        width: 100%;
+
+        gap: 7px;
+
+        align-items: stretch;
+      }
+
+      .row > input,
+      .row > select,
+      .row > button {
+        flex: 1 1 100%;
+
+        width: 100%;
+
+        min-width: 0;
+
+        min-height: 40px;
+      }
+
+      .row > label {
+        width: 100%;
+
+        margin-bottom: -4px;
+      }
+
+      #search {
+        min-width: 0;
+
+        width: 100%;
+
+        flex: 1 1 auto;
+      }
+
+      #clearBtn {
+        flex: 0 0 auto;
+
+        width: auto;
+
+        min-width: 70px;
+      }
+
+      .small,
+      .grow {
+        width: 100%;
+
+        min-width: 0;
+      }
+
+      input,
+      select,
+      button,
+      textarea {
+        font-size: 16px;
+      }
+
+      textarea {
+        min-height: 100px;
+      }
+
+      .btnRow {
+        width: 100%;
+
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .btnRow button {
+        width: 100%;
+
+        min-height: 42px;
+      }
+
+
+      /* -------------------------
+         LEAFLET
+      ------------------------- */
+
+      .leaflet-top {
+        top: 4px;
+      }
+
+      .leaflet-right {
+        right: 4px;
+      }
+
+      .leaflet-bottom {
+        bottom:
+          calc(4px + env(safe-area-inset-bottom));
+      }
+
+      .leaflet-control-layers {
+        font-size: 14px;
+      }
+
+      .leaflet-control-layers-expanded {
+        max-width: calc(100vw - 20px);
+
+        overflow: hidden;
+      }
+
+      .leaflet-control-layers-list {
+        max-width: 230px;
+      }
+
+      .leaflet-popup-content-wrapper {
+        max-width: calc(100vw - 50px);
+      }
+
+      .leaflet-popup-content {
+        max-width: calc(100vw - 75px);
+
+        font-size: 14px;
+      }
+
+
+      /* -------------------------
+         LIST VIEW
+      ------------------------- */
+
+      #listViewOverlay {
+        position: fixed;
+
+        height: 100dvh;
+
+        min-height: 100vh;
+
+        padding-bottom:
+          env(safe-area-inset-bottom);
       }
 
       #listViewInner {
-        padding: 12px;
+        padding:
+          calc(10px + env(safe-area-inset-top))
+          10px
+          calc(20px + env(safe-area-inset-bottom));
       }
 
-      .listHeader,
-      .listRow {
-        grid-template-columns: 180px 110px 90px 110px 90px 100px 100px;
-        gap: 8px;
+      #listViewHeader {
+        margin-bottom: 12px;
+
+        padding-bottom: 10px;
+      }
+
+      #listViewHeaderTop {
+        align-items: stretch;
+      }
+
+      #listViewHeader h2 {
+        font-size: 20px;
+
+        line-height: 1.2;
+      }
+
+      #listViewHeader .hint {
         font-size: 11px;
+      }
+
+      #closeListBtn {
+        width: 100%;
+
+        min-height: 42px;
+
+        font-size: 15px;
+      }
+
+      .countySection {
+        margin-bottom: 24px;
       }
 
       .countyTitle {
         font-size: 18px;
+
+        margin-bottom: 8px;
+
+        padding-bottom: 5px;
       }
+
+
+      /*
+        Instead of forcing a huge spreadsheet horizontally,
+        mobile converts every row into a readable card.
+      */
+
+      .listHeader {
+        display: none;
+      }
+
+      .listRow {
+        display: block;
+
+        padding: 12px;
+
+        margin-bottom: 9px;
+
+        border-radius: 10px;
+      }
+
+      .listRow > div {
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding: 5px 0;
+
+        border-bottom: 1px solid #f0f0f0;
+
+        font-size: 14px;
+
+        line-height: 1.3;
+      }
+
+      .listRow > div:last-child {
+        border-bottom: none;
+      }
+
+      .listRow > div:first-child {
+        display: block;
+
+        padding-top: 0;
+
+        padding-bottom: 8px;
+
+        margin-bottom: 3px;
+      }
+
+      .listRow > div:not(:first-child)::before {
+        font-weight: 700;
+
+        color: #555;
+
+        flex: 0 0 auto;
+      }
+
+      .listRow > div:nth-child(2)::before {
+        content: "Type";
+      }
+
+      .listRow > div:nth-child(3)::before {
+        content: "Status";
+      }
+
+      .listRow > div:nth-child(4)::before {
+        content: "Permission";
+      }
+
+      .listRow > div:nth-child(5)::before {
+        content: "Entity";
+      }
+
+      .listRow > div:nth-child(6)::before {
+        content: "Latitude";
+      }
+
+      .listRow > div:nth-child(7)::before {
+        content: "Longitude";
+      }
+
+      .locationNameBtn {
+        display: block;
+
+        width: 100%;
+
+        font-size: 16px;
+
+        font-weight: 700;
+
+        min-height: 32px;
+      }
+
+
+      /* -------------------------
+         NOTES POPOVER
+      ------------------------- */
+
+      .notesPopover {
+        position: fixed;
+
+        left: 10px !important;
+
+        right: 10px;
+
+        top: auto !important;
+
+        bottom:
+          calc(10px + env(safe-area-inset-bottom));
+
+        width: auto;
+
+        max-width: none;
+
+        min-width: 0;
+
+        max-height: 45vh;
+
+        font-size: 14px;
+
+        padding: 13px 14px;
+
+        border-radius: 12px;
+      }
+
+      .notesPopoverClose {
+        font-size: 24px;
+
+        padding: 2px 4px;
+      }
+
     }
+
+
+    /* =========================================================
+       VERY SMALL PHONES
+    ========================================================= */
+
+    @media (max-width: 380px) {
+
+      #menuTitle {
+        display: none;
+      }
+
+      #menuHeader {
+        justify-content: flex-end;
+      }
+
+      .authPill {
+        max-width: 95px;
+      }
+
+      .countyTitle {
+        font-size: 17px;
+      }
+
+      .listRow {
+        padding: 10px;
+      }
+
+      .listRow > div {
+        font-size: 13px;
+      }
+
+      .locationNameBtn {
+        font-size: 15px;
+      }
+
+    }
+
   </style>
 </head>
 
+
 <body>
+
+  <!-- =======================================================
+       MAIN MENU
+  ======================================================== -->
 
   <div id="menuWrap" class="panel collapsed">
 
@@ -350,25 +1113,42 @@
         Investigation Menu
       </div>
 
-      <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
+      <div id="menuHeaderRight">
 
-        <span id="adminBadge" class="adminBadge" style="display:none;">
+        <span
+          id="adminBadge"
+          class="adminBadge"
+          style="display:none;"
+        >
           ADMIN
         </span>
 
-        <span id="authState" class="authPill">
+        <span
+          id="authState"
+          class="authPill"
+        >
           Not signed in
         </span>
 
-        <button id="loginBtn" type="button">
+        <button
+          id="loginBtn"
+          type="button"
+        >
           Sign in
         </button>
 
-        <button id="logoutBtn" type="button" style="display:none;">
+        <button
+          id="logoutBtn"
+          type="button"
+          style="display:none;"
+        >
           Sign out
         </button>
 
-        <button id="menuToggle" type="button">
+        <button
+          id="menuToggle"
+          type="button"
+        >
           Open
         </button>
 
@@ -376,23 +1156,32 @@
 
     </div>
 
+
     <div class="menuBody">
 
-      <!-- Filters -->
+      <!-- =====================================================
+           FILTERS
+      ====================================================== -->
 
       <div id="controls">
 
         <div class="row">
+
           <input
             id="search"
             type="text"
             placeholder="Search location name..."
           />
 
-          <button id="clearBtn" type="button">
+          <button
+            id="clearBtn"
+            type="button"
+          >
             Clear
           </button>
+
         </div>
+
 
         <div class="row">
 
@@ -406,18 +1195,33 @@
             </option>
           </select>
 
+
           <label for="statusFilter">
             Status:
           </label>
 
           <select id="statusFilter">
-            <option value="ALL">All</option>
-            <option value="Active">Active</option>
-            <option value="Closed">Closed</option>
-            <option value="Unknown">Unknown</option>
+
+            <option value="ALL">
+              All
+            </option>
+
+            <option value="Active">
+              Active
+            </option>
+
+            <option value="Closed">
+              Closed
+            </option>
+
+            <option value="Unknown">
+              Unknown
+            </option>
+
           </select>
 
         </div>
+
 
         <div class="row">
 
@@ -426,24 +1230,52 @@
           </label>
 
           <select id="permissionFilter">
-            <option value="ALL">All</option>
-            <option value="Required">Required</option>
-            <option value="Not Required">Not Required</option>
-            <option value="Unknown">Unknown</option>
+
+            <option value="ALL">
+              All
+            </option>
+
+            <option value="Required">
+              Required
+            </option>
+
+            <option value="Not Required">
+              Not Required
+            </option>
+
+            <option value="Unknown">
+              Unknown
+            </option>
+
           </select>
+
 
           <label for="entityFilter">
             Entity:
           </label>
 
           <select id="entityFilter">
-            <option value="ALL">All</option>
-            <option value="Ghost">Ghost</option>
-            <option value="Demon">Demon</option>
-            <option value="Unknown">Unknown</option>
+
+            <option value="ALL">
+              All
+            </option>
+
+            <option value="Ghost">
+              Ghost
+            </option>
+
+            <option value="Demon">
+              Demon
+            </option>
+
+            <option value="Unknown">
+              Unknown
+            </option>
+
           </select>
 
         </div>
+
 
         <div class="row">
 
@@ -452,30 +1284,67 @@
           </label>
 
           <select id="typeFilter">
-            <option value="ALL">All</option>
-            <option value="Cemetery">Cemetery</option>
-            <option value="Structure (In Use)">Structure (In Use)</option>
-            <option value="Structure (Abandoned)">Structure (Abandoned)</option>
-            <option value="Park">Park</option>
-            <option value="Lake">Lake</option>
-            <option value="Road/Bridge">Road/Bridge</option>
-            <option value="Other">Other</option>
-            <option value="Unknown">Unknown</option>
+
+            <option value="ALL">
+              All
+            </option>
+
+            <option value="Cemetery">
+              Cemetery
+            </option>
+
+            <option value="Structure (In Use)">
+              Structure (In Use)
+            </option>
+
+            <option value="Structure (Abandoned)">
+              Structure (Abandoned)
+            </option>
+
+            <option value="Park">
+              Park
+            </option>
+
+            <option value="Lake">
+              Lake
+            </option>
+
+            <option value="Road/Bridge">
+              Road/Bridge
+            </option>
+
+            <option value="Other">
+              Other
+            </option>
+
+            <option value="Unknown">
+              Unknown
+            </option>
+
           </select>
 
         </div>
 
       </div>
 
-      <!-- Section overlays -->
+
+      <!-- =====================================================
+           SECTION OVERLAYS
+      ====================================================== -->
 
       <div style="margin-top:10px;">
 
-        <div class="row" style="margin-bottom:2px;">
+        <div
+          class="row"
+          style="margin-bottom:2px;"
+        >
+
           <strong>
             Section Overlays
           </strong>
+
         </div>
+
 
         <div class="row">
 
@@ -483,15 +1352,24 @@
             View:
           </label>
 
-          <select id="sectionMapFilter" class="grow">
+          <select
+            id="sectionMapFilter"
+            class="grow"
+          >
+
             <option value="ALL">
               All section maps
             </option>
+
           </select>
 
         </div>
 
-        <div id="sectionAdminTools" style="display:none;">
+
+        <div
+          id="sectionAdminTools"
+          style="display:none;"
+        >
 
           <div class="row">
 
@@ -499,7 +1377,7 @@
               id="sectionMapName"
               class="grow"
               type="text"
-              placeholder="Map name for NEW sections (ex: Crown Hill Cemetery)"
+              placeholder="Map name for NEW sections"
             />
 
             <input
@@ -513,13 +1391,17 @@
 
           </div>
 
+
           <div class="row">
 
             <label for="sectionDefaultStatus">
               Default:
             </label>
 
-            <select id="sectionDefaultStatus" class="small">
+            <select
+              id="sectionDefaultStatus"
+              class="small"
+            >
 
               <option value="uninvestigated">
                 White (Uninvestigated)
@@ -537,28 +1419,47 @@
 
           </div>
 
+
           <div class="hint">
 
-            Admin only: draw rectangles/polygons using the toolbar (top-right).
-            Click a section/hex to cycle status.
+            Admin only: draw rectangles/polygons using the toolbar.
+
             <br>
+
+            Click a section/hex to cycle status.
+
+            <br>
+
             Right-click a section to rename map / change its number.
 
           </div>
 
         </div>
 
+
         <div class="hint">
-          Status colors: White = uninvestigated,
+
+          Status colors:
+
+          White = uninvestigated,
+
           Yellow = possible activity,
+
           Green = confirmed activity.
+
         </div>
 
       </div>
 
-      <!-- New location -->
 
-      <div id="newLocationPanel" style="margin-top:10px;">
+      <!-- =====================================================
+           NEW LOCATION
+      ====================================================== -->
+
+      <div
+        id="newLocationPanel"
+        style="margin-top:10px;"
+      >
 
         <div class="row">
 
@@ -572,13 +1473,28 @@
 
         </div>
 
-        <div id="mustLoginNote" class="hint" style="display:none;">
-          Sign in with an authorized editor account to add or edit locations.
+
+        <div
+          id="mustLoginNote"
+          class="hint"
+          style="display:none;"
+        >
+
+          Sign in with your @prcofok.org Google account to add locations.
+
         </div>
 
-        <div id="editModeBanner" class="editMode">
-          Editing an existing pin. Submit will UPDATE it.
+
+        <div
+          id="editModeBanner"
+          class="editMode"
+        >
+
+          Editing an existing pin.
+          Submit will UPDATE it.
+
         </div>
+
 
         <form id="newLocationForm">
 
@@ -592,17 +1508,27 @@
               required
             />
 
-            <select id="nl_county" class="small">
+
+            <select
+              id="nl_county"
+              class="small"
+            >
+
               <option value="Unassigned">
                 Unassigned
               </option>
+
             </select>
 
           </div>
 
+
           <div class="row">
 
-            <select id="nl_type" class="small">
+            <select
+              id="nl_type"
+              class="small"
+            >
 
               <option value="Unknown">
                 Type: Unknown
@@ -638,7 +1564,11 @@
 
             </select>
 
-            <select id="nl_status" class="small">
+
+            <select
+              id="nl_status"
+              class="small"
+            >
 
               <option value="Active">
                 Active
@@ -654,7 +1584,11 @@
 
             </select>
 
-            <select id="nl_permission" class="small">
+
+            <select
+              id="nl_permission"
+              class="small"
+            >
 
               <option value="Unknown">
                 Permission: Unknown
@@ -670,7 +1604,11 @@
 
             </select>
 
-            <select id="nl_entity" class="small">
+
+            <select
+              id="nl_entity"
+              class="small"
+            >
 
               <option value="Unknown">
                 Entity: Unknown
@@ -687,6 +1625,7 @@
             </select>
 
           </div>
+
 
           <div class="row">
 
@@ -708,11 +1647,15 @@
               required
             />
 
-            <button id="pickBtn" type="button">
+            <button
+              id="pickBtn"
+              type="button"
+            >
               Pick from map
             </button>
 
           </div>
+
 
           <div class="row">
 
@@ -723,9 +1666,13 @@
 
           </div>
 
+
           <div class="btnRow">
 
-            <button id="submitBtn" type="submit">
+            <button
+              id="submitBtn"
+              type="submit"
+            >
               Add Location
             </button>
 
@@ -739,9 +1686,16 @@
 
           </div>
 
-          <div id="pickHint" class="hint" style="display:none;">
+
+          <div
+            id="pickHint"
+            class="hint"
+            style="display:none;"
+          >
+
             Click the map to set coordinates.
             Press Esc to cancel.
+
           </div>
 
         </form>
@@ -752,9 +1706,17 @@
 
   </div>
 
+
+  <!-- =========================================================
+       MAP
+  ========================================================== -->
+
   <div id="map"></div>
 
-  <!-- List view -->
+
+  <!-- =========================================================
+       LIST VIEW
+  ========================================================== -->
 
   <div id="listViewOverlay">
 
@@ -770,14 +1732,23 @@
               Haunted Locations List
             </h2>
 
-            <div class="hint" style="margin-top:4px;">
+            <div
+              class="hint"
+              style="margin-top:4px;"
+            >
+
               Grouped by county and sorted alphabetically.
               Click a location name to view notes.
+
             </div>
 
           </div>
 
-          <button id="closeListBtn" type="button">
+
+          <button
+            id="closeListBtn"
+            type="button"
+          >
             Close List
           </button>
 
@@ -785,22 +1756,44 @@
 
       </div>
 
+
       <div id="listViewContent"></div>
 
     </div>
 
   </div>
 
-  <div id="notesPopover" class="notesPopover"></div>
+
+  <!-- =========================================================
+       NOTES POPOVER
+  ========================================================== -->
+
+  <div
+    id="notesPopover"
+    class="notesPopover"
+  ></div>
+
+
+  <!-- =========================================================
+       LEAFLET
+  ========================================================== -->
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+
+  <!-- =========================================================
+       APPLICATION
+  ========================================================== -->
 
   <script type="module">
 
     import {
       initializeApp
-    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    } from
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
 
     import {
       getFirestore,
@@ -811,7 +1804,9 @@
       updateDoc,
       deleteDoc,
       serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    } from
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
 
     import {
       getAuth,
@@ -819,12 +1814,13 @@
       signInWithPopup,
       signOut,
       onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    } from
+      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
 
     /* =========================================================
        OKLAHOMA COUNTIES
-    ========================================================= */
+    ========================================================== */
 
     const OKLAHOMA_COUNTIES = [
 
@@ -917,47 +1913,65 @@
 
       selectEl.innerHTML = "";
 
+
       if (includeAll) {
 
-        const allOpt = document.createElement("option");
+        const allOpt =
+          document.createElement("option");
 
         allOpt.value = "ALL";
+
         allOpt.textContent = "All";
 
         selectEl.appendChild(allOpt);
+
       }
+
 
       if (includeUnassigned) {
 
-        const unassignedOpt = document.createElement("option");
+        const unassignedOpt =
+          document.createElement("option");
 
-        unassignedOpt.value = "Unassigned";
-        unassignedOpt.textContent = "Unassigned";
+        unassignedOpt.value =
+          "Unassigned";
 
-        selectEl.appendChild(unassignedOpt);
+        unassignedOpt.textContent =
+          "Unassigned";
+
+        selectEl.appendChild(
+          unassignedOpt
+        );
+
       }
 
-      OKLAHOMA_COUNTIES.forEach((county) => {
 
-        const opt = document.createElement("option");
+      OKLAHOMA_COUNTIES.forEach(
+        (county) => {
 
-        opt.value = county;
-        opt.textContent = county;
+          const opt =
+            document.createElement("option");
 
-        selectEl.appendChild(opt);
+          opt.value = county;
 
-      });
+          opt.textContent = county;
+
+          selectEl.appendChild(opt);
+
+        }
+      );
 
     }
 
 
     /* =========================================================
        FIREBASE
-    ========================================================= */
+    ========================================================== */
 
     const firebaseConfig = {
 
-      apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
+      apiKey:
+        "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
 
       authDomain:
         "oklahoma-investigation-map.firebaseapp.com",
@@ -977,60 +1991,68 @@
     };
 
 
-    const app = initializeApp(firebaseConfig);
+    const app =
+      initializeApp(firebaseConfig);
 
-    const db = getFirestore(app);
+
+    const db =
+      getFirestore(app);
 
 
-    const LOCATIONS = "locations";
+    const LOCATIONS =
+      "locations";
 
-    const SECTIONS = "section_overlays";
+
+    const SECTIONS =
+      "section_overlays";
 
 
     /* =========================================================
-       AUTHORIZATION
-       
-       BOTH accounts below have FULL editor access.
-    ========================================================= */
+       AUTH
+    ========================================================== */
 
-    const auth = getAuth(app);
-
-    const provider = new GoogleAuthProvider();
+    const auth =
+      getAuth(app);
 
 
-    const AUTHORIZED_EDITORS = new Set([
+    const provider =
+      new GoogleAuthProvider();
 
-      "fclegg@prcofok.org",
 
-      "sws12022004@gmail.com"
+    provider.setCustomParameters({
+      hd: "prcofok.org"
+    });
 
-    ]);
+
+    const ALLOWED_DOMAIN =
+      "@prcofok.org";
+
+
+    /*
+      Both accounts have editing/admin privileges.
+    */
+
+    const AUTHORIZED_EDITORS =
+      new Set([
+        "fclegg@prcofok.org",
+        "sws12022004@gmail.com"
+      ]);
 
 
     let currentUser = null;
 
+    let isMember = false;
+
     let isAdmin = false;
 
 
-    function isAuthorizedEditor(email) {
-
-      if (!email) {
-        return false;
-      }
-
-      return AUTHORIZED_EDITORS.has(
-        email.toLowerCase()
-      );
-
-    }
-
-
     /* =========================================================
-       DOM REFERENCES
-    ========================================================= */
+       ELEMENT REFERENCES
+    ========================================================== */
 
     const menuWrap =
       document.getElementById("menuWrap");
+
 
     const menuToggle =
       document.getElementById("menuToggle");
@@ -1039,11 +2061,14 @@
     const loginBtn =
       document.getElementById("loginBtn");
 
+
     const logoutBtn =
       document.getElementById("logoutBtn");
 
+
     const authStateEl =
       document.getElementById("authState");
+
 
     const adminBadgeEl =
       document.getElementById("adminBadge");
@@ -1052,20 +2077,26 @@
     const searchEl =
       document.getElementById("search");
 
+
     const clearBtn =
       document.getElementById("clearBtn");
+
 
     const countyFilterEl =
       document.getElementById("countyFilter");
 
+
     const statusFilterEl =
       document.getElementById("statusFilter");
+
 
     const permissionFilterEl =
       document.getElementById("permissionFilter");
 
+
     const entityFilterEl =
       document.getElementById("entityFilter");
+
 
     const typeFilterEl =
       document.getElementById("typeFilter");
@@ -1078,8 +2109,10 @@
     const editModeBanner =
       document.getElementById("editModeBanner");
 
+
     const cancelEditBtn =
       document.getElementById("cancelEditBtn");
+
 
     const submitBtn =
       document.getElementById("submitBtn");
@@ -1088,35 +2121,46 @@
     const form =
       document.getElementById("newLocationForm");
 
+
     const nl_name =
       document.getElementById("nl_name");
+
 
     const nl_county =
       document.getElementById("nl_county");
 
+
     const nl_type =
       document.getElementById("nl_type");
+
 
     const nl_status =
       document.getElementById("nl_status");
 
+
     const nl_permission =
       document.getElementById("nl_permission");
+
 
     const nl_entity =
       document.getElementById("nl_entity");
 
+
     const nl_lat =
       document.getElementById("nl_lat");
+
 
     const nl_lng =
       document.getElementById("nl_lng");
 
+
     const nl_details =
       document.getElementById("nl_details");
 
+
     const pickBtn =
       document.getElementById("pickBtn");
+
 
     const pickHint =
       document.getElementById("pickHint");
@@ -1125,14 +2169,18 @@
     const sectionMapFilter =
       document.getElementById("sectionMapFilter");
 
+
     const sectionAdminTools =
       document.getElementById("sectionAdminTools");
+
 
     const sectionMapName =
       document.getElementById("sectionMapName");
 
+
     const sectionNextNumber =
       document.getElementById("sectionNextNumber");
+
 
     const sectionDefaultStatus =
       document.getElementById("sectionDefaultStatus");
@@ -1141,11 +2189,14 @@
     const listViewOverlay =
       document.getElementById("listViewOverlay");
 
+
     const listViewContent =
       document.getElementById("listViewContent");
 
+
     const closeListBtn =
       document.getElementById("closeListBtn");
+
 
     const notesPopover =
       document.getElementById("notesPopover");
@@ -1157,6 +2208,7 @@
       true
     );
 
+
     populateCountySelect(
       nl_county,
       false,
@@ -1166,39 +2218,57 @@
 
     /* =========================================================
        MENU
-    ========================================================= */
+    ========================================================== */
 
-    function setMenuCollapsed(collapsed) {
+    function setMenuCollapsed(
+      collapsed
+    ) {
 
       menuWrap.classList.toggle(
         "collapsed",
         collapsed
       );
 
+
       menuToggle.textContent =
-        collapsed ? "Open" : "Close";
+        collapsed
+          ? "Open"
+          : "Close";
 
     }
 
 
-    menuToggle.addEventListener("click", () => {
+    menuToggle.addEventListener(
+      "click",
+      () => {
 
-      const collapsed =
-        menuWrap.classList.contains("collapsed");
+        const collapsed =
+          menuWrap.classList.contains(
+            "collapsed"
+          );
 
-      setMenuCollapsed(!collapsed);
+        setMenuCollapsed(
+          !collapsed
+        );
 
-    });
+      }
+    );
+
+
+    const mobileQuery =
+      window.matchMedia(
+        "(max-width: 600px)"
+      );
 
 
     setMenuCollapsed(
-      window.matchMedia("(max-width: 600px)").matches
+      mobileQuery.matches
     );
 
 
     /* =========================================================
        AUTH UI
-    ========================================================= */
+    ========================================================== */
 
     function refreshAuthUI() {
 
@@ -1223,53 +2293,52 @@
           "block";
 
         return;
+
       }
 
 
       authStateEl.textContent =
-        currentUser.email || "Signed in";
+        currentUser.email ||
+        "Signed in";
 
 
       loginBtn.style.display =
         "none";
 
+
       logoutBtn.style.display =
         "inline-block";
 
 
-      if (isAdmin) {
+      adminBadgeEl.style.display =
+        isAdmin
+          ? "inline-block"
+          : "none";
 
-        adminBadgeEl.style.display =
-          "inline-block";
 
-        sectionAdminTools.style.display =
-          "block";
+      sectionAdminTools.style.display =
+        isAdmin
+          ? "block"
+          : "none";
 
-        mustLoginNote.style.display =
-          "none";
 
-      } else {
-
-        adminBadgeEl.style.display =
-          "none";
-
-        sectionAdminTools.style.display =
-          "none";
-
-        mustLoginNote.style.display =
-          "block";
-
-      }
+      mustLoginNote.style.display =
+        isMember
+          ? "none"
+          : "block";
 
     }
 
 
     /* =========================================================
        MAP
-    ========================================================= */
+    ========================================================== */
 
     const map =
-      L.map("map").setView(
+      L.map("map", {
+        tap: true,
+        zoomControl: true
+      }).setView(
         [35.4676, -97.5164],
         7
       );
@@ -1280,6 +2349,7 @@
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           maxZoom: 19,
+
           attribution:
             "&copy; OpenStreetMap contributors"
         }
@@ -1291,6 +2361,7 @@
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
           maxZoom: 19,
+
           attribution:
             "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
         }
@@ -1304,22 +2375,19 @@
       L.layerGroup();
 
 
-    L.control.layers(
-
-      {
-        "Streets": streets,
-        "Satellite": satellite
-      },
-
-      {
-        "List": listOverlayLayer
-      },
-
-      {
-        position: "topright"
-      }
-
-    ).addTo(map);
+    const layersControl =
+      L.control.layers(
+        {
+          "Streets": streets,
+          "Satellite": satellite
+        },
+        {
+          "List": listOverlayLayer
+        },
+        {
+          position: "topright"
+        }
+      ).addTo(map);
 
 
     const markerLayer =
@@ -1328,26 +2396,40 @@
 
     let markers = [];
 
+
     let editingId = null;
+
 
     let locationDocs = [];
 
 
     /* =========================================================
-       LOCATION EDIT MODE
-    ========================================================= */
+       LOCATION EDITING
+    ========================================================== */
 
-    function setEditMode(idOrNull) {
+    function setEditMode(
+      idOrNull
+    ) {
 
-      editingId = idOrNull;
+      editingId =
+        idOrNull;
 
-      const on = !!editingId;
+
+      const on =
+        !!editingId;
+
 
       editModeBanner.style.display =
-        on ? "block" : "none";
+        on
+          ? "block"
+          : "none";
+
 
       cancelEditBtn.style.display =
-        on ? "inline-block" : "none";
+        on
+          ? "inline-block"
+          : "none";
+
 
       submitBtn.textContent =
         on
@@ -1357,33 +2439,41 @@
     }
 
 
-    /* =========================================================
-       MARKERS
-    ========================================================= */
+    function makeMarker(
+      loc
+    ) {
 
-    function makeMarker(loc) {
+      const actions =
+        isAdmin
+          ? `
+            <div
+              style="
+                margin-top:8px;
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+              "
+            >
 
-      const actions = isAdmin
-        ? `
-          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button
+                type="button"
+                class="editPinBtn"
+                data-id="${loc.id}"
+              >
+                Edit
+              </button>
 
-            <button
-              type="button"
-              class="editPinBtn"
-              data-id="${loc.id}">
-              Edit
-            </button>
+              <button
+                type="button"
+                class="deletePinBtn danger"
+                data-id="${loc.id}"
+              >
+                Delete
+              </button>
 
-            <button
-              type="button"
-              class="deletePinBtn danger"
-              data-id="${loc.id}">
-              Delete
-            </button>
-
-          </div>
-        `
-        : "";
+            </div>
+          `
+          : "";
 
 
       return L.marker([
@@ -1420,7 +2510,11 @@
 
           <br><br>
 
-          ${escapeHtml(loc.details || "")}
+          ${
+            loc.details
+              ? escapeHtml(loc.details)
+              : ""
+          }
 
           ${actions}
         `
@@ -1435,21 +2529,24 @@
       markers = [];
 
 
-      locationDocs.forEach((loc) => {
+      locationDocs.forEach(
+        (loc) => {
 
-        if (
-          Number.isFinite(loc.lat) &&
-          Number.isFinite(loc.lng)
-        ) {
+          if (
+            Number.isFinite(loc.lat) &&
+            Number.isFinite(loc.lng)
+          ) {
 
-          markers.push({
-            loc,
-            marker: makeMarker(loc)
-          });
+            markers.push({
+              loc,
+              marker:
+                makeMarker(loc)
+            });
+
+          }
 
         }
-
-      });
+      );
 
 
       applyFilters();
@@ -1459,26 +2556,27 @@
     }
 
 
-    /* =========================================================
-       FILTERS
-    ========================================================= */
-
     function applyFilters() {
 
       const countyValue =
         countyFilterEl.value;
 
+
       const statusValue =
         statusFilterEl.value;
+
 
       const permissionValue =
         permissionFilterEl.value;
 
+
       const entityValue =
         entityFilterEl.value;
 
+
       const typeValue =
         typeFilterEl.value;
+
 
       const searchValue =
         searchEl.value
@@ -1489,80 +2587,116 @@
       markerLayer.clearLayers();
 
 
-      markers.forEach(({ loc, marker }) => {
+      markers.forEach(
+        ({ loc, marker }) => {
 
-        const countyOk =
-          countyValue === "ALL" ||
-          loc.county === countyValue;
-
-        const statusOk =
-          statusValue === "ALL" ||
-          loc.status === statusValue;
-
-        const permissionOk =
-          permissionValue === "ALL" ||
-          loc.permission === permissionValue;
-
-        const entityOk =
-          entityValue === "ALL" ||
-          loc.entity === entityValue;
-
-        const typeOk =
-          typeValue === "ALL" ||
-          loc.type === typeValue;
-
-        const searchOk =
-          searchValue === "" ||
-          String(loc.name || "")
-            .toLowerCase()
-            .includes(searchValue);
+          const countyOk =
+            countyValue === "ALL" ||
+            loc.county === countyValue;
 
 
-        if (
-          countyOk &&
-          statusOk &&
-          permissionOk &&
-          entityOk &&
-          typeOk &&
-          searchOk
-        ) {
+          const statusOk =
+            statusValue === "ALL" ||
+            loc.status === statusValue;
 
-          marker.addTo(markerLayer);
+
+          const permissionOk =
+            permissionValue === "ALL" ||
+            loc.permission ===
+              permissionValue;
+
+
+          const entityOk =
+            entityValue === "ALL" ||
+            loc.entity ===
+              entityValue;
+
+
+          const typeOk =
+            typeValue === "ALL" ||
+            loc.type === typeValue;
+
+
+          const searchOk =
+            searchValue === "" ||
+            String(
+              loc.name || ""
+            )
+              .toLowerCase()
+              .includes(searchValue);
+
+
+          if (
+            countyOk &&
+            statusOk &&
+            permissionOk &&
+            entityOk &&
+            typeOk &&
+            searchOk
+          ) {
+
+            marker.addTo(
+              markerLayer
+            );
+
+          }
 
         }
+      );
 
-      });
+    }
+
+
+    /* =========================================================
+       SAFE HTML
+    ========================================================== */
+
+    function escapeHtml(
+      str
+    ) {
+
+      return String(
+        str ?? ""
+      )
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+        .replace(
+          /</g,
+          "&lt;"
+        )
+        .replace(
+          />/g,
+          "&gt;"
+        )
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+
+    }
+
+
+    function normalizeCounty(
+      county
+    ) {
+
+      return county &&
+        county !== "Unassigned"
+        ? county
+        : "Unassigned";
 
     }
 
 
     /* =========================================================
        LIST VIEW
-    ========================================================= */
-
-    function escapeHtml(str) {
-
-      return String(str ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
-    }
-
-
-    function normalizeCounty(county) {
-
-      return county &&
-        county !== "Unassigned"
-
-        ? county
-
-        : "Unassigned";
-
-    }
-
+    ========================================================== */
 
     function renderListView() {
 
@@ -1570,144 +2704,235 @@
         new Map();
 
 
-      locationDocs.forEach((loc) => {
+      locationDocs.forEach(
+        (loc) => {
 
-        const county =
-          normalizeCounty(loc.county);
+          const county =
+            normalizeCounty(
+              loc.county
+            );
 
-        if (!grouped.has(county)) {
-          grouped.set(county, []);
+
+          if (
+            !grouped.has(county)
+          ) {
+
+            grouped.set(
+              county,
+              []
+            );
+
+          }
+
+
+          grouped
+            .get(county)
+            .push(loc);
+
         }
-
-        grouped.get(county).push(loc);
-
-      });
+      );
 
 
       const countyNames =
-        Array.from(grouped.keys())
-          .sort((a, b) =>
+        Array.from(
+          grouped.keys()
+        ).sort(
+          (a, b) =>
             a.localeCompare(b)
-          );
+        );
 
 
-      if (countyNames.length === 0) {
+      if (
+        countyNames.length === 0
+      ) {
 
         listViewContent.innerHTML =
-          `<div class="muted">No locations found.</div>`;
+          `
+            <div class="muted">
+              No locations found.
+            </div>
+          `;
 
         return;
+
       }
 
 
       let html = "";
 
 
-      countyNames.forEach((county) => {
+      countyNames.forEach(
+        (county) => {
 
-        const items =
-          grouped.get(county)
-            .slice()
-            .sort((a, b) =>
-              a.name.localeCompare(b.name)
-            );
+          const items =
+            grouped
+              .get(county)
+              .slice()
+              .sort(
+                (a, b) =>
+                  String(a.name)
+                    .localeCompare(
+                      String(b.name)
+                    )
+              );
 
-
-        html += `
-
-          <section class="countySection">
-
-            <div class="countyTitle">
-              ${escapeHtml(county)}
-            </div>
-
-            <div class="listHeader">
-
-              <div>Location Name</div>
-              <div>Type</div>
-              <div>Status</div>
-              <div>Permission</div>
-              <div>Entity</div>
-              <div>Latitude</div>
-              <div>Longitude</div>
-
-            </div>
-
-        `;
-
-
-        items.forEach((loc) => {
 
           html += `
 
-            <div class="listRow">
+            <section
+              class="countySection"
+            >
 
-              <div>
-
-                <button
-                  type="button"
-                  class="locationNameBtn"
-                  data-name="${escapeHtml(loc.name)}"
-                  data-notes="${escapeHtml(loc.details || "")}"
-                >
-                  ${escapeHtml(loc.name)}
-                </button>
-
+              <div
+                class="countyTitle"
+              >
+                ${escapeHtml(county)}
               </div>
 
-              <div>
-                ${escapeHtml(loc.type || "Unknown")}
-              </div>
 
-              <div>
-                ${escapeHtml(loc.status || "Unknown")}
-              </div>
+              <div
+                class="listHeader"
+              >
 
-              <div>
-                ${escapeHtml(loc.permission || "Unknown")}
-              </div>
+                <div>
+                  Location Name
+                </div>
 
-              <div>
-                ${escapeHtml(loc.entity || "Unknown")}
-              </div>
+                <div>
+                  Type
+                </div>
 
-              <div>
-                ${
-                  Number.isFinite(loc.lat)
-                    ? loc.lat.toFixed(6)
-                    : ""
-                }
-              </div>
+                <div>
+                  Status
+                </div>
 
-              <div>
-                ${
-                  Number.isFinite(loc.lng)
-                    ? loc.lng.toFixed(6)
-                    : ""
-                }
-              </div>
+                <div>
+                  Permission
+                </div>
 
-            </div>
+                <div>
+                  Entity
+                </div>
+
+                <div>
+                  Latitude
+                </div>
+
+                <div>
+                  Longitude
+                </div>
+
+              </div>
 
           `;
 
-        });
+
+          items.forEach(
+            (loc) => {
+
+              html += `
+
+                <div
+                  class="listRow"
+                >
+
+                  <div>
+
+                    <button
+                      type="button"
+                      class="locationNameBtn"
+                      data-name="${escapeHtml(loc.name)}"
+                      data-notes="${escapeHtml(loc.details || "")}"
+                    >
+
+                      ${escapeHtml(loc.name)}
+
+                    </button>
+
+                  </div>
 
 
-        html += `
-          </section>
-        `;
+                  <div>
+                    ${escapeHtml(
+                      loc.type ||
+                      "Unknown"
+                    )}
+                  </div>
 
-      });
+
+                  <div>
+                    ${escapeHtml(
+                      loc.status ||
+                      "Unknown"
+                    )}
+                  </div>
+
+
+                  <div>
+                    ${escapeHtml(
+                      loc.permission ||
+                      "Unknown"
+                    )}
+                  </div>
+
+
+                  <div>
+                    ${escapeHtml(
+                      loc.entity ||
+                      "Unknown"
+                    )}
+                  </div>
+
+
+                  <div>
+                    ${
+                      Number.isFinite(
+                        loc.lat
+                      )
+                        ? loc.lat.toFixed(6)
+                        : ""
+                    }
+                  </div>
+
+
+                  <div>
+                    ${
+                      Number.isFinite(
+                        loc.lng
+                      )
+                        ? loc.lng.toFixed(6)
+                        : ""
+                    }
+                  </div>
+
+                </div>
+
+              `;
+
+            }
+          );
+
+
+          html += `
+            </section>
+          `;
+
+        }
+      );
 
 
       listViewContent.innerHTML =
         html;
 
+
       wireLocationNoteButtons();
 
     }
 
+
+    /* =========================================================
+       NOTES POPOVER
+    ========================================================== */
 
     function showNotesPopover(
       buttonEl,
@@ -1720,7 +2945,8 @@
 
 
       const notesText =
-        notes && notes.trim()
+        notes &&
+        notes.trim()
           ? notes
           : "No notes available.";
 
@@ -1730,11 +2956,14 @@
         <button
           type="button"
           class="notesPopoverClose"
-          aria-label="Close notes">
+          aria-label="Close notes"
+        >
           &times;
         </button>
 
-        <div class="notesPopoverTitle">
+        <div
+          class="notesPopoverTitle"
+        >
           ${escapeHtml(name)}
         </div>
 
@@ -1749,32 +2978,62 @@
         "block";
 
 
-      const popoverWidth = 320;
+      /*
+        On phones the CSS handles
+        the bottom-sheet positioning.
+      */
+
+      if (
+        window.matchMedia(
+          "(max-width: 600px)"
+        ).matches
+      ) {
+
+        notesPopover.style.left =
+          "10px";
+
+        notesPopover.style.right =
+          "10px";
+
+        notesPopover.style.top =
+          "auto";
+
+        notesPopover.style.bottom =
+          "calc(10px + env(safe-area-inset-bottom))";
+
+      } else {
+
+        const popoverWidth =
+          320;
 
 
-      const left =
-        Math.min(
-          window.scrollX +
-            rect.right +
-            10,
-
-          window.scrollX +
+        const left =
+          Math.min(
+            rect.right + 10,
             window.innerWidth -
-            popoverWidth -
-            16
-        );
+              popoverWidth -
+              16
+          );
 
 
-      const top =
-        window.scrollY +
-        rect.top;
+        const top =
+          rect.top;
 
 
-      notesPopover.style.left =
-        `${Math.max(16, left)}px`;
+        notesPopover.style.left =
+          `${Math.max(
+            16,
+            left
+          )}px`;
 
-      notesPopover.style.top =
-        `${Math.max(16, top)}px`;
+
+        notesPopover.style.top =
+          `${Math.max(
+            16,
+            top
+          )}px`;
+
+      }
 
 
       const closeBtn =
@@ -1800,6 +3059,7 @@
       notesPopover.style.display =
         "none";
 
+
       notesPopover.innerHTML =
         "";
 
@@ -1809,49 +3069,55 @@
     function wireLocationNoteButtons() {
 
       document
-        .querySelectorAll(".locationNameBtn")
-        .forEach((btn) => {
+        .querySelectorAll(
+          ".locationNameBtn"
+        )
+        .forEach(
+          (btn) => {
 
-          btn.addEventListener(
-            "click",
-            (e) => {
+            btn.addEventListener(
+              "click",
+              (e) => {
 
-              e.stopPropagation();
-
-
-              const sameButton =
-                notesPopover.dataset.anchorName ===
-                  btn.dataset.name &&
-                notesPopover.style.display ===
-                  "block";
+                e.stopPropagation();
 
 
-              if (sameButton) {
+                const sameButton =
+                  notesPopover.dataset.anchorName ===
+                    btn.dataset.name &&
+                  notesPopover.style.display ===
+                    "block";
 
-                hideNotesPopover();
+
+                if (sameButton) {
+
+                  hideNotesPopover();
+
+                  notesPopover.dataset.anchorName =
+                    "";
+
+                  return;
+
+                }
+
 
                 notesPopover.dataset.anchorName =
-                  "";
+                  btn.dataset.name || "";
 
-                return;
+
+                showNotesPopover(
+                  btn,
+                  btn.dataset.name ||
+                    "Location",
+                  btn.dataset.notes ||
+                    ""
+                );
 
               }
+            );
 
-
-              notesPopover.dataset.anchorName =
-                btn.dataset.name || "";
-
-
-              showNotesPopover(
-                btn,
-                btn.dataset.name || "Location",
-                btn.dataset.notes || ""
-              );
-
-            }
-          );
-
-        });
+          }
+        );
 
     }
 
@@ -1863,6 +3129,9 @@
       listViewOverlay.style.display =
         "block";
 
+      document.body.style.overflow =
+        "hidden";
+
     }
 
 
@@ -1871,11 +3140,25 @@
       listViewOverlay.style.display =
         "none";
 
+
       hideNotesPopover();
 
-      map.removeLayer(
-        listOverlayLayer
-      );
+
+      document.body.style.overflow =
+        "hidden";
+
+
+      if (
+        map.hasLayer(
+          listOverlayLayer
+        )
+      ) {
+
+        map.removeLayer(
+          listOverlayLayer
+        );
+
+      }
 
     }
 
@@ -1886,26 +3169,48 @@
     );
 
 
-    map.on("overlayadd", (e) => {
+    map.on(
+      "overlayadd",
+      (e) => {
 
-      if (e.layer === listOverlayLayer) {
+        if (
+          e.layer ===
+          listOverlayLayer
+        ) {
 
-        openListView();
+          openListView();
 
-      }
-
-    });
-
-
-    map.on("overlayremove", (e) => {
-
-      if (e.layer === listOverlayLayer) {
-
-        closeListView();
+        }
 
       }
+    );
 
-    });
+
+    map.on(
+      "overlayremove",
+      (e) => {
+
+        if (
+          e.layer ===
+          listOverlayLayer
+        ) {
+
+          if (
+            listViewOverlay.style.display ===
+            "block"
+          ) {
+
+            listViewOverlay.style.display =
+              "none";
+
+            hideNotesPopover();
+
+          }
+
+        }
+
+      }
+    );
 
 
     document.addEventListener(
@@ -1913,8 +3218,12 @@
       (e) => {
 
         if (
-          !notesPopover.contains(e.target) &&
-          !e.target.closest(".locationNameBtn")
+          !notesPopover.contains(
+            e.target
+          ) &&
+          !e.target.closest(
+            ".locationNameBtn"
+          )
         ) {
 
           hideNotesPopover();
@@ -1937,13 +3246,27 @@
         notesPopover.dataset.anchorName =
           "";
 
+        if (
+          listViewOverlay.style.display ===
+          "block"
+        ) {
+
+          renderListView();
+
+        }
+
+        setTimeout(
+          () => map.invalidateSize(),
+          100
+        );
+
       }
     );
 
 
     /* =========================================================
-       AUTHENTICATION
-    ========================================================= */
+       AUTH LOGIN
+    ========================================================== */
 
     loginBtn.addEventListener(
       "click",
@@ -1960,25 +3283,25 @@
 
           const email =
             (
-              res.user?.email || ""
+              res.user?.email ||
+              ""
             ).toLowerCase();
 
 
           if (
-            !isAuthorizedEditor(email)
+            !email.endsWith(
+              ALLOWED_DOMAIN
+            )
           ) {
 
             await signOut(auth);
 
 
             alert(
-              "This Google account is not authorized to edit the Oklahoma Investigation Map."
+              `Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`
             );
 
-
-            return;
           }
-
 
         } catch (err) {
 
@@ -2009,25 +3332,38 @@
       auth,
       (user) => {
 
-        currentUser = user;
+        currentUser =
+          user;
 
 
         const email =
           (
-            user?.email || ""
+            user?.email ||
+            ""
           ).toLowerCase();
+
+
+        isMember =
+          !!user &&
+          email.endsWith(
+            ALLOWED_DOMAIN
+          );
 
 
         isAdmin =
           !!user &&
-          isAuthorizedEditor(email);
+          AUTHORIZED_EDITORS.has(
+            email
+          );
 
 
         refreshAuthUI();
 
+
         setSectionEditingEnabled(
           isAdmin
         );
+
 
         rebuildMarkersFromDocs();
 
@@ -2036,211 +3372,227 @@
 
 
     /* =========================================================
-       LOCATION POPUP EDIT / DELETE
-    ========================================================= */
+       POPUP EDIT / DELETE
+    ========================================================== */
 
-    map.on("popupopen", (e) => {
+    map.on(
+      "popupopen",
+      (e) => {
 
-      const popupEl =
-        e.popup.getElement();
-
-
-      if (
-        !popupEl ||
-        !isAdmin
-      ) {
-        return;
-      }
+        const popupEl =
+          e.popup.getElement();
 
 
-      const editBtn =
-        popupEl.querySelector(
-          ".editPinBtn"
-        );
+        if (
+          !popupEl ||
+          !isAdmin
+        ) {
+          return;
+        }
 
 
-      const deleteBtn =
-        popupEl.querySelector(
-          ".deletePinBtn"
-        );
+        const editBtn =
+          popupEl.querySelector(
+            ".editPinBtn"
+          );
 
 
-      if (editBtn) {
-
-        editBtn.addEventListener(
-          "click",
-          () => {
-
-            const id =
-              editBtn.dataset.id;
+        const deleteBtn =
+          popupEl.querySelector(
+            ".deletePinBtn"
+          );
 
 
-            const loc =
-              markers.find(
-                m => m.loc.id === id
-              )?.loc;
+        if (editBtn) {
+
+          editBtn.addEventListener(
+            "click",
+            () => {
+
+              const id =
+                editBtn.dataset.id;
 
 
-            if (!loc) {
-
-              return alert(
-                "Could not find that pin."
-              );
-
-            }
+              const loc =
+                markers.find(
+                  m =>
+                    m.loc.id === id
+                )?.loc;
 
 
-            nl_name.value =
-              loc.name || "";
+              if (!loc) {
 
+                alert(
+                  "Could not find that pin."
+                );
 
-            nl_county.value =
-              OKLAHOMA_COUNTIES.includes(
-                loc.county
-              )
-                ? loc.county
-                : "Unassigned";
-
-
-            nl_type.value =
-              loc.type || "Unknown";
-
-
-            nl_status.value =
-              loc.status || "Unknown";
-
-
-            nl_permission.value =
-              loc.permission || "Unknown";
-
-
-            nl_entity.value =
-              loc.entity || "Unknown";
-
-
-            nl_lat.value =
-              Number(loc.lat)
-                .toFixed(6);
-
-
-            nl_lng.value =
-              Number(loc.lng)
-                .toFixed(6);
-
-
-            nl_details.value =
-              loc.details || "";
-
-
-            setEditMode(id);
-
-
-            alert(
-              "Editing mode enabled. Update the form and click Update Location."
-            );
-
-
-            if (
-              window.matchMedia(
-                "(max-width: 600px)"
-              ).matches
-            ) {
-
-              setMenuCollapsed(false);
-
-            }
-
-          }
-        );
-
-      }
-
-
-      if (deleteBtn) {
-
-        deleteBtn.addEventListener(
-          "click",
-          async () => {
-
-            const id =
-              deleteBtn.dataset.id;
-
-
-            if (
-              !confirm(
-                "Delete this pin? This cannot be undone."
-              )
-            ) {
-              return;
-            }
-
-
-            try {
-
-              await deleteDoc(
-                doc(
-                  db,
-                  LOCATIONS,
-                  id
-                )
-              );
-
-
-              if (
-                editingId === id
-              ) {
-
-                setEditMode(null);
+                return;
 
               }
 
-            } catch (err) {
 
-              console.error(err);
+              nl_name.value =
+                loc.name || "";
 
-              alert(
-                "Delete failed: " +
-                (err?.message || err)
-              );
+
+              nl_county.value =
+                OKLAHOMA_COUNTIES.includes(
+                  loc.county
+                )
+                  ? loc.county
+                  : "Unassigned";
+
+
+              nl_type.value =
+                loc.type ||
+                "Unknown";
+
+
+              nl_status.value =
+                loc.status ||
+                "Unknown";
+
+
+              nl_permission.value =
+                loc.permission ||
+                "Unknown";
+
+
+              nl_entity.value =
+                loc.entity ||
+                "Unknown";
+
+
+              nl_lat.value =
+                Number(
+                  loc.lat
+                ).toFixed(6);
+
+
+              nl_lng.value =
+                Number(
+                  loc.lng
+                ).toFixed(6);
+
+
+              nl_details.value =
+                loc.details ||
+                "";
+
+
+              setEditMode(id);
+
+
+              if (
+                mobileQuery.matches
+              ) {
+
+                setMenuCollapsed(
+                  false
+                );
+
+              }
 
             }
+          );
 
-          }
-        );
+        }
+
+
+        if (deleteBtn) {
+
+          deleteBtn.addEventListener(
+            "click",
+            async () => {
+
+              const id =
+                deleteBtn.dataset.id;
+
+
+              if (
+                !confirm(
+                  "Delete this pin? This cannot be undone."
+                )
+              ) {
+                return;
+              }
+
+
+              try {
+
+                await deleteDoc(
+                  doc(
+                    db,
+                    LOCATIONS,
+                    id
+                  )
+                );
+
+
+                if (
+                  editingId === id
+                ) {
+
+                  setEditMode(
+                    null
+                  );
+
+                }
+
+              } catch (err) {
+
+                console.error(err);
+
+                alert(
+                  "Delete failed: " +
+                  (err?.message ||
+                    err)
+                );
+
+              }
+
+            }
+          );
+
+        }
 
       }
-
-    });
+    );
 
 
     /* =========================================================
        FILTER EVENTS
-    ========================================================= */
+    ========================================================== */
 
     countyFilterEl.addEventListener(
       "change",
       applyFilters
     );
 
+
     statusFilterEl.addEventListener(
       "change",
       applyFilters
     );
+
 
     permissionFilterEl.addEventListener(
       "change",
       applyFilters
     );
 
+
     entityFilterEl.addEventListener(
       "change",
       applyFilters
     );
 
+
     typeFilterEl.addEventListener(
       "change",
       applyFilters
     );
+
 
     searchEl.addEventListener(
       "input",
@@ -2277,29 +3629,38 @@
 
 
     /* =========================================================
-       PICK LOCATION FROM MAP
-    ========================================================= */
+       MAP PICKING
+    ========================================================== */
 
     let picking = false;
 
 
     function setPicking(on) {
 
-      picking = on;
+      picking =
+        on;
+
 
       pickHint.style.display =
-        on ? "block" : "none";
+        on
+          ? "block"
+          : "none";
+
 
       pickBtn.textContent =
         on
           ? "Picking…"
           : "Pick from map";
 
+
       pickBtn.disabled =
         on;
 
+
       map.getContainer().style.cursor =
-        on ? "crosshair" : "";
+        on
+          ? "crosshair"
+          : "";
 
     }
 
@@ -2308,63 +3669,66 @@
       "click",
       () => {
 
-        if (!isAdmin) {
-
-          alert(
-            "You must be signed in with an authorized editor account."
-          );
-
-          return;
-        }
-
         setPicking(true);
 
       }
     );
 
 
-    map.on("click", (e) => {
+    map.on(
+      "click",
+      (e) => {
 
-      if (!picking) {
-        return;
+        if (!picking) {
+          return;
+        }
+
+
+        nl_lat.value =
+          e.latlng.lat.toFixed(
+            6
+          );
+
+
+        nl_lng.value =
+          e.latlng.lng.toFixed(
+            6
+          );
+
+
+        setPicking(false);
+
+
+        if (
+          mobileQuery.matches
+        ) {
+
+          setMenuCollapsed(
+            false
+          );
+
+        }
+
       }
-
-
-      nl_lat.value =
-        e.latlng.lat.toFixed(6);
-
-
-      nl_lng.value =
-        e.latlng.lng.toFixed(6);
-
-
-      setPicking(false);
-
-
-      if (
-        window.matchMedia(
-          "(max-width: 600px)"
-        ).matches
-      ) {
-
-        setMenuCollapsed(false);
-
-      }
-
-    });
+    );
 
 
     document.addEventListener(
       "keydown",
       (e) => {
 
-        if (e.key === "Escape") {
+        if (
+          e.key ===
+          "Escape"
+        ) {
 
           if (picking) {
             setPicking(false);
           }
 
+
           hideNotesPopover();
+
 
           notesPopover.dataset.anchorName =
             "";
@@ -2377,7 +3741,7 @@
 
     /* =========================================================
        CANCEL EDIT
-    ========================================================= */
+    ========================================================== */
 
     cancelEditBtn.addEventListener(
       "click",
@@ -2395,8 +3759,8 @@
 
 
     /* =========================================================
-       ADD / UPDATE LOCATION
-    ========================================================= */
+       SAVE LOCATION
+    ========================================================== */
 
     form.addEventListener(
       "submit",
@@ -2405,10 +3769,24 @@
         e.preventDefault();
 
 
-        if (!isAdmin) {
+        if (!isMember) {
 
           alert(
-            "You must be signed in with an authorized editor account."
+            "Sign in with your @prcofok.org Google account to add locations."
+          );
+
+          return;
+
+        }
+
+
+        if (
+          editingId &&
+          !isAdmin
+        ) {
+
+          alert(
+            "Only authorized editors can edit existing locations."
           );
 
           return;
@@ -2445,11 +3823,15 @@
 
 
         const lat =
-          Number(nl_lat.value);
+          Number(
+            nl_lat.value
+          );
 
 
         const lng =
-          Number(nl_lng.value);
+          Number(
+            nl_lng.value
+          );
 
 
         const details =
@@ -2522,15 +3904,19 @@
             );
 
 
-            setEditMode(null);
+            setEditMode(
+              null
+            );
 
           } else {
 
             payload.createdAt =
               serverTimestamp();
 
+
             payload.createdBy =
-              currentUser?.email || "";
+              currentUser?.email ||
+              "";
 
 
             await addDoc(
@@ -2551,17 +3937,18 @@
 
           form.reset();
 
+
           nl_county.value =
             "Unassigned";
 
 
           if (
-            window.matchMedia(
-              "(max-width: 600px)"
-            ).matches
+            mobileQuery.matches
           ) {
 
-            setMenuCollapsed(true);
+            setMenuCollapsed(
+              true
+            );
 
           }
 
@@ -2571,7 +3958,8 @@
 
           alert(
             "Save failed: " +
-            (err?.message || err)
+            (err?.message ||
+              err)
           );
 
         }
@@ -2582,10 +3970,9 @@
 
     /* =========================================================
        FIRESTORE LOCATIONS
-    ========================================================= */
+    ========================================================== */
 
     onSnapshot(
-
       collection(
         db,
         LOCATIONS
@@ -2646,8 +4033,12 @@
 
 
             if (
-              Number.isFinite(loc.lat) &&
-              Number.isFinite(loc.lng)
+              Number.isFinite(
+                loc.lat
+              ) &&
+              Number.isFinite(
+                loc.lng
+              )
             ) {
 
               locationDocs.push(
@@ -2683,8 +4074,8 @@
 
 
     /* =========================================================
-       SECTION OVERLAY SYSTEM
-    ========================================================= */
+       SECTION OVERLAY SETTINGS
+    ========================================================== */
 
     const STATUS_COLORS = {
 
@@ -2703,14 +4094,18 @@
     const HEX_SHOW_MIN_ZOOM =
       14;
 
+
     const HEX_SIZE_AT_ZOOM =
       18;
+
 
     const HEX_BASE_PX =
       48;
 
+
     const HEX_MIN_PX =
       18;
+
 
     const HEX_MAX_PX =
       64;
@@ -2719,11 +4114,14 @@
     const HEX_FADE_MS =
       220;
 
+
     const HEX_FADE_STEPS =
       12;
 
+
     const HEX_MIN_OPACITY =
       0.0;
+
 
     const HEX_MAX_OPACITY =
       1.0;
@@ -2737,25 +4135,34 @@
 
       return Math.max(
         min,
-        Math.min(max, n)
+        Math.min(
+          max,
+          n
+        )
       );
 
     }
 
 
-    function hexSizeForZoom(z) {
+    function hexSizeForZoom(
+      z
+    ) {
 
       const scale =
         Math.pow(
           1.15,
-          z - HEX_SIZE_AT_ZOOM
+          z -
+            HEX_SIZE_AT_ZOOM
         );
 
 
       return Math.round(
         clamp(
-          HEX_BASE_PX * scale,
+          HEX_BASE_PX *
+            scale,
+
           HEX_MIN_PX,
+
           HEX_MAX_PX
         )
       );
@@ -2763,10 +4170,14 @@
     }
 
 
-    function shouldShowHexesAtZoom(z) {
+    function shouldShowHexesAtZoom(
+      z
+    ) {
 
-      return z >=
-        HEX_SHOW_MIN_ZOOM;
+      return (
+        z >=
+        HEX_SHOW_MIN_ZOOM
+      );
 
     }
 
@@ -2778,7 +4189,9 @@
       steps = HEX_FADE_STEPS
     ) {
 
-      if (marker._fadeTimer) {
+      if (
+        marker._fadeTimer
+      ) {
 
         clearInterval(
           marker._fadeTimer
@@ -2792,7 +4205,8 @@
 
       const from =
         Number(
-          marker.options.opacity ?? 1
+          marker.options.opacity ??
+          1
         );
 
 
@@ -2804,13 +4218,17 @@
         !Number.isFinite(from) ||
         !Number.isFinite(target)
       ) {
+
         return;
+
       }
 
 
       if (
-        Math.abs(from - target) <
-        0.01
+        Math.abs(
+          from -
+          target
+        ) < 0.01
       ) {
 
         marker.setOpacity(
@@ -2853,32 +4271,38 @@
                 ? 2 * t * t
                 : 1 -
                   Math.pow(
-                    -2 * t + 2,
+                    -2 * t +
+                    2,
                     2
-                  ) / 2;
+                  ) /
+                  2;
 
 
             const val =
               from +
-              (target - from) *
-              eased;
+              (target -
+                from) *
+                eased;
 
 
             marker.setOpacity(
               val
             );
 
+
             marker.options.opacity =
               val;
 
 
             if (
-              step >= steps
+              step >=
+              steps
             ) {
 
               clearInterval(
                 marker._fadeTimer
               );
+
 
               marker._fadeTimer =
                 null;
@@ -2888,12 +4312,14 @@
                 target
               );
 
+
               marker.options.opacity =
                 target;
 
             }
 
           },
+
           stepTime
         );
 
@@ -2907,19 +4333,23 @@
     ) {
 
       const fill =
-        STATUS_COLORS[status] ||
+        STATUS_COLORS[
+          status
+        ] ||
         "#ffffff";
 
 
       const text =
         String(
-          numberText ?? ""
+          numberText ??
+          ""
         ).trim();
 
 
       const fontSize =
         Math.round(
-          sizePx * 0.75
+          sizePx *
+          0.75
         );
 
 
@@ -2928,10 +4358,18 @@
         <svg
           width="${sizePx}"
           height="${sizePx}"
-          viewBox="0 0 100 100">
+          viewBox="0 0 100 100"
+        >
 
           <polygon
-            points="50,5 90,27 90,73 50,95 10,73 10,27"
+            points="
+              50,5
+              90,27
+              90,73
+              50,95
+              10,73
+              10,27
+            "
             fill="${fill}"
             stroke="#000"
             stroke-width="6"
@@ -2944,7 +4382,8 @@
             font-size="${fontSize}"
             font-family="Arial"
             font-weight="700"
-            fill="#000">
+            fill="#000"
+          >
             ${escapeHtml(text)}
           </text>
 
@@ -2985,7 +4424,9 @@
     ) {
 
       const ring =
-        Array.isArray(latlngs?.[0])
+        Array.isArray(
+          latlngs?.[0]
+        )
           ? latlngs[0]
           : latlngs;
 
@@ -3002,12 +4443,16 @@
           : 1;
 
 
-      (ring || []).forEach(
+      (
+        ring || []
+      ).forEach(
         (p) => {
 
-          sumLat += p.lat;
+          sumLat +=
+            p.lat;
 
-          sumLng += p.lng;
+          sumLng +=
+            p.lng;
 
         }
       );
@@ -3021,14 +4466,17 @@
     }
 
 
-    function cycleStatus(s) {
+    function cycleStatus(
+      s
+    ) {
 
       return s ===
         "uninvestigated"
 
         ? "possible"
 
-        : s === "possible"
+        : s ===
+          "possible"
 
           ? "confirmed"
 
@@ -3055,7 +4503,9 @@
     }
 
 
-    function layerToPoints(layer) {
+    function layerToPoints(
+      layer
+    ) {
 
       const ll =
         layer.getLatLngs();
@@ -3064,23 +4514,37 @@
       let rings = ll;
 
 
-      if (!Array.isArray(rings)) {
-        rings = [];
-      }
-
-
       if (
-        !Array.isArray(rings[0])
+        !Array.isArray(
+          rings
+        )
       ) {
 
-        rings = [rings];
+        rings = [];
 
       }
 
 
       if (
-        Array.isArray(rings[0]) &&
-        Array.isArray(rings[0][0]) &&
+        !Array.isArray(
+          rings[0]
+        )
+      ) {
+
+        rings = [
+          rings
+        ];
+
+      }
+
+
+      if (
+        Array.isArray(
+          rings[0]
+        ) &&
+        Array.isArray(
+          rings[0][0]
+        ) &&
         rings[0][0]?.lat ===
           undefined
       ) {
@@ -3088,7 +4552,9 @@
         rings =
           rings.map(
             (r) =>
-              Array.isArray(r[0])
+              Array.isArray(
+                r[0]
+              )
                 ? r[0]
                 : r
           );
@@ -3102,19 +4568,30 @@
       rings.forEach(
         (ring, ringIdx) => {
 
-          (ring || []).forEach(
+          (
+            ring || []
+          ).forEach(
             (p, i) => {
 
               const lat =
-                Number(p?.lat);
+                Number(
+                  p?.lat
+                );
+
 
               const lng =
-                Number(p?.lng);
+                Number(
+                  p?.lng
+                );
 
 
               if (
-                Number.isFinite(lat) &&
-                Number.isFinite(lng)
+                Number.isFinite(
+                  lat
+                ) &&
+                Number.isFinite(
+                  lng
+                )
               ) {
 
                 points.push({
@@ -3149,7 +4626,9 @@
     ) {
 
       if (
-        !Array.isArray(points) ||
+        !Array.isArray(
+          points
+        ) ||
         points.length === 0
       ) {
 
@@ -3167,23 +4646,42 @@
       ) {
 
         const ring =
-          Number(pt.ring);
+          Number(
+            pt.ring
+          );
+
 
         const i =
-          Number(pt.i);
+          Number(
+            pt.i
+          );
+
 
         const lat =
-          Number(pt.lat);
+          Number(
+            pt.lat
+          );
+
 
         const lng =
-          Number(pt.lng);
+          Number(
+            pt.lng
+          );
 
 
         if (
-          !Number.isFinite(ring) ||
-          !Number.isFinite(i) ||
-          !Number.isFinite(lat) ||
-          !Number.isFinite(lng)
+          !Number.isFinite(
+            ring
+          ) ||
+          !Number.isFinite(
+            i
+          ) ||
+          !Number.isFinite(
+            lat
+          ) ||
+          !Number.isFinite(
+            lng
+          )
         ) {
 
           continue;
@@ -3192,7 +4690,9 @@
 
 
         if (
-          !byRing.has(ring)
+          !byRing.has(
+            ring
+          )
         ) {
 
           byRing.set(
@@ -3203,11 +4703,13 @@
         }
 
 
-        byRing.get(ring).push({
-          i,
-          lat,
-          lng
-        });
+        byRing
+          .get(ring)
+          .push({
+            i,
+            lat,
+            lng
+          });
 
       }
 
@@ -3224,11 +4726,13 @@
       const rings =
         ringKeys.map(
           (rk) =>
+
             byRing
               .get(rk)
               .sort(
                 (a, b) =>
-                  a.i - b.i
+                  a.i -
+                  b.i
               )
               .map(
                 (p) =>
@@ -3237,6 +4741,7 @@
                     p.lng
                   )
               )
+
         );
 
 
@@ -3246,6 +4751,10 @@
 
     }
 
+
+    /* =========================================================
+       SECTION LAYERS
+    ========================================================== */
 
     const sectionPolys =
       L.featureGroup()
@@ -3261,12 +4770,9 @@
       new Map();
 
 
-    let drawControl = null;
+    let drawControl =
+      null;
 
-
-    /* =========================================================
-       SECTION DRAWING CONTROLS
-    ========================================================= */
 
     function setSectionEditingEnabled(
       enabled
@@ -3352,13 +4858,15 @@
 
       const names =
         Array.from(
-          new Set(mapNames)
+          new Set(
+            mapNames
+          )
         )
-        .filter(Boolean)
-        .sort(
-          (a, b) =>
-            a.localeCompare(b)
-        );
+          .filter(Boolean)
+          .sort(
+            (a, b) =>
+              a.localeCompare(b)
+          );
 
 
       const opts = [
@@ -3371,33 +4879,37 @@
         "";
 
 
-      opts.forEach((v) => {
+      opts.forEach(
+        (v) => {
 
-        const o =
-          document.createElement(
-            "option"
+          const o =
+            document.createElement(
+              "option"
+            );
+
+
+          o.value =
+            v;
+
+
+          o.textContent =
+            v === "ALL"
+              ? "All section maps"
+              : v;
+
+
+          sectionMapFilter.appendChild(
+            o
           );
 
-
-        o.value =
-          v;
-
-
-        o.textContent =
-          v === "ALL"
-            ? "All section maps"
-            : v;
-
-
-        sectionMapFilter.appendChild(
-          o
-        );
-
-      });
+        }
+      );
 
 
       sectionMapFilter.value =
-        opts.includes(current)
+        opts.includes(
+          current
+        )
           ? current
           : "ALL";
 
@@ -3415,12 +4927,15 @@
         const [
           id,
           rec
-        ] of sectionById.entries()
+        ]
+        of sectionById.entries()
       ) {
 
         const show =
-          selected === "ALL" ||
-          rec.mapName === selected;
+          selected ===
+            "ALL" ||
+          rec.mapName ===
+            selected;
 
 
         if (show) {
@@ -3506,6 +5021,7 @@
 
         applySectionFilter();
 
+
         refreshAllHexIconsForZoom();
 
       }
@@ -3519,11 +5035,15 @@
 
 
       const shouldShow =
-        shouldShowHexesAtZoom(z);
+        shouldShowHexesAtZoom(
+          z
+        );
 
 
       const sizePx =
-        hexSizeForZoom(z);
+        hexSizeForZoom(
+          z
+        );
 
 
       const targetOpacity =
@@ -3562,10 +5082,6 @@
     );
 
 
-    /* =========================================================
-       CREATE SECTION
-    ========================================================= */
-
     map.on(
       L.Draw.Event.CREATED,
       async (e) => {
@@ -3599,7 +5115,7 @@
         if (!mapName) {
 
           alert(
-            "Enter a Map name first (ex: Crown Hill Cemetery)."
+            "Enter a Map name first."
           );
 
 
@@ -3632,7 +5148,9 @@
 
 
         const points =
-          layerToPoints(layer);
+          layerToPoints(
+            layer
+          );
 
 
         try {
@@ -3691,7 +5209,8 @@
 
           alert(
             "Save section failed: " +
-            (err?.message || err)
+            (err?.message ||
+              err)
           );
 
 
@@ -3704,10 +5223,6 @@
       }
     );
 
-
-    /* =========================================================
-       EDIT SECTION
-    ========================================================= */
 
     map.on(
       L.Draw.Event.EDITED,
@@ -3738,30 +5253,24 @@
 
 
             const points =
-              layerToPoints(layer);
+              layerToPoints(
+                layer
+              );
 
 
             updates.push(
-
               updateDoc(
-
                 doc(
                   db,
                   SECTIONS,
                   id
                 ),
-
                 {
-
                   points,
-
                   updatedAt:
                     serverTimestamp()
-
                 }
-
               )
-
             );
 
           }
@@ -3781,7 +5290,8 @@
 
           alert(
             "Update failed: " +
-            (err?.message || err)
+            (err?.message ||
+              err)
           );
 
         }
@@ -3789,10 +5299,6 @@
       }
     );
 
-
-    /* =========================================================
-       DELETE SECTION
-    ========================================================= */
 
     map.on(
       L.Draw.Event.DELETED,
@@ -3823,17 +5329,13 @@
 
 
             deletes.push(
-
               deleteDoc(
-
                 doc(
                   db,
                   SECTIONS,
                   id
                 )
-
               )
-
             );
 
           }
@@ -3853,7 +5355,8 @@
 
           alert(
             "Delete failed: " +
-            (err?.message || err)
+            (err?.message ||
+              err)
           );
 
         }
@@ -3861,10 +5364,6 @@
       }
     );
 
-
-    /* =========================================================
-       SECTION INTERACTIONS
-    ========================================================= */
 
     function attachSectionInteractions(
       id,
@@ -3877,7 +5376,9 @@
         async () => {
 
           const rec =
-            sectionById.get(id);
+            sectionById.get(
+              id
+            );
 
 
           if (!rec) {
@@ -3896,23 +5397,18 @@
             try {
 
               await updateDoc(
-
                 doc(
                   db,
                   SECTIONS,
                   id
                 ),
-
                 {
-
                   status:
                     next,
 
                   updatedAt:
                     serverTimestamp()
-
                 }
-
               );
 
             } catch (err) {
@@ -3922,7 +5418,8 @@
 
               alert(
                 "Status update failed: " +
-                (err?.message || err)
+                (err?.message ||
+                  err)
               );
 
             }
@@ -3951,7 +5448,9 @@
 
 
           const rec =
-            sectionById.get(id);
+            sectionById.get(
+              id
+            );
 
 
           if (!rec) {
@@ -3986,13 +5485,11 @@
           try {
 
             await updateDoc(
-
               doc(
                 db,
                 SECTIONS,
                 id
               ),
-
               {
 
                 mapName:
@@ -4007,7 +5504,6 @@
                   serverTimestamp()
 
               }
-
             );
 
           } catch (err) {
@@ -4017,7 +5513,8 @@
 
             alert(
               "Label update failed: " +
-              (err?.message || err)
+              (err?.message ||
+                err)
             );
 
           }
@@ -4036,7 +5533,9 @@
 
 
           const rec =
-            sectionById.get(id);
+            sectionById.get(
+              id
+            );
 
 
           if (!rec) {
@@ -4053,13 +5552,11 @@
           try {
 
             await updateDoc(
-
               doc(
                 db,
                 SECTIONS,
                 id
               ),
-
               {
 
                 status:
@@ -4069,7 +5566,6 @@
                   serverTimestamp()
 
               }
-
             );
 
           } catch (err) {
@@ -4079,7 +5575,8 @@
 
             alert(
               "Status update failed: " +
-              (err?.message || err)
+              (err?.message ||
+                err)
             );
 
           }
@@ -4089,10 +5586,6 @@
 
     }
 
-
-    /* =========================================================
-       REBUILD SECTION FROM FIRESTORE
-    ========================================================= */
 
     function rebuildSectionLayerFromDoc(
       id,
@@ -4115,7 +5608,9 @@
 
 
       const existing =
-        sectionById.get(id);
+        sectionById.get(
+          id
+        );
 
 
       if (existing) {
@@ -4146,7 +5641,9 @@
         }
 
 
-        sectionById.delete(id);
+        sectionById.delete(
+          id
+        );
 
       }
 
@@ -4184,11 +5681,15 @@
 
 
       const sizePx =
-        hexSizeForZoom(z);
+        hexSizeForZoom(
+          z
+        );
 
 
       const startOpacity =
-        shouldShowHexesAtZoom(z)
+        shouldShowHexesAtZoom(
+          z
+        )
           ? HEX_MAX_OPACITY
           : HEX_MIN_OPACITY;
 
@@ -4221,7 +5722,6 @@
       sectionById.set(
         id,
         {
-
           poly:
             polyLayer,
 
@@ -4232,7 +5732,6 @@
           number,
 
           status
-
         }
       );
 
@@ -4260,6 +5759,7 @@
           polyLayer
         );
 
+
         sectionHexes.addLayer(
           hex
         );
@@ -4269,12 +5769,7 @@
     }
 
 
-    /* =========================================================
-       FIRESTORE SECTION OVERLAYS
-    ========================================================= */
-
     onSnapshot(
-
       collection(
         db,
         SECTIONS
@@ -4293,9 +5788,11 @@
 
 
             if (d.mapName) {
+
               names.push(
                 d.mapName
               );
+
             }
 
           }
@@ -4315,11 +5812,14 @@
 
 
             if (
-              ch.type === "removed"
+              ch.type ===
+              "removed"
             ) {
 
               const existing =
-                sectionById.get(id);
+                sectionById.get(
+                  id
+                );
 
 
               if (existing) {
@@ -4373,6 +5873,7 @@
 
         applySectionFilter();
 
+
         refreshAllHexIconsForZoom();
 
       },
@@ -4387,6 +5888,38 @@
       }
 
     );
+
+
+    /* =========================================================
+       FINAL MOBILE MAP REFRESH
+    ========================================================== */
+
+    setTimeout(
+      () => {
+
+        map.invalidateSize();
+
+      },
+      300
+    );
+
+
+    window.addEventListener(
+      "orientationchange",
+      () => {
+
+        setTimeout(
+          () => {
+
+            map.invalidateSize();
+
+          },
+          300
+        );
+
+      }
+    );
+
 
   </script>
 
