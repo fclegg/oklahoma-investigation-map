@@ -1,35 +1,38 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
+
+  <meta charset="utf-8">
 
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
-  />
+  >
 
   <meta
     name="theme-color"
     content="#ffffff"
-  />
+  >
 
   <title>Oklahoma Investigation Map</title>
 
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  >
 
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
-  />
+  >
+
 
   <style>
 
     /* =========================================================
        GLOBAL
-    ========================================================= */
+    ========================================================== */
 
     * {
       box-sizing: border-box;
@@ -37,11 +40,12 @@
 
     html,
     body {
-      margin: 0;
-      padding: 0;
       width: 100%;
       height: 100%;
+      margin: 0;
+      padding: 0;
       overflow: hidden;
+
       font-family:
         system-ui,
         -apple-system,
@@ -50,6 +54,7 @@
         Roboto,
         Arial,
         sans-serif;
+
       background: #fff;
     }
 
@@ -70,73 +75,88 @@
       touch-action: manipulation;
     }
 
+
+    /* =========================================================
+       MAP
+    ========================================================== */
+
     #map {
-      position: absolute;
+      position: fixed;
       inset: 0;
+
       width: 100%;
       height: 100%;
+
+      z-index: 1;
     }
 
 
     /* =========================================================
        MAIN MENU
-    ========================================================= */
+    ========================================================== */
 
     .panel {
-      position: absolute;
+      position: fixed;
+
       left: 10px;
       top: 10px;
-
-      z-index: 1000;
 
       width: 440px;
       max-width: calc(100vw - 20px);
 
-      background: rgba(255, 255, 255, 0.97);
+      max-height: calc(100vh - 20px);
+
+      z-index: 1000;
+
+      background: rgba(255,255,255,0.97);
 
       padding: 10px;
 
       border-radius: 10px;
 
       box-shadow:
-        0 2px 10px rgba(0, 0, 0, 0.20);
+        0 2px 10px rgba(0,0,0,0.20);
 
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
+      overflow: hidden;
     }
 
     #menuWrap {
       display: flex;
+
       flex-direction: column;
+
       gap: 10px;
     }
 
     #menuHeader {
       display: flex;
+
       align-items: center;
+
       justify-content: space-between;
 
       gap: 10px;
 
       min-height: 34px;
+
+      flex-shrink: 0;
     }
 
     #menuTitle {
       font-weight: 700;
+
       font-size: 14px;
 
       white-space: nowrap;
+
+      flex-shrink: 0;
     }
 
     #menuHeaderRight {
       display: flex;
+
       align-items: center;
+
       justify-content: flex-end;
 
       gap: 6px;
@@ -148,6 +168,7 @@
       padding: 7px 10px;
 
       border: 1px solid #ccc;
+
       border-radius: 9px;
 
       background: #fff;
@@ -157,10 +178,22 @@
       cursor: pointer;
 
       min-height: 34px;
+
+      flex-shrink: 0;
     }
 
     .menuBody {
       display: block;
+
+      min-height: 0;
+
+      overflow-y: auto;
+
+      overflow-x: hidden;
+
+      -webkit-overflow-scrolling: touch;
+
+      overscroll-behavior: contain;
     }
 
     .collapsed .menuBody {
@@ -170,7 +203,7 @@
 
     /* =========================================================
        GENERAL CONTROLS
-    ========================================================= */
+    ========================================================== */
 
     .row {
       display: flex;
@@ -199,6 +232,8 @@
       background: #fff;
 
       min-height: 34px;
+
+      max-width: 100%;
     }
 
     input,
@@ -211,7 +246,8 @@
     select:focus,
     textarea:focus,
     button:focus-visible {
-      outline: 2px solid rgba(0, 100, 255, 0.25);
+      outline: 2px solid rgba(0,100,255,0.25);
+
       outline-offset: 1px;
     }
 
@@ -247,11 +283,13 @@
 
     .small {
       width: 130px;
+
       max-width: 100%;
     }
 
     .grow {
       flex: 1;
+
       min-width: 160px;
     }
 
@@ -269,6 +307,7 @@
 
     .danger {
       border-color: #d33 !important;
+
       color: #d33 !important;
     }
 
@@ -285,7 +324,7 @@
 
     /* =========================================================
        AUTH UI
-    ========================================================= */
+    ========================================================== */
 
     .authPill {
       font-size: 12px;
@@ -323,29 +362,35 @@
 
 
     /* =========================================================
-       LEAFLET MOBILE CONTROL IMPROVEMENTS
-    ========================================================= */
+       LEAFLET CONTROLS
+    ========================================================== */
 
     .leaflet-control-layers {
       border-radius: 9px !important;
     }
 
     .leaflet-control-layers-toggle {
-      width: 38px !important;
-      height: 38px !important;
+      width: 40px !important;
+
+      height: 40px !important;
     }
 
     .leaflet-bar a {
-      width: 38px !important;
-      height: 38px !important;
+      width: 40px !important;
 
-      line-height: 38px !important;
+      height: 40px !important;
+
+      line-height: 40px !important;
+    }
+
+    .leaflet-control {
+      touch-action: manipulation;
     }
 
 
     /* =========================================================
        LIST VIEW
-    ========================================================= */
+    ========================================================== */
 
     #listViewOverlay {
       position: fixed;
@@ -354,7 +399,7 @@
 
       z-index: 2000;
 
-      background: rgba(255, 255, 255, 0.98);
+      background: rgba(255,255,255,0.98);
 
       display: none;
 
@@ -363,15 +408,6 @@
       overflow-x: hidden;
 
       -webkit-overflow-scrolling: touch;
-
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
 
       padding-bottom:
         env(safe-area-inset-bottom);
@@ -392,7 +428,7 @@
 
       top: 0;
 
-      background: rgba(255, 255, 255, 0.98);
+      background: rgba(255,255,255,0.98);
 
       padding-top: 4px;
 
@@ -534,7 +570,7 @@
 
     /* =========================================================
        NOTES POPOVER
-    ========================================================= */
+    ========================================================== */
 
     .notesPopover {
       position: fixed;
@@ -550,7 +586,7 @@
       border-radius: 10px;
 
       box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.18);
+        0 8px 24px rgba(0,0,0,0.18);
 
       padding: 10px 12px;
 
@@ -604,7 +640,7 @@
 
     /* =========================================================
        TABLET
-    ========================================================= */
+    ========================================================== */
 
     @media (max-width: 1100px) {
 
@@ -627,7 +663,7 @@
 
     /* =========================================================
        SMALL TABLET
-    ========================================================= */
+    ========================================================== */
 
     @media (max-width: 900px) {
 
@@ -656,7 +692,7 @@
 
     /* =========================================================
        PHONE
-    ========================================================= */
+    ========================================================== */
 
     @media (max-width: 600px) {
 
@@ -669,14 +705,14 @@
       }
 
       #map {
+        width: 100%;
         height: 100dvh;
-        min-height: 100vh;
       }
 
 
-      /* -------------------------
-         MENU
-      ------------------------- */
+      /* -------------------------------------------------------
+         MOBILE MENU
+      -------------------------------------------------------- */
 
       .panel {
         left: 8px;
@@ -690,23 +726,47 @@
         max-width:
           calc(100vw - 16px);
 
+        height:
+          calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+
+        max-height:
+          calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+
         padding: 9px;
 
-        border-radius: 10px;
+        border-radius: 12px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        overflow: hidden;
       }
 
       #menuHeader {
-        align-items: center;
+        min-height: 48px;
 
-        gap: 6px;
+        flex-shrink: 0;
+
+        gap: 5px;
       }
 
       #menuTitle {
-        font-size: 13px;
+        font-size: 14px;
+
+        max-width: 115px;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
       }
 
       #menuHeaderRight {
         gap: 4px;
+
+        flex: 1;
+
+        min-width: 0;
       }
 
       .authPill {
@@ -714,36 +774,50 @@
 
         font-size: 11px;
 
-        padding: 4px 6px;
+        padding: 5px 6px;
+
+        flex-shrink: 1;
       }
 
       .adminBadge {
         font-size: 9px;
 
         padding: 3px 5px;
+
+        flex-shrink: 0;
       }
 
       #loginBtn,
-      #logoutBtn {
+      #logoutBtn,
+      #menuToggle {
         padding: 7px 8px;
 
-        min-height: 34px;
+        min-height: 38px;
 
         font-size: 12px;
+
+        flex-shrink: 0;
       }
 
-      #menuToggle {
-        min-height: 34px;
+      .menuBody {
+        flex: 1 1 auto;
 
-        padding: 7px 9px;
+        min-height: 0;
 
-        font-size: 12px;
+        overflow-y: auto;
+
+        overflow-x: hidden;
+
+        padding-right: 2px;
+
+        padding-bottom:
+          calc(18px + env(safe-area-inset-bottom));
       }
 
 
-      /* -------------------------
-         FORM CONTROLS
-      ------------------------- */
+      /* -------------------------------------------------------
+         MOBILE FORM CONTROLS
+      -------------------------------------------------------- */
 
       .row {
         width: 100%;
@@ -762,7 +836,7 @@
 
         min-width: 0;
 
-        min-height: 40px;
+        min-height: 42px;
       }
 
       .row > label {
@@ -784,7 +858,7 @@
 
         width: auto;
 
-        min-width: 70px;
+        min-width: 80px;
       }
 
       .small,
@@ -802,7 +876,7 @@
       }
 
       textarea {
-        min-height: 100px;
+        min-height: 110px;
       }
 
       .btnRow {
@@ -810,71 +884,98 @@
 
         display: grid;
 
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns:
+          1fr 1fr;
       }
 
       .btnRow button {
         width: 100%;
 
-        min-height: 42px;
+        min-height: 44px;
       }
 
 
-      /* -------------------------
-         LEAFLET
-      ------------------------- */
+      /* -------------------------------------------------------
+         MOBILE LEAFLET CONTROLS
+         
+         Put them BELOW the menu area instead of on top
+         of the menu.
+      -------------------------------------------------------- */
 
       .leaflet-top {
-        top: 4px;
-      }
-
-      .leaflet-right {
-        right: 4px;
+        top: auto !important;
       }
 
       .leaflet-bottom {
         bottom:
-          calc(4px + env(safe-area-inset-bottom));
+          calc(8px + env(safe-area-inset-bottom)) !important;
       }
 
+      .leaflet-left {
+        left: 8px !important;
+      }
+
+      .leaflet-right {
+        right: 8px !important;
+      }
+
+      /* Zoom control */
+
+      .leaflet-control-zoom {
+        margin-bottom: 8px !important;
+      }
+
+      /* Layers control */
+
       .leaflet-control-layers {
-        font-size: 14px;
+        margin-bottom: 8px !important;
       }
 
       .leaflet-control-layers-expanded {
-        max-width: calc(100vw - 20px);
+        max-width:
+          calc(100vw - 24px);
 
-        overflow: hidden;
+        max-height:
+          45vh;
+
+        overflow-y: auto;
       }
 
       .leaflet-control-layers-list {
         max-width: 230px;
       }
 
+      /* Drawing controls */
+
+      .leaflet-draw {
+        margin-bottom: 8px !important;
+      }
+
+      .leaflet-draw-toolbar {
+        margin-bottom: 0 !important;
+      }
+
       .leaflet-popup-content-wrapper {
-        max-width: calc(100vw - 50px);
+        max-width:
+          calc(100vw - 50px);
       }
 
       .leaflet-popup-content {
-        max-width: calc(100vw - 75px);
+        max-width:
+          calc(100vw - 75px);
 
         font-size: 14px;
       }
 
 
-      /* -------------------------
-         LIST VIEW
-      ------------------------- */
+      /* -------------------------------------------------------
+         MOBILE LIST VIEW
+      -------------------------------------------------------- */
 
       #listViewOverlay {
-        position: fixed;
-
         height: 100dvh;
 
         min-height: 100vh;
-
-        padding-bottom:
-          env(safe-area-inset-bottom);
       }
 
       #listViewInner {
@@ -923,12 +1024,6 @@
 
         padding-bottom: 5px;
       }
-
-
-      /*
-        Instead of forcing a huge spreadsheet horizontally,
-        mobile converts every row into a readable card.
-      */
 
       .listHeader {
         display: none;
@@ -1019,16 +1114,16 @@
       }
 
 
-      /* -------------------------
-         NOTES POPOVER
-      ------------------------- */
+      /* -------------------------------------------------------
+         MOBILE NOTES
+      -------------------------------------------------------- */
 
       .notesPopover {
         position: fixed;
 
         left: 10px !important;
 
-        right: 10px;
+        right: 10px !important;
 
         top: auto !important;
 
@@ -1061,7 +1156,7 @@
 
     /* =========================================================
        VERY SMALL PHONES
-    ========================================================= */
+    ========================================================== */
 
     @media (max-width: 380px) {
 
@@ -1096,16 +1191,21 @@
     }
 
   </style>
+
 </head>
 
 
 <body>
 
+
   <!-- =======================================================
        MAIN MENU
   ======================================================== -->
 
-  <div id="menuWrap" class="panel collapsed">
+  <div
+    id="menuWrap"
+    class="panel collapsed"
+  >
 
     <div id="menuHeader">
 
@@ -1159,6 +1259,7 @@
 
     <div class="menuBody">
 
+
       <!-- =====================================================
            FILTERS
       ====================================================== -->
@@ -1171,7 +1272,7 @@
             id="search"
             type="text"
             placeholder="Search location name..."
-          />
+          >
 
           <button
             id="clearBtn"
@@ -1194,7 +1295,6 @@
               All
             </option>
           </select>
-
 
           <label for="statusFilter">
             Status:
@@ -1378,7 +1478,7 @@
               class="grow"
               type="text"
               placeholder="Map name for NEW sections"
-            />
+            >
 
             <input
               id="sectionNextNumber"
@@ -1387,7 +1487,7 @@
               min="1"
               step="1"
               placeholder="Next #"
-            />
+            >
 
           </div>
 
@@ -1479,9 +1579,7 @@
           class="hint"
           style="display:none;"
         >
-
-          Sign in with your @prcofok.org Google account to add locations.
-
+          Sign in with an authorized Google account to add or edit locations.
         </div>
 
 
@@ -1489,10 +1587,8 @@
           id="editModeBanner"
           class="editMode"
         >
-
           Editing an existing pin.
           Submit will UPDATE it.
-
         </div>
 
 
@@ -1506,8 +1602,7 @@
               type="text"
               placeholder="Location name (required)"
               required
-            />
-
+            >
 
             <select
               id="nl_county"
@@ -1636,7 +1731,7 @@
               step="any"
               placeholder="Lat"
               required
-            />
+            >
 
             <input
               id="nl_lng"
@@ -1645,7 +1740,7 @@
               step="any"
               placeholder="Lng"
               required
-            />
+            >
 
             <button
               id="pickBtn"
@@ -1692,10 +1787,8 @@
             class="hint"
             style="display:none;"
           >
-
             Click the map to set coordinates.
             Press Esc to cancel.
-
           </div>
 
         </form>
@@ -1736,14 +1829,11 @@
               class="hint"
               style="margin-top:4px;"
             >
-
               Grouped by county and sorted alphabetically.
               Click a location name to view notes.
-
             </div>
 
           </div>
-
 
           <button
             id="closeListBtn"
@@ -1755,7 +1845,6 @@
         </div>
 
       </div>
-
 
       <div id="listViewContent"></div>
 
@@ -1778,9 +1867,13 @@
        LEAFLET
   ========================================================== -->
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
 
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script
+    src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"
+  ></script>
 
 
   <!-- =========================================================
@@ -1952,11 +2045,15 @@
           const opt =
             document.createElement("option");
 
-          opt.value = county;
+          opt.value =
+            county;
 
-          opt.textContent = county;
+          opt.textContent =
+            county;
 
-          selectEl.appendChild(opt);
+          selectEl.appendChild(
+            opt
+          );
 
         }
       );
@@ -1992,7 +2089,9 @@
 
 
     const app =
-      initializeApp(firebaseConfig);
+      initializeApp(
+        firebaseConfig
+      );
 
 
     const db =
@@ -2019,6 +2118,12 @@
       new GoogleAuthProvider();
 
 
+    /*
+      This is only a Google sign-in hint.
+
+      It does NOT prevent the Gmail editor from signing in.
+    */
+
     provider.setCustomParameters({
       hd: "prcofok.org"
     });
@@ -2029,13 +2134,16 @@
 
 
     /*
-      Both accounts have editing/admin privileges.
+      BOTH of these accounts have full editing privileges.
     */
 
     const AUTHORIZED_EDITORS =
       new Set([
+
         "fclegg@prcofok.org",
+
         "sws12022004@gmail.com"
+
       ]);
 
 
@@ -2051,155 +2159,202 @@
     ========================================================== */
 
     const menuWrap =
-      document.getElementById("menuWrap");
-
+      document.getElementById(
+        "menuWrap"
+      );
 
     const menuToggle =
-      document.getElementById("menuToggle");
+      document.getElementById(
+        "menuToggle"
+      );
 
 
     const loginBtn =
-      document.getElementById("loginBtn");
-
+      document.getElementById(
+        "loginBtn"
+      );
 
     const logoutBtn =
-      document.getElementById("logoutBtn");
-
+      document.getElementById(
+        "logoutBtn"
+      );
 
     const authStateEl =
-      document.getElementById("authState");
-
+      document.getElementById(
+        "authState"
+      );
 
     const adminBadgeEl =
-      document.getElementById("adminBadge");
+      document.getElementById(
+        "adminBadge"
+      );
 
 
     const searchEl =
-      document.getElementById("search");
-
+      document.getElementById(
+        "search"
+      );
 
     const clearBtn =
-      document.getElementById("clearBtn");
-
+      document.getElementById(
+        "clearBtn"
+      );
 
     const countyFilterEl =
-      document.getElementById("countyFilter");
-
+      document.getElementById(
+        "countyFilter"
+      );
 
     const statusFilterEl =
-      document.getElementById("statusFilter");
-
+      document.getElementById(
+        "statusFilter"
+      );
 
     const permissionFilterEl =
-      document.getElementById("permissionFilter");
-
+      document.getElementById(
+        "permissionFilter"
+      );
 
     const entityFilterEl =
-      document.getElementById("entityFilter");
-
+      document.getElementById(
+        "entityFilter"
+      );
 
     const typeFilterEl =
-      document.getElementById("typeFilter");
+      document.getElementById(
+        "typeFilter"
+      );
 
 
     const mustLoginNote =
-      document.getElementById("mustLoginNote");
+      document.getElementById(
+        "mustLoginNote"
+      );
 
 
     const editModeBanner =
-      document.getElementById("editModeBanner");
-
+      document.getElementById(
+        "editModeBanner"
+      );
 
     const cancelEditBtn =
-      document.getElementById("cancelEditBtn");
-
+      document.getElementById(
+        "cancelEditBtn"
+      );
 
     const submitBtn =
-      document.getElementById("submitBtn");
+      document.getElementById(
+        "submitBtn"
+      );
 
 
     const form =
-      document.getElementById("newLocationForm");
+      document.getElementById(
+        "newLocationForm"
+      );
 
 
     const nl_name =
-      document.getElementById("nl_name");
-
+      document.getElementById(
+        "nl_name"
+      );
 
     const nl_county =
-      document.getElementById("nl_county");
-
+      document.getElementById(
+        "nl_county"
+      );
 
     const nl_type =
-      document.getElementById("nl_type");
-
+      document.getElementById(
+        "nl_type"
+      );
 
     const nl_status =
-      document.getElementById("nl_status");
-
+      document.getElementById(
+        "nl_status"
+      );
 
     const nl_permission =
-      document.getElementById("nl_permission");
-
+      document.getElementById(
+        "nl_permission"
+      );
 
     const nl_entity =
-      document.getElementById("nl_entity");
-
+      document.getElementById(
+        "nl_entity"
+      );
 
     const nl_lat =
-      document.getElementById("nl_lat");
-
+      document.getElementById(
+        "nl_lat"
+      );
 
     const nl_lng =
-      document.getElementById("nl_lng");
-
+      document.getElementById(
+        "nl_lng"
+      );
 
     const nl_details =
-      document.getElementById("nl_details");
-
+      document.getElementById(
+        "nl_details"
+      );
 
     const pickBtn =
-      document.getElementById("pickBtn");
-
+      document.getElementById(
+        "pickBtn"
+      );
 
     const pickHint =
-      document.getElementById("pickHint");
+      document.getElementById(
+        "pickHint"
+      );
 
 
     const sectionMapFilter =
-      document.getElementById("sectionMapFilter");
-
+      document.getElementById(
+        "sectionMapFilter"
+      );
 
     const sectionAdminTools =
-      document.getElementById("sectionAdminTools");
-
+      document.getElementById(
+        "sectionAdminTools"
+      );
 
     const sectionMapName =
-      document.getElementById("sectionMapName");
-
+      document.getElementById(
+        "sectionMapName"
+      );
 
     const sectionNextNumber =
-      document.getElementById("sectionNextNumber");
-
+      document.getElementById(
+        "sectionNextNumber"
+      );
 
     const sectionDefaultStatus =
-      document.getElementById("sectionDefaultStatus");
+      document.getElementById(
+        "sectionDefaultStatus"
+      );
 
 
     const listViewOverlay =
-      document.getElementById("listViewOverlay");
-
+      document.getElementById(
+        "listViewOverlay"
+      );
 
     const listViewContent =
-      document.getElementById("listViewContent");
-
+      document.getElementById(
+        "listViewContent"
+      );
 
     const closeListBtn =
-      document.getElementById("closeListBtn");
-
+      document.getElementById(
+        "closeListBtn"
+      );
 
     const notesPopover =
-      document.getElementById("notesPopover");
+      document.getElementById(
+        "notesPopover"
+      );
 
 
     populateCountySelect(
@@ -2217,6 +2372,16 @@
 
 
     /* =========================================================
+       MOBILE QUERY
+    ========================================================== */
+
+    const mobileQuery =
+      window.matchMedia(
+        "(max-width: 600px)"
+      );
+
+
+    /* =========================================================
        MENU
     ========================================================== */
 
@@ -2229,11 +2394,16 @@
         collapsed
       );
 
-
       menuToggle.textContent =
         collapsed
           ? "Open"
           : "Close";
+
+
+      setTimeout(
+        () => map.invalidateSize(),
+        100
+      );
 
     }
 
@@ -2255,11 +2425,10 @@
     );
 
 
-    const mobileQuery =
-      window.matchMedia(
-        "(max-width: 600px)"
-      );
-
+    /*
+      Desktop starts open.
+      Mobile starts closed.
+    */
 
     setMenuCollapsed(
       mobileQuery.matches
@@ -2335,13 +2504,31 @@
     ========================================================== */
 
     const map =
-      L.map("map", {
-        tap: true,
-        zoomControl: true
-      }).setView(
+      L.map(
+        "map",
+        {
+          tap: true,
+          zoomControl: false
+        }
+      ).setView(
         [35.4676, -97.5164],
         7
       );
+
+
+    /*
+      Put zoom controls at bottom-left so they do not
+      overlap the mobile menu.
+    */
+
+    const zoomControl =
+      L.control.zoom({
+        position:
+          "bottomleft"
+      });
+
+
+    zoomControl.addTo(map);
 
 
     const streets =
@@ -2371,22 +2558,35 @@
     streets.addTo(map);
 
 
+    /* =========================================================
+       LAYERS / LIST
+    ========================================================== */
+
     const listOverlayLayer =
       L.layerGroup();
 
 
     const layersControl =
       L.control.layers(
+
         {
-          "Streets": streets,
-          "Satellite": satellite
+          "Streets":
+            streets,
+
+          "Satellite":
+            satellite
         },
+
         {
-          "List": listOverlayLayer
+          "List":
+            listOverlayLayer
         },
+
         {
-          position: "topright"
+          position:
+            "bottomright"
         }
+
       ).addTo(map);
 
 
@@ -2396,15 +2596,13 @@
 
     let markers = [];
 
-
     let editingId = null;
-
 
     let locationDocs = [];
 
 
     /* =========================================================
-       LOCATION EDITING
+       LOCATION EDIT MODE
     ========================================================== */
 
     function setEditMode(
@@ -2435,214 +2633,6 @@
         on
           ? "Update Location"
           : "Add Location";
-
-    }
-
-
-    function makeMarker(
-      loc
-    ) {
-
-      const actions =
-        isAdmin
-          ? `
-            <div
-              style="
-                margin-top:8px;
-                display:flex;
-                gap:8px;
-                flex-wrap:wrap;
-              "
-            >
-
-              <button
-                type="button"
-                class="editPinBtn"
-                data-id="${loc.id}"
-              >
-                Edit
-              </button>
-
-              <button
-                type="button"
-                class="deletePinBtn danger"
-                data-id="${loc.id}"
-              >
-                Delete
-              </button>
-
-            </div>
-          `
-          : "";
-
-
-      return L.marker([
-        loc.lat,
-        loc.lng
-      ]).bindPopup(
-
-        `
-          <b>${escapeHtml(loc.name)}</b>
-          <br>
-
-          Type:
-          ${escapeHtml(loc.type)}
-
-          <br>
-
-          County:
-          ${escapeHtml(loc.county)}
-
-          <br>
-
-          Status:
-          ${escapeHtml(loc.status)}
-
-          <br>
-
-          Permission:
-          ${escapeHtml(loc.permission)}
-
-          <br>
-
-          Entity:
-          ${escapeHtml(loc.entity)}
-
-          <br><br>
-
-          ${
-            loc.details
-              ? escapeHtml(loc.details)
-              : ""
-          }
-
-          ${actions}
-        `
-
-      );
-
-    }
-
-
-    function rebuildMarkersFromDocs() {
-
-      markers = [];
-
-
-      locationDocs.forEach(
-        (loc) => {
-
-          if (
-            Number.isFinite(loc.lat) &&
-            Number.isFinite(loc.lng)
-          ) {
-
-            markers.push({
-              loc,
-              marker:
-                makeMarker(loc)
-            });
-
-          }
-
-        }
-      );
-
-
-      applyFilters();
-
-      renderListView();
-
-    }
-
-
-    function applyFilters() {
-
-      const countyValue =
-        countyFilterEl.value;
-
-
-      const statusValue =
-        statusFilterEl.value;
-
-
-      const permissionValue =
-        permissionFilterEl.value;
-
-
-      const entityValue =
-        entityFilterEl.value;
-
-
-      const typeValue =
-        typeFilterEl.value;
-
-
-      const searchValue =
-        searchEl.value
-          .trim()
-          .toLowerCase();
-
-
-      markerLayer.clearLayers();
-
-
-      markers.forEach(
-        ({ loc, marker }) => {
-
-          const countyOk =
-            countyValue === "ALL" ||
-            loc.county === countyValue;
-
-
-          const statusOk =
-            statusValue === "ALL" ||
-            loc.status === statusValue;
-
-
-          const permissionOk =
-            permissionValue === "ALL" ||
-            loc.permission ===
-              permissionValue;
-
-
-          const entityOk =
-            entityValue === "ALL" ||
-            loc.entity ===
-              entityValue;
-
-
-          const typeOk =
-            typeValue === "ALL" ||
-            loc.type === typeValue;
-
-
-          const searchOk =
-            searchValue === "" ||
-            String(
-              loc.name || ""
-            )
-              .toLowerCase()
-              .includes(searchValue);
-
-
-          if (
-            countyOk &&
-            statusOk &&
-            permissionOk &&
-            entityOk &&
-            typeOk &&
-            searchOk
-          ) {
-
-            marker.addTo(
-              markerLayer
-            );
-
-          }
-
-        }
-      );
 
     }
 
@@ -2682,6 +2672,230 @@
     }
 
 
+    /* =========================================================
+       LOCATION MARKERS
+    ========================================================== */
+
+    function makeMarker(
+      loc
+    ) {
+
+      const actions =
+        isAdmin
+          ? `
+
+            <div
+              style="
+                margin-top:8px;
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+              "
+            >
+
+              <button
+                type="button"
+                class="editPinBtn"
+                data-id="${escapeHtml(loc.id)}"
+              >
+                Edit
+              </button>
+
+              <button
+                type="button"
+                class="deletePinBtn danger"
+                data-id="${escapeHtml(loc.id)}"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          `
+          : "";
+
+
+      return L.marker([
+
+        loc.lat,
+
+        loc.lng
+
+      ]).bindPopup(
+
+        `
+
+          <b>
+            ${escapeHtml(loc.name)}
+          </b>
+
+          <br>
+
+          Type:
+          ${escapeHtml(loc.type)}
+
+          <br>
+
+          County:
+          ${escapeHtml(loc.county)}
+
+          <br>
+
+          Status:
+          ${escapeHtml(loc.status)}
+
+          <br>
+
+          Permission:
+          ${escapeHtml(loc.permission)}
+
+          <br>
+
+          Entity:
+          ${escapeHtml(loc.entity)}
+
+          <br><br>
+
+          ${
+            loc.details
+              ? escapeHtml(loc.details)
+              : ""
+          }
+
+          ${actions}
+
+        `
+
+      );
+
+    }
+
+
+    function rebuildMarkersFromDocs() {
+
+      markers = [];
+
+
+      locationDocs.forEach(
+        (loc) => {
+
+          if (
+            Number.isFinite(loc.lat) &&
+            Number.isFinite(loc.lng)
+          ) {
+
+            markers.push({
+
+              loc,
+
+              marker:
+                makeMarker(loc)
+
+            });
+
+          }
+
+        }
+      );
+
+
+      applyFilters();
+
+      renderListView();
+
+    }
+
+
+    function applyFilters() {
+
+      const countyValue =
+        countyFilterEl.value;
+
+      const statusValue =
+        statusFilterEl.value;
+
+      const permissionValue =
+        permissionFilterEl.value;
+
+      const entityValue =
+        entityFilterEl.value;
+
+      const typeValue =
+        typeFilterEl.value;
+
+      const searchValue =
+        searchEl.value
+          .trim()
+          .toLowerCase();
+
+
+      markerLayer.clearLayers();
+
+
+      markers.forEach(
+        ({ loc, marker }) => {
+
+          const countyOk =
+            countyValue === "ALL" ||
+            loc.county === countyValue;
+
+
+          const statusOk =
+            statusValue === "ALL" ||
+            loc.status === statusValue;
+
+
+          const permissionOk =
+            permissionValue === "ALL" ||
+            loc.permission === permissionValue;
+
+
+          const entityOk =
+            entityValue === "ALL" ||
+            loc.entity === entityValue;
+
+
+          const typeOk =
+            typeValue === "ALL" ||
+            loc.type === typeValue;
+
+
+          const searchOk =
+            searchValue === "" ||
+            String(
+              loc.name || ""
+            )
+              .toLowerCase()
+              .includes(
+                searchValue
+              );
+
+
+          if (
+            countyOk &&
+            statusOk &&
+            permissionOk &&
+            entityOk &&
+            typeOk &&
+            searchOk
+          ) {
+
+            marker.addTo(
+              markerLayer
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =========================================================
+       LIST VIEW
+    ========================================================== */
+
     function normalizeCounty(
       county
     ) {
@@ -2693,10 +2907,6 @@
 
     }
 
-
-    /* =========================================================
-       LIST VIEW
-    ========================================================== */
 
     function renderListView() {
 
@@ -2737,7 +2947,7 @@
         Array.from(
           grouped.keys()
         ).sort(
-          (a, b) =>
+          (a,b) =>
             a.localeCompare(b)
         );
 
@@ -2769,7 +2979,7 @@
               .get(county)
               .slice()
               .sort(
-                (a, b) =>
+                (a,b) =>
                   String(a.name)
                     .localeCompare(
                       String(b.name)
@@ -2844,65 +3054,33 @@
                       data-name="${escapeHtml(loc.name)}"
                       data-notes="${escapeHtml(loc.details || "")}"
                     >
-
                       ${escapeHtml(loc.name)}
-
                     </button>
 
                   </div>
 
-
                   <div>
-                    ${escapeHtml(
-                      loc.type ||
-                      "Unknown"
-                    )}
+                    ${escapeHtml(loc.type || "Unknown")}
                   </div>
 
-
                   <div>
-                    ${escapeHtml(
-                      loc.status ||
-                      "Unknown"
-                    )}
+                    ${escapeHtml(loc.status || "Unknown")}
                   </div>
 
-
                   <div>
-                    ${escapeHtml(
-                      loc.permission ||
-                      "Unknown"
-                    )}
+                    ${escapeHtml(loc.permission || "Unknown")}
                   </div>
 
-
                   <div>
-                    ${escapeHtml(
-                      loc.entity ||
-                      "Unknown"
-                    )}
+                    ${escapeHtml(loc.entity || "Unknown")}
                   </div>
 
-
                   <div>
-                    ${
-                      Number.isFinite(
-                        loc.lat
-                      )
-                        ? loc.lat.toFixed(6)
-                        : ""
-                    }
+                    ${escapeHtml(Number(loc.lat).toFixed(6))}
                   </div>
 
-
                   <div>
-                    ${
-                      Number.isFinite(
-                        loc.lng
-                      )
-                        ? loc.lng.toFixed(6)
-                        : ""
-                    }
+                    ${escapeHtml(Number(loc.lng).toFixed(6))}
                   </div>
 
                 </div>
@@ -2935,20 +3113,13 @@
     ========================================================== */
 
     function showNotesPopover(
-      buttonEl,
+      button,
       name,
-      notes
+      notesText
     ) {
 
       const rect =
-        buttonEl.getBoundingClientRect();
-
-
-      const notesText =
-        notes &&
-        notes.trim()
-          ? notes
-          : "No notes available.";
+        button.getBoundingClientRect();
 
 
       notesPopover.innerHTML = `
@@ -2968,7 +3139,11 @@
         </div>
 
         <div>
-          ${escapeHtml(notesText)}
+          ${
+            notesText
+              ? escapeHtml(notesText)
+              : '<span class="muted">No notes recorded.</span>'
+          }
         </div>
 
       `;
@@ -2978,15 +3153,8 @@
         "block";
 
 
-      /*
-        On phones the CSS handles
-        the bottom-sheet positioning.
-      */
-
       if (
-        window.matchMedia(
-          "(max-width: 600px)"
-        ).matches
+        mobileQuery.matches
       ) {
 
         notesPopover.style.left =
@@ -3009,10 +3177,13 @@
 
         const left =
           Math.min(
+
             rect.right + 10,
+
             window.innerWidth -
               popoverWidth -
               16
+
           );
 
 
@@ -3021,17 +3192,11 @@
 
 
         notesPopover.style.left =
-          `${Math.max(
-            16,
-            left
-          )}px`;
+          `${Math.max(16,left)}px`;
 
 
         notesPopover.style.top =
-          `${Math.max(
-            16,
-            top
-          )}px`;
+          `${Math.max(16,top)}px`;
 
       }
 
@@ -3058,7 +3223,6 @@
 
       notesPopover.style.display =
         "none";
-
 
       notesPopover.innerHTML =
         "";
@@ -3089,7 +3253,9 @@
                     "block";
 
 
-                if (sameButton) {
+                if (
+                  sameButton
+                ) {
 
                   hideNotesPopover();
 
@@ -3106,11 +3272,15 @@
 
 
                 showNotesPopover(
+
                   btn,
+
                   btn.dataset.name ||
                     "Location",
+
                   btn.dataset.notes ||
                     ""
+
                 );
 
               }
@@ -3140,12 +3310,7 @@
       listViewOverlay.style.display =
         "none";
 
-
       hideNotesPopover();
-
-
-      document.body.style.overflow =
-        "hidden";
 
 
       if (
@@ -3237,35 +3402,8 @@
     );
 
 
-    window.addEventListener(
-      "resize",
-      () => {
-
-        hideNotesPopover();
-
-        notesPopover.dataset.anchorName =
-          "";
-
-        if (
-          listViewOverlay.style.display ===
-          "block"
-        ) {
-
-          renderListView();
-
-        }
-
-        setTimeout(
-          () => map.invalidateSize(),
-          100
-        );
-
-      }
-    );
-
-
     /* =========================================================
-       AUTH LOGIN
+       FIREBASE LOGIN
     ========================================================== */
 
     loginBtn.addEventListener(
@@ -3285,20 +3423,45 @@
             (
               res.user?.email ||
               ""
-            ).toLowerCase();
+            )
+              .trim()
+              .toLowerCase();
+
+
+          /*
+            IMPORTANT:
+
+            Authorized editors are allowed even if
+            their email is NOT @prcofok.org.
+
+            This is what allows:
+            sws12022004@gmail.com
+          */
+
+          const authorizedEditor =
+            AUTHORIZED_EDITORS.has(
+              email
+            );
+
+
+          const domainMember =
+            email.endsWith(
+              ALLOWED_DOMAIN
+            );
 
 
           if (
-            !email.endsWith(
-              ALLOWED_DOMAIN
-            )
+            !authorizedEditor &&
+            !domainMember
           ) {
 
-            await signOut(auth);
+            await signOut(
+              auth
+            );
 
 
             alert(
-              `Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`
+              "Unauthorized account. Please sign in with an authorized account."
             );
 
           }
@@ -3307,9 +3470,13 @@
 
           console.error(err);
 
+
           alert(
             "Sign-in failed: " +
-            (err?.message || err)
+            (
+              err?.message ||
+              err
+            )
           );
 
         }
@@ -3322,11 +3489,25 @@
       "click",
       async () => {
 
-        await signOut(auth);
+        try {
+
+          await signOut(
+            auth
+          );
+
+        } catch (err) {
+
+          console.error(err);
+
+        }
 
       }
     );
 
+
+    /* =========================================================
+       AUTH STATE
+    ========================================================== */
 
     onAuthStateChanged(
       auth,
@@ -3340,20 +3521,34 @@
           (
             user?.email ||
             ""
-          ).toLowerCase();
+          )
+            .trim()
+            .toLowerCase();
 
 
-        isMember =
-          !!user &&
-          email.endsWith(
-            ALLOWED_DOMAIN
-          );
+        /*
+          IMPORTANT:
 
+          A normal @prcofok.org account is a member.
+
+          Either authorized editor is ALSO a member,
+          even if they use Gmail.
+        */
 
         isAdmin =
           !!user &&
           AUTHORIZED_EDITORS.has(
             email
+          );
+
+
+        isMember =
+          !!user &&
+          (
+            email.endsWith(
+              ALLOWED_DOMAIN
+            ) ||
+            isAdmin
           );
 
 
@@ -3387,7 +3582,9 @@
           !popupEl ||
           !isAdmin
         ) {
+
           return;
+
         }
 
 
@@ -3415,7 +3612,7 @@
 
               const loc =
                 markers.find(
-                  m =>
+                  (m) =>
                     m.loc.id === id
                 )?.loc;
 
@@ -3480,7 +3677,9 @@
                 "";
 
 
-              setEditMode(id);
+              setEditMode(
+                id
+              );
 
 
               if (
@@ -3489,6 +3688,19 @@
 
                 setMenuCollapsed(
                   false
+                );
+
+
+                setTimeout(
+                  () => {
+
+                    editModeBanner.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start"
+                    });
+
+                  },
+                  150
                 );
 
               }
@@ -3514,7 +3726,9 @@
                   "Delete this pin? This cannot be undone."
                 )
               ) {
+
                 return;
+
               }
 
 
@@ -3541,12 +3755,17 @@
 
               } catch (err) {
 
-                console.error(err);
+                console.error(
+                  err
+                );
+
 
                 alert(
                   "Delete failed: " +
-                  (err?.message ||
-                    err)
+                  (
+                    err?.message ||
+                    err
+                  )
                 );
 
               }
@@ -3569,30 +3788,25 @@
       applyFilters
     );
 
-
     statusFilterEl.addEventListener(
       "change",
       applyFilters
     );
-
 
     permissionFilterEl.addEventListener(
       "change",
       applyFilters
     );
 
-
     entityFilterEl.addEventListener(
       "change",
       applyFilters
     );
 
-
     typeFilterEl.addEventListener(
       "change",
       applyFilters
     );
-
 
     searchEl.addEventListener(
       "input",
@@ -3635,7 +3849,9 @@
     let picking = false;
 
 
-    function setPicking(on) {
+    function setPicking(
+      on
+    ) {
 
       picking =
         on;
@@ -3669,7 +3885,19 @@
       "click",
       () => {
 
-        setPicking(true);
+        setPicking(
+          true
+        );
+
+        if (
+          mobileQuery.matches
+        ) {
+
+          setMenuCollapsed(
+            true
+          );
+
+        }
 
       }
     );
@@ -3680,23 +3908,23 @@
       (e) => {
 
         if (!picking) {
+
           return;
+
         }
 
 
         nl_lat.value =
-          e.latlng.lat.toFixed(
-            6
-          );
+          e.latlng.lat.toFixed(6);
 
 
         nl_lng.value =
-          e.latlng.lng.toFixed(
-            6
-          );
+          e.latlng.lng.toFixed(6);
 
 
-        setPicking(false);
+        setPicking(
+          false
+        );
 
 
         if (
@@ -3718,12 +3946,15 @@
       (e) => {
 
         if (
-          e.key ===
-          "Escape"
+          e.key === "Escape"
         ) {
 
           if (picking) {
-            setPicking(false);
+
+            setPicking(
+              false
+            );
+
           }
 
 
@@ -3747,9 +3978,13 @@
       "click",
       () => {
 
-        setEditMode(null);
+        setEditMode(
+          null
+        );
+
 
         form.reset();
+
 
         nl_county.value =
           "Unassigned";
@@ -3769,10 +4004,16 @@
         e.preventDefault();
 
 
+        /*
+          isMember includes BOTH:
+          - @prcofok.org users
+          - authorized editors
+        */
+
         if (!isMember) {
 
           alert(
-            "Sign in with your @prcofok.org Google account to add locations."
+            "Sign in with an authorized Google account to add locations."
           );
 
           return;
@@ -3840,9 +4081,11 @@
 
         if (!name) {
 
-          return alert(
+          alert(
             "Location name is required."
           );
+
+          return;
 
         }
 
@@ -3852,9 +4095,11 @@
           !Number.isFinite(lng)
         ) {
 
-          return alert(
+          alert(
             "Valid latitude and longitude are required."
           );
+
+          return;
 
         }
 
@@ -3887,7 +4132,9 @@
 
         try {
 
-          if (editingId) {
+          if (
+            editingId
+          ) {
 
             await updateDoc(
               doc(
@@ -3954,12 +4201,17 @@
 
         } catch (err) {
 
-          console.error(err);
+          console.error(
+            err
+          );
+
 
           alert(
             "Save failed: " +
-            (err?.message ||
-              err)
+            (
+              err?.message ||
+              err
+            )
           );
 
         }
@@ -4020,10 +4272,14 @@
                 "Unknown",
 
               lat:
-                Number(d.lat),
+                Number(
+                  d.lat
+                ),
 
               lng:
-                Number(d.lng),
+                Number(
+                  d.lng
+                ),
 
               details:
                 d.details ||
@@ -4094,34 +4350,26 @@
     const HEX_SHOW_MIN_ZOOM =
       14;
 
-
     const HEX_SIZE_AT_ZOOM =
       18;
-
 
     const HEX_BASE_PX =
       48;
 
-
     const HEX_MIN_PX =
       18;
-
 
     const HEX_MAX_PX =
       64;
 
-
     const HEX_FADE_MS =
       220;
-
 
     const HEX_FADE_STEPS =
       12;
 
-
     const HEX_MIN_OPACITY =
       0.0;
-
 
     const HEX_MAX_OPACITY =
       1.0;
@@ -4152,14 +4400,14 @@
         Math.pow(
           1.15,
           z -
-            HEX_SIZE_AT_ZOOM
+          HEX_SIZE_AT_ZOOM
         );
 
 
       return Math.round(
         clamp(
           HEX_BASE_PX *
-            scale,
+          scale,
 
           HEX_MIN_PX,
 
@@ -4174,10 +4422,8 @@
       z
     ) {
 
-      return (
-        z >=
-        HEX_SHOW_MIN_ZOOM
-      );
+      return z >=
+        HEX_SHOW_MIN_ZOOM;
 
     }
 
@@ -4226,8 +4472,7 @@
 
       if (
         Math.abs(
-          from -
-          target
+          from - target
         ) < 0.01
       ) {
 
@@ -4274,15 +4519,16 @@
                     -2 * t +
                     2,
                     2
-                  ) /
-                  2;
+                  ) / 2;
 
 
             const val =
               from +
-              (target -
-                from) *
-                eased;
+              (
+                target -
+                from
+              ) *
+              eased;
 
 
             marker.setOpacity(
@@ -4295,23 +4541,19 @@
 
 
             if (
-              step >=
-              steps
+              step >= steps
             ) {
 
               clearInterval(
                 marker._fadeTimer
               );
 
-
               marker._fadeTimer =
                 null;
-
 
               marker.setOpacity(
                 target
               );
-
 
               marker.options.opacity =
                 target;
@@ -4319,7 +4561,6 @@
             }
 
           },
-
           stepTime
         );
 
@@ -4503,6 +4744,10 @@
     }
 
 
+    /* =========================================================
+       SECTION POINT CONVERSION
+    ========================================================== */
+
     function layerToPoints(
       layer
     ) {
@@ -4511,13 +4756,12 @@
         layer.getLatLngs();
 
 
-      let rings = ll;
+      let rings =
+        ll;
 
 
       if (
-        !Array.isArray(
-          rings
-        )
+        !Array.isArray(rings)
       ) {
 
         rings = [];
@@ -4552,9 +4796,7 @@
         rings =
           rings.map(
             (r) =>
-              Array.isArray(
-                r[0]
-              )
+              Array.isArray(r[0])
                 ? r[0]
                 : r
           );
@@ -4578,7 +4820,6 @@
                   p?.lat
                 );
 
-
               const lng =
                 Number(
                   p?.lng
@@ -4586,12 +4827,8 @@
 
 
               if (
-                Number.isFinite(
-                  lat
-                ) &&
-                Number.isFinite(
-                  lng
-                )
+                Number.isFinite(lat) &&
+                Number.isFinite(lng)
               ) {
 
                 points.push({
@@ -4626,9 +4863,7 @@
     ) {
 
       if (
-        !Array.isArray(
-          points
-        ) ||
+        !Array.isArray(points) ||
         points.length === 0
       ) {
 
@@ -4650,18 +4885,15 @@
             pt.ring
           );
 
-
         const i =
           Number(
             pt.i
           );
 
-
         const lat =
           Number(
             pt.lat
           );
-
 
         const lng =
           Number(
@@ -4670,18 +4902,10 @@
 
 
         if (
-          !Number.isFinite(
-            ring
-          ) ||
-          !Number.isFinite(
-            i
-          ) ||
-          !Number.isFinite(
-            lat
-          ) ||
-          !Number.isFinite(
-            lng
-          )
+          !Number.isFinite(ring) ||
+          !Number.isFinite(i) ||
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
         ) {
 
           continue;
@@ -4690,9 +4914,7 @@
 
 
         if (
-          !byRing.has(
-            ring
-          )
+          !byRing.has(ring)
         ) {
 
           byRing.set(
@@ -4718,7 +4940,7 @@
         Array.from(
           byRing.keys()
         ).sort(
-          (a, b) =>
+          (a,b) =>
             a - b
         );
 
@@ -4730,9 +4952,8 @@
             byRing
               .get(rk)
               .sort(
-                (a, b) =>
-                  a.i -
-                  b.i
+                (a,b) =>
+                  a.i - b.i
               )
               .map(
                 (p) =>
@@ -4778,15 +4999,19 @@
       enabled
     ) {
 
-      if (enabled) {
+      if (
+        enabled
+      ) {
 
-        if (!drawControl) {
+        if (
+          !drawControl
+        ) {
 
           drawControl =
             new L.Control.Draw({
 
               position:
-                "topright",
+                "bottomright",
 
               draw: {
 
@@ -4831,7 +5056,9 @@
 
       } else {
 
-        if (drawControl) {
+        if (
+          drawControl
+        ) {
 
           map.removeControl(
             drawControl
@@ -4864,7 +5091,7 @@
         )
           .filter(Boolean)
           .sort(
-            (a, b) =>
+            (a,b) =>
               a.localeCompare(b)
           );
 
@@ -4932,13 +5159,13 @@
       ) {
 
         const show =
-          selected ===
-            "ALL" ||
-          rec.mapName ===
-            selected;
+          selected === "ALL" ||
+          rec.mapName === selected;
 
 
-        if (show) {
+        if (
+          show
+        ) {
 
           if (
             !sectionPolys.hasLayer(
@@ -5082,12 +5309,20 @@
     );
 
 
+    /* =========================================================
+       DRAW CREATED
+    ========================================================== */
+
     map.on(
       L.Draw.Event.CREATED,
       async (e) => {
 
-        if (!isAdmin) {
+        if (
+          !isAdmin
+        ) {
+
           return;
+
         }
 
 
@@ -5112,7 +5347,9 @@
           ).trim();
 
 
-        if (!mapName) {
+        if (
+          !mapName
+        ) {
 
           alert(
             "Enter a Map name first."
@@ -5190,7 +5427,9 @@
 
 
           const n =
-            Number(number);
+            Number(
+              number
+            );
 
 
           if (
@@ -5198,19 +5437,25 @@
           ) {
 
             sectionNextNumber.value =
-              String(n + 1);
+              String(
+                n + 1
+              );
 
           }
 
         } catch (err) {
 
-          console.error(err);
+          console.error(
+            err
+          );
 
 
           alert(
             "Save section failed: " +
-            (err?.message ||
-              err)
+            (
+              err?.message ||
+              err
+            )
           );
 
 
@@ -5224,12 +5469,20 @@
     );
 
 
+    /* =========================================================
+       DRAW EDITED
+    ========================================================== */
+
     map.on(
       L.Draw.Event.EDITED,
       async (e) => {
 
-        if (!isAdmin) {
+        if (
+          !isAdmin
+        ) {
+
           return;
+
         }
 
 
@@ -5248,7 +5501,9 @@
 
 
             if (!id) {
+
               return;
+
             }
 
 
@@ -5259,18 +5514,26 @@
 
 
             updates.push(
+
               updateDoc(
+
                 doc(
                   db,
                   SECTIONS,
                   id
                 ),
+
                 {
+
                   points,
+
                   updatedAt:
                     serverTimestamp()
+
                 }
+
               )
+
             );
 
           }
@@ -5285,13 +5548,17 @@
 
         } catch (err) {
 
-          console.error(err);
+          console.error(
+            err
+          );
 
 
           alert(
             "Update failed: " +
-            (err?.message ||
-              err)
+            (
+              err?.message ||
+              err
+            )
           );
 
         }
@@ -5300,12 +5567,20 @@
     );
 
 
+    /* =========================================================
+       DRAW DELETED
+    ========================================================== */
+
     map.on(
       L.Draw.Event.DELETED,
       async (e) => {
 
-        if (!isAdmin) {
+        if (
+          !isAdmin
+        ) {
+
           return;
+
         }
 
 
@@ -5324,18 +5599,24 @@
 
 
             if (!id) {
+
               return;
+
             }
 
 
             deletes.push(
+
               deleteDoc(
+
                 doc(
                   db,
                   SECTIONS,
                   id
                 )
+
               )
+
             );
 
           }
@@ -5350,13 +5631,17 @@
 
         } catch (err) {
 
-          console.error(err);
+          console.error(
+            err
+          );
 
 
           alert(
             "Delete failed: " +
-            (err?.message ||
-              err)
+            (
+              err?.message ||
+              err
+            )
           );
 
         }
@@ -5364,6 +5649,10 @@
       }
     );
 
+
+    /* =========================================================
+       SECTION INTERACTIONS
+    ========================================================== */
 
     function attachSectionInteractions(
       id,
@@ -5382,11 +5671,15 @@
 
 
           if (!rec) {
+
             return;
+
           }
 
 
-          if (isAdmin) {
+          if (
+            isAdmin
+          ) {
 
             const next =
               cycleStatus(
@@ -5397,29 +5690,38 @@
             try {
 
               await updateDoc(
+
                 doc(
                   db,
                   SECTIONS,
                   id
                 ),
+
                 {
+
                   status:
                     next,
 
                   updatedAt:
                     serverTimestamp()
+
                 }
+
               );
 
             } catch (err) {
 
-              console.error(err);
+              console.error(
+                err
+              );
 
 
               alert(
                 "Status update failed: " +
-                (err?.message ||
-                  err)
+                (
+                  err?.message ||
+                  err
+                )
               );
 
             }
@@ -5442,8 +5744,12 @@
         "contextmenu",
         async () => {
 
-          if (!isAdmin) {
+          if (
+            !isAdmin
+          ) {
+
             return;
+
           }
 
 
@@ -5454,7 +5760,9 @@
 
 
           if (!rec) {
+
             return;
+
           }
 
 
@@ -5466,7 +5774,9 @@
 
 
           if (!newMapName) {
+
             return;
+
           }
 
 
@@ -5478,18 +5788,22 @@
 
 
           if (!newNumber) {
+
             return;
+
           }
 
 
           try {
 
             await updateDoc(
+
               doc(
                 db,
                 SECTIONS,
                 id
               ),
+
               {
 
                 mapName:
@@ -5504,17 +5818,22 @@
                   serverTimestamp()
 
               }
+
             );
 
           } catch (err) {
 
-            console.error(err);
+            console.error(
+              err
+            );
 
 
             alert(
               "Label update failed: " +
-              (err?.message ||
-                err)
+              (
+                err?.message ||
+                err
+              )
             );
 
           }
@@ -5527,8 +5846,12 @@
         "click",
         async () => {
 
-          if (!isAdmin) {
+          if (
+            !isAdmin
+          ) {
+
             return;
+
           }
 
 
@@ -5539,7 +5862,9 @@
 
 
           if (!rec) {
+
             return;
+
           }
 
 
@@ -5552,11 +5877,13 @@
           try {
 
             await updateDoc(
+
               doc(
                 db,
                 SECTIONS,
                 id
               ),
+
               {
 
                 status:
@@ -5566,17 +5893,22 @@
                   serverTimestamp()
 
               }
+
             );
 
           } catch (err) {
 
-            console.error(err);
+            console.error(
+              err
+            );
 
 
             alert(
               "Status update failed: " +
-              (err?.message ||
-                err)
+              (
+                err?.message ||
+                err
+              )
             );
 
           }
@@ -5586,6 +5918,10 @@
 
     }
 
+
+    /* =========================================================
+       REBUILD SECTION
+    ========================================================== */
 
     function rebuildSectionLayerFromDoc(
       id,
@@ -5613,7 +5949,9 @@
         );
 
 
-      if (existing) {
+      if (
+        existing
+      ) {
 
         if (
           sectionPolys.hasLayer(
@@ -5654,8 +5992,12 @@
         );
 
 
-      if (!latlngRings) {
+      if (
+        !latlngRings
+      ) {
+
         return;
+
       }
 
 
@@ -5722,6 +6064,7 @@
       sectionById.set(
         id,
         {
+
           poly:
             polyLayer,
 
@@ -5732,6 +6075,7 @@
           number,
 
           status
+
         }
       );
 
@@ -5753,12 +6097,13 @@
         mapName === selected;
 
 
-      if (show) {
+      if (
+        show
+      ) {
 
         sectionPolys.addLayer(
           polyLayer
         );
-
 
         sectionHexes.addLayer(
           hex
@@ -5769,7 +6114,12 @@
     }
 
 
+    /* =========================================================
+       SECTION FIRESTORE
+    ========================================================== */
+
     onSnapshot(
+
       collection(
         db,
         SECTIONS
@@ -5787,7 +6137,9 @@
               docSnap.data();
 
 
-            if (d.mapName) {
+            if (
+              d.mapName
+            ) {
 
               names.push(
                 d.mapName
@@ -5822,7 +6174,9 @@
                 );
 
 
-              if (existing) {
+              if (
+                existing
+              ) {
 
                 if (
                   sectionPolys.hasLayer(
@@ -5891,16 +6245,39 @@
 
 
     /* =========================================================
-       FINAL MOBILE MAP REFRESH
+       WINDOW / ORIENTATION
     ========================================================== */
 
-    setTimeout(
+    window.addEventListener(
+      "resize",
       () => {
 
-        map.invalidateSize();
+        hideNotesPopover();
 
-      },
-      300
+        notesPopover.dataset.anchorName =
+          "";
+
+
+        if (
+          listViewOverlay.style.display ===
+          "block"
+        ) {
+
+          renderListView();
+
+        }
+
+
+        setTimeout(
+          () => {
+
+            map.invalidateSize();
+
+          },
+          150
+        );
+
+      }
     );
 
 
@@ -5914,14 +6291,28 @@
             map.invalidateSize();
 
           },
-          300
+          400
         );
 
       }
     );
 
 
+    /* =========================================================
+       INITIAL MAP REFRESH
+    ========================================================== */
+
+    setTimeout(
+      () => {
+
+        map.invalidateSize();
+
+      },
+      500
+    );
+
   </script>
 
 </body>
+
 </html>
