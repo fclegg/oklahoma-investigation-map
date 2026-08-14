@@ -9,8 +9,14 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 
   <style>
-    body { margin: 0; }
-    #map { height: 100vh; width: 100%; }
+    body {
+      margin: 0;
+    }
+
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
 
     .panel {
       position: absolute;
@@ -54,8 +60,13 @@
       cursor: pointer;
     }
 
-    .menuBody { display: block; }
-    .collapsed .menuBody { display: none; }
+    .menuBody {
+      display: block;
+    }
+
+    .collapsed .menuBody {
+      display: none;
+    }
 
     .row {
       display: flex;
@@ -65,7 +76,10 @@
       flex-wrap: wrap;
     }
 
-    input, select, button, textarea {
+    input,
+    select,
+    button,
+    textarea {
       padding: 6px 8px;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -85,7 +99,9 @@
       min-width: 200px;
     }
 
-    label { font-size: 13px; }
+    label {
+      font-size: 13px;
+    }
 
     .hint {
       font-size: 12px;
@@ -94,10 +110,26 @@
       line-height: 1.25;
     }
 
-    .small { width: 130px; }
-    .grow { flex: 1; min-width: 160px; }
-    .btnRow { display: flex; gap: 8px; flex-wrap: wrap; }
-    .danger { border-color: #d33 !important; color: #d33 !important; }
+    .small {
+      width: 130px;
+    }
+
+    .grow {
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .btnRow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .danger {
+      border-color: #d33 !important;
+      color: #d33 !important;
+    }
+
     .editMode {
       font-size: 12px;
       color: #0a5;
@@ -126,7 +158,8 @@
       border-radius: 999px;
     }
 
-    /* Full-screen list overlay */
+    /* Full-screen List view */
+
     #listViewOverlay {
       position: absolute;
       inset: 0;
@@ -281,8 +314,13 @@
     }
 
     @media (max-width: 600px) {
-      .panel { width: calc(100vw - 20px); }
-      .authPill { max-width: 140px; }
+      .panel {
+        width: calc(100vw - 20px);
+      }
+
+      .authPill {
+        max-width: 140px;
+      }
 
       #listViewInner {
         padding: 12px;
@@ -301,44 +339,92 @@
     }
   </style>
 </head>
+
 <body>
+
   <div id="menuWrap" class="panel collapsed">
+
     <div id="menuHeader">
-      <div id="menuTitle">Investigation Menu</div>
+
+      <div id="menuTitle">
+        Investigation Menu
+      </div>
 
       <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;">
-        <span id="adminBadge" class="adminBadge" style="display:none;">ADMIN</span>
-        <span id="authState" class="authPill">Not signed in</span>
-        <button id="loginBtn" type="button">Sign in</button>
-        <button id="logoutBtn" type="button" style="display:none;">Sign out</button>
-        <button id="menuToggle" type="button">Open</button>
+
+        <span id="adminBadge" class="adminBadge" style="display:none;">
+          ADMIN
+        </span>
+
+        <span id="authState" class="authPill">
+          Not signed in
+        </span>
+
+        <button id="loginBtn" type="button">
+          Sign in
+        </button>
+
+        <button id="logoutBtn" type="button" style="display:none;">
+          Sign out
+        </button>
+
+        <button id="menuToggle" type="button">
+          Open
+        </button>
+
       </div>
+
     </div>
 
     <div class="menuBody">
+
+      <!-- Filters -->
+
       <div id="controls">
+
         <div class="row">
-          <input id="search" type="text" placeholder="Search location name..." />
-          <button id="clearBtn" type="button">Clear</button>
+          <input
+            id="search"
+            type="text"
+            placeholder="Search location name..."
+          />
+
+          <button id="clearBtn" type="button">
+            Clear
+          </button>
         </div>
 
         <div class="row">
-          <label for="countyFilter">County:</label>
+
+          <label for="countyFilter">
+            County:
+          </label>
+
           <select id="countyFilter">
-            <option value="ALL">All</option>
+            <option value="ALL">
+              All
+            </option>
           </select>
 
-          <label for="statusFilter">Status:</label>
+          <label for="statusFilter">
+            Status:
+          </label>
+
           <select id="statusFilter">
             <option value="ALL">All</option>
             <option value="Active">Active</option>
             <option value="Closed">Closed</option>
             <option value="Unknown">Unknown</option>
           </select>
+
         </div>
 
         <div class="row">
-          <label for="permissionFilter">Permission:</label>
+
+          <label for="permissionFilter">
+            Permission:
+          </label>
+
           <select id="permissionFilter">
             <option value="ALL">All</option>
             <option value="Required">Required</option>
@@ -346,17 +432,25 @@
             <option value="Unknown">Unknown</option>
           </select>
 
-          <label for="entityFilter">Entity:</label>
+          <label for="entityFilter">
+            Entity:
+          </label>
+
           <select id="entityFilter">
             <option value="ALL">All</option>
             <option value="Ghost">Ghost</option>
             <option value="Demon">Demon</option>
             <option value="Unknown">Unknown</option>
           </select>
+
         </div>
 
         <div class="row">
-          <label for="typeFilter">Type:</label>
+
+          <label for="typeFilter">
+            Type:
+          </label>
+
           <select id="typeFilter">
             <option value="ALL">All</option>
             <option value="Cemetery">Cemetery</option>
@@ -368,138 +462,333 @@
             <option value="Other">Other</option>
             <option value="Unknown">Unknown</option>
           </select>
+
         </div>
+
       </div>
 
+      <!-- Section overlays -->
+
       <div style="margin-top:10px;">
+
         <div class="row" style="margin-bottom:2px;">
-          <strong>Section Overlays</strong>
+          <strong>
+            Section Overlays
+          </strong>
         </div>
 
         <div class="row">
-          <label for="sectionMapFilter">View:</label>
+
+          <label for="sectionMapFilter">
+            View:
+          </label>
+
           <select id="sectionMapFilter" class="grow">
-            <option value="ALL">All section maps</option>
+            <option value="ALL">
+              All section maps
+            </option>
           </select>
+
         </div>
 
         <div id="sectionAdminTools" style="display:none;">
+
           <div class="row">
-            <input id="sectionMapName" class="grow" type="text" placeholder="Map name for NEW sections (ex: Crown Hill Cemetery)" />
-            <input id="sectionNextNumber" class="small" type="number" min="1" step="1" placeholder="Next #" />
+
+            <input
+              id="sectionMapName"
+              class="grow"
+              type="text"
+              placeholder="Map name for NEW sections (ex: Crown Hill Cemetery)"
+            />
+
+            <input
+              id="sectionNextNumber"
+              class="small"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Next #"
+            />
+
           </div>
 
           <div class="row">
-            <label for="sectionDefaultStatus">Default:</label>
+
+            <label for="sectionDefaultStatus">
+              Default:
+            </label>
+
             <select id="sectionDefaultStatus" class="small">
-              <option value="uninvestigated">White (Uninvestigated)</option>
-              <option value="possible">Yellow (Possible)</option>
-              <option value="confirmed">Green (Confirmed)</option>
+
+              <option value="uninvestigated">
+                White (Uninvestigated)
+              </option>
+
+              <option value="possible">
+                Yellow (Possible)
+              </option>
+
+              <option value="confirmed">
+                Green (Confirmed)
+              </option>
+
             </select>
+
           </div>
 
           <div class="hint">
+
             Admin only: draw rectangles/polygons using the toolbar (top-right).
             Click a section/hex to cycle status.
-            <br>Right-click a section to rename map / change its number.
+            <br>
+            Right-click a section to rename map / change its number.
+
           </div>
+
         </div>
 
         <div class="hint">
-          Status colors: White = uninvestigated, Yellow = possible activity, Green = confirmed activity.
+          Status colors: White = uninvestigated,
+          Yellow = possible activity,
+          Green = confirmed activity.
         </div>
+
       </div>
 
+      <!-- New location -->
+
       <div id="newLocationPanel" style="margin-top:10px;">
+
         <div class="row">
-          <strong>New Location</strong>
-          <span class="hint">Tip: click “Pick from map”, then click the map to fill lat/lng.</span>
+
+          <strong>
+            New Location
+          </strong>
+
+          <span class="hint">
+            Tip: click “Pick from map”, then click the map to fill lat/lng.
+          </span>
+
         </div>
 
         <div id="mustLoginNote" class="hint" style="display:none;">
-          Sign in with your @prcofok.org Google account to add locations.
+          Sign in with an authorized editor account to add or edit locations.
         </div>
 
-        <div id="editModeBanner" class="editMode">Editing an existing pin. Submit will UPDATE it.</div>
+        <div id="editModeBanner" class="editMode">
+          Editing an existing pin. Submit will UPDATE it.
+        </div>
 
         <form id="newLocationForm">
+
           <div class="row">
-            <input id="nl_name" class="grow" type="text" placeholder="Location name (required)" required />
+
+            <input
+              id="nl_name"
+              class="grow"
+              type="text"
+              placeholder="Location name (required)"
+              required
+            />
+
             <select id="nl_county" class="small">
-              <option value="Unassigned">Unassigned</option>
+              <option value="Unassigned">
+                Unassigned
+              </option>
             </select>
+
           </div>
 
           <div class="row">
+
             <select id="nl_type" class="small">
-              <option value="Unknown">Type: Unknown</option>
-              <option value="Cemetery">Type: Cemetery</option>
-              <option value="Structure (In Use)">Structure (In Use)</option>
-              <option value="Structure (Abandoned)">Structure (Abandoned)</option>
-              <option value="Park">Type: Park</option>
-              <option value="Lake">Type: Lake</option>
-              <option value="Road/Bridge">Type: Road/Bridge</option>
-              <option value="Other">Type: Other</option>
+
+              <option value="Unknown">
+                Type: Unknown
+              </option>
+
+              <option value="Cemetery">
+                Type: Cemetery
+              </option>
+
+              <option value="Structure (In Use)">
+                Structure (In Use)
+              </option>
+
+              <option value="Structure (Abandoned)">
+                Structure (Abandoned)
+              </option>
+
+              <option value="Park">
+                Type: Park
+              </option>
+
+              <option value="Lake">
+                Type: Lake
+              </option>
+
+              <option value="Road/Bridge">
+                Type: Road/Bridge
+              </option>
+
+              <option value="Other">
+                Type: Other
+              </option>
+
             </select>
 
             <select id="nl_status" class="small">
-              <option value="Active">Active</option>
-              <option value="Closed">Closed</option>
-              <option value="Unknown">Unknown</option>
+
+              <option value="Active">
+                Active
+              </option>
+
+              <option value="Closed">
+                Closed
+              </option>
+
+              <option value="Unknown">
+                Unknown
+              </option>
+
             </select>
 
             <select id="nl_permission" class="small">
-              <option value="Unknown">Permission: Unknown</option>
-              <option value="Required">Permission: Required</option>
-              <option value="Not Required">Permission: Not Required</option>
+
+              <option value="Unknown">
+                Permission: Unknown
+              </option>
+
+              <option value="Required">
+                Permission: Required
+              </option>
+
+              <option value="Not Required">
+                Permission: Not Required
+              </option>
+
             </select>
 
             <select id="nl_entity" class="small">
-              <option value="Unknown">Entity: Unknown</option>
-              <option value="Ghost">Entity: Ghost</option>
-              <option value="Demon">Entity: Demon</option>
+
+              <option value="Unknown">
+                Entity: Unknown
+              </option>
+
+              <option value="Ghost">
+                Entity: Ghost
+              </option>
+
+              <option value="Demon">
+                Entity: Demon
+              </option>
+
             </select>
+
           </div>
 
           <div class="row">
-            <input id="nl_lat" class="small" type="number" step="any" placeholder="Lat" required />
-            <input id="nl_lng" class="small" type="number" step="any" placeholder="Lng" required />
-            <button id="pickBtn" type="button">Pick from map</button>
+
+            <input
+              id="nl_lat"
+              class="small"
+              type="number"
+              step="any"
+              placeholder="Lat"
+              required
+            />
+
+            <input
+              id="nl_lng"
+              class="small"
+              type="number"
+              step="any"
+              placeholder="Lng"
+              required
+            />
+
+            <button id="pickBtn" type="button">
+              Pick from map
+            </button>
+
           </div>
 
           <div class="row">
-            <textarea id="nl_details" placeholder="Details / notes (optional)"></textarea>
+
+            <textarea
+              id="nl_details"
+              placeholder="Details / notes (optional)"
+            ></textarea>
+
           </div>
 
           <div class="btnRow">
-            <button id="submitBtn" type="submit">Add Location</button>
-            <button id="cancelEditBtn" type="button" style="display:none;">Cancel Edit</button>
+
+            <button id="submitBtn" type="submit">
+              Add Location
+            </button>
+
+            <button
+              id="cancelEditBtn"
+              type="button"
+              style="display:none;"
+            >
+              Cancel Edit
+            </button>
+
           </div>
 
           <div id="pickHint" class="hint" style="display:none;">
-            Click the map to set coordinates. Press Esc to cancel.
+            Click the map to set coordinates.
+            Press Esc to cancel.
           </div>
+
         </form>
+
       </div>
+
     </div>
+
   </div>
 
   <div id="map"></div>
 
+  <!-- List view -->
+
   <div id="listViewOverlay">
+
     <div id="listViewInner">
+
       <div id="listViewHeader">
+
         <div id="listViewHeaderTop">
+
           <div>
-            <h2 style="margin:0;">Haunted Locations List</h2>
-            <div class="hint" style="margin-top:4px;">Grouped by county and sorted alphabetically. Click a location name to view notes.</div>
+
+            <h2 style="margin:0;">
+              Haunted Locations List
+            </h2>
+
+            <div class="hint" style="margin-top:4px;">
+              Grouped by county and sorted alphabetically.
+              Click a location name to view notes.
+            </div>
+
           </div>
-          <button id="closeListBtn" type="button">Close List</button>
+
+          <button id="closeListBtn" type="button">
+            Close List
+          </button>
+
         </div>
+
       </div>
 
       <div id="listViewContent"></div>
+
     </div>
+
   </div>
 
   <div id="notesPopover" class="notesPopover"></div>
@@ -508,7 +797,11 @@
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+
     import {
       getFirestore,
       collection,
@@ -528,291 +821,808 @@
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
+
+    /* =========================================================
+       OKLAHOMA COUNTIES
+    ========================================================= */
+
     const OKLAHOMA_COUNTIES = [
-      "Adair County","Alfalfa County","Atoka County","Beaver County","Beckham County","Blaine County",
-      "Bryan County","Caddo County","Canadian County","Carter County","Cherokee County","Choctaw County",
-      "Cimarron County","Cleveland County","Coal County","Comanche County","Cotton County","Craig County",
-      "Creek County","Custer County","Delaware County","Dewey County","Ellis County","Garfield County",
-      "Garvin County","Grady County","Grant County","Greer County","Harmon County","Harper County",
-      "Haskell County","Hughes County","Jackson County","Jefferson County","Johnston County","Kay County",
-      "Kingfisher County","Kiowa County","Latimer County","Le Flore County","Lincoln County","Logan County",
-      "Love County","Major County","Marshall County","Mayes County","McClain County","McCurtain County",
-      "McIntosh County","Murray County","Muskogee County","Noble County","Nowata County","Okfuskee County",
-      "Oklahoma County","Okmulgee County","Osage County","Ottawa County","Pawnee County","Payne County",
-      "Pittsburg County","Pontotoc County","Pottawatomie County","Pushmataha County","Roger Mills County",
-      "Rogers County","Seminole County","Sequoyah County","Stephens County","Texas County","Tillman County",
-      "Tulsa County","Wagoner County","Washington County","Washita County","Woods County","Woodward County"
+
+      "Adair County",
+      "Alfalfa County",
+      "Atoka County",
+      "Beaver County",
+      "Beckham County",
+      "Blaine County",
+      "Bryan County",
+      "Caddo County",
+      "Canadian County",
+      "Carter County",
+      "Cherokee County",
+      "Choctaw County",
+      "Cimarron County",
+      "Cleveland County",
+      "Coal County",
+      "Comanche County",
+      "Cotton County",
+      "Craig County",
+      "Creek County",
+      "Custer County",
+      "Delaware County",
+      "Dewey County",
+      "Ellis County",
+      "Garfield County",
+      "Garvin County",
+      "Grady County",
+      "Grant County",
+      "Greer County",
+      "Harmon County",
+      "Harper County",
+      "Haskell County",
+      "Hughes County",
+      "Jackson County",
+      "Jefferson County",
+      "Johnston County",
+      "Kay County",
+      "Kingfisher County",
+      "Kiowa County",
+      "Latimer County",
+      "Le Flore County",
+      "Lincoln County",
+      "Logan County",
+      "Love County",
+      "Major County",
+      "Marshall County",
+      "Mayes County",
+      "McClain County",
+      "McCurtain County",
+      "McIntosh County",
+      "Murray County",
+      "Muskogee County",
+      "Noble County",
+      "Nowata County",
+      "Okfuskee County",
+      "Oklahoma County",
+      "Okmulgee County",
+      "Osage County",
+      "Ottawa County",
+      "Pawnee County",
+      "Payne County",
+      "Pittsburg County",
+      "Pontotoc County",
+      "Pottawatomie County",
+      "Pushmataha County",
+      "Roger Mills County",
+      "Rogers County",
+      "Seminole County",
+      "Sequoyah County",
+      "Stephens County",
+      "Texas County",
+      "Tillman County",
+      "Tulsa County",
+      "Wagoner County",
+      "Washington County",
+      "Washita County",
+      "Woods County",
+      "Woodward County"
+
     ];
 
-    function populateCountySelect(selectEl, includeAll = false, includeUnassigned = false) {
+
+    function populateCountySelect(
+      selectEl,
+      includeAll = false,
+      includeUnassigned = false
+    ) {
+
       selectEl.innerHTML = "";
 
       if (includeAll) {
+
         const allOpt = document.createElement("option");
+
         allOpt.value = "ALL";
         allOpt.textContent = "All";
+
         selectEl.appendChild(allOpt);
       }
 
       if (includeUnassigned) {
+
         const unassignedOpt = document.createElement("option");
+
         unassignedOpt.value = "Unassigned";
         unassignedOpt.textContent = "Unassigned";
+
         selectEl.appendChild(unassignedOpt);
       }
 
       OKLAHOMA_COUNTIES.forEach((county) => {
+
         const opt = document.createElement("option");
+
         opt.value = county;
         opt.textContent = county;
+
         selectEl.appendChild(opt);
+
       });
+
     }
+
+
+    /* =========================================================
+       FIREBASE
+    ========================================================= */
 
     const firebaseConfig = {
+
       apiKey: "AIzaSyAfAk1hl11uDpC3JB7m0JvwnPf8rVXxJTg",
-      authDomain: "oklahoma-investigation-map.firebaseapp.com",
-      projectId: "oklahoma-investigation-map",
-      storageBucket: "oklahoma-investigation-map.firebasestorage.app",
-      messagingSenderId: "809288424180",
-      appId: "1:809288424180:web:6b6989762ea7db99151ca1"
+
+      authDomain:
+        "oklahoma-investigation-map.firebaseapp.com",
+
+      projectId:
+        "oklahoma-investigation-map",
+
+      storageBucket:
+        "oklahoma-investigation-map.firebasestorage.app",
+
+      messagingSenderId:
+        "809288424180",
+
+      appId:
+        "1:809288424180:web:6b6989762ea7db99151ca1"
+
     };
 
+
     const app = initializeApp(firebaseConfig);
+
     const db = getFirestore(app);
 
+
     const LOCATIONS = "locations";
+
     const SECTIONS = "section_overlays";
 
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ hd: "prcofok.org" });
 
-    const ALLOWED_DOMAIN = "@prcofok.org";
-    const ADMIN_EMAILS = new Set(["fclegg@prcofok.org"]);
+    /* =========================================================
+       AUTHORIZATION
+       
+       BOTH accounts below have FULL editor access.
+    ========================================================= */
+
+    const auth = getAuth(app);
+
+    const provider = new GoogleAuthProvider();
+
+
+    const AUTHORIZED_EDITORS = new Set([
+
+      "fclegg@prcofok.org",
+
+      "sws12022004@gmail.com"
+
+    ]);
+
 
     let currentUser = null;
-    let isMember = false;
+
     let isAdmin = false;
 
-    const menuWrap = document.getElementById("menuWrap");
-    const menuToggle = document.getElementById("menuToggle");
 
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const authStateEl = document.getElementById("authState");
-    const adminBadgeEl = document.getElementById("adminBadge");
+    function isAuthorizedEditor(email) {
 
-    const searchEl = document.getElementById("search");
-    const clearBtn = document.getElementById("clearBtn");
-    const countyFilterEl = document.getElementById("countyFilter");
-    const statusFilterEl = document.getElementById("statusFilter");
-    const permissionFilterEl = document.getElementById("permissionFilter");
-    const entityFilterEl = document.getElementById("entityFilter");
-    const typeFilterEl = document.getElementById("typeFilter");
+      if (!email) {
+        return false;
+      }
 
-    const mustLoginNote = document.getElementById("mustLoginNote");
+      return AUTHORIZED_EDITORS.has(
+        email.toLowerCase()
+      );
 
-    const editModeBanner = document.getElementById("editModeBanner");
-    const cancelEditBtn = document.getElementById("cancelEditBtn");
-    const submitBtn = document.getElementById("submitBtn");
-
-    const form = document.getElementById("newLocationForm");
-    const nl_name = document.getElementById("nl_name");
-    const nl_county = document.getElementById("nl_county");
-    const nl_type = document.getElementById("nl_type");
-    const nl_status = document.getElementById("nl_status");
-    const nl_permission = document.getElementById("nl_permission");
-    const nl_entity = document.getElementById("nl_entity");
-    const nl_lat = document.getElementById("nl_lat");
-    const nl_lng = document.getElementById("nl_lng");
-    const nl_details = document.getElementById("nl_details");
-    const pickBtn = document.getElementById("pickBtn");
-    const pickHint = document.getElementById("pickHint");
-
-    const sectionMapFilter = document.getElementById("sectionMapFilter");
-    const sectionAdminTools = document.getElementById("sectionAdminTools");
-    const sectionMapName = document.getElementById("sectionMapName");
-    const sectionNextNumber = document.getElementById("sectionNextNumber");
-    const sectionDefaultStatus = document.getElementById("sectionDefaultStatus");
-
-    const listViewOverlay = document.getElementById("listViewOverlay");
-    const listViewContent = document.getElementById("listViewContent");
-    const closeListBtn = document.getElementById("closeListBtn");
-    const notesPopover = document.getElementById("notesPopover");
-
-    populateCountySelect(countyFilterEl, true, true);
-    populateCountySelect(nl_county, false, true);
-
-    function setMenuCollapsed(collapsed) {
-      menuWrap.classList.toggle("collapsed", collapsed);
-      menuToggle.textContent = collapsed ? "Open" : "Close";
     }
 
+
+    /* =========================================================
+       DOM REFERENCES
+    ========================================================= */
+
+    const menuWrap =
+      document.getElementById("menuWrap");
+
+    const menuToggle =
+      document.getElementById("menuToggle");
+
+
+    const loginBtn =
+      document.getElementById("loginBtn");
+
+    const logoutBtn =
+      document.getElementById("logoutBtn");
+
+    const authStateEl =
+      document.getElementById("authState");
+
+    const adminBadgeEl =
+      document.getElementById("adminBadge");
+
+
+    const searchEl =
+      document.getElementById("search");
+
+    const clearBtn =
+      document.getElementById("clearBtn");
+
+    const countyFilterEl =
+      document.getElementById("countyFilter");
+
+    const statusFilterEl =
+      document.getElementById("statusFilter");
+
+    const permissionFilterEl =
+      document.getElementById("permissionFilter");
+
+    const entityFilterEl =
+      document.getElementById("entityFilter");
+
+    const typeFilterEl =
+      document.getElementById("typeFilter");
+
+
+    const mustLoginNote =
+      document.getElementById("mustLoginNote");
+
+
+    const editModeBanner =
+      document.getElementById("editModeBanner");
+
+    const cancelEditBtn =
+      document.getElementById("cancelEditBtn");
+
+    const submitBtn =
+      document.getElementById("submitBtn");
+
+
+    const form =
+      document.getElementById("newLocationForm");
+
+    const nl_name =
+      document.getElementById("nl_name");
+
+    const nl_county =
+      document.getElementById("nl_county");
+
+    const nl_type =
+      document.getElementById("nl_type");
+
+    const nl_status =
+      document.getElementById("nl_status");
+
+    const nl_permission =
+      document.getElementById("nl_permission");
+
+    const nl_entity =
+      document.getElementById("nl_entity");
+
+    const nl_lat =
+      document.getElementById("nl_lat");
+
+    const nl_lng =
+      document.getElementById("nl_lng");
+
+    const nl_details =
+      document.getElementById("nl_details");
+
+    const pickBtn =
+      document.getElementById("pickBtn");
+
+    const pickHint =
+      document.getElementById("pickHint");
+
+
+    const sectionMapFilter =
+      document.getElementById("sectionMapFilter");
+
+    const sectionAdminTools =
+      document.getElementById("sectionAdminTools");
+
+    const sectionMapName =
+      document.getElementById("sectionMapName");
+
+    const sectionNextNumber =
+      document.getElementById("sectionNextNumber");
+
+    const sectionDefaultStatus =
+      document.getElementById("sectionDefaultStatus");
+
+
+    const listViewOverlay =
+      document.getElementById("listViewOverlay");
+
+    const listViewContent =
+      document.getElementById("listViewContent");
+
+    const closeListBtn =
+      document.getElementById("closeListBtn");
+
+    const notesPopover =
+      document.getElementById("notesPopover");
+
+
+    populateCountySelect(
+      countyFilterEl,
+      true,
+      true
+    );
+
+    populateCountySelect(
+      nl_county,
+      false,
+      true
+    );
+
+
+    /* =========================================================
+       MENU
+    ========================================================= */
+
+    function setMenuCollapsed(collapsed) {
+
+      menuWrap.classList.toggle(
+        "collapsed",
+        collapsed
+      );
+
+      menuToggle.textContent =
+        collapsed ? "Open" : "Close";
+
+    }
+
+
     menuToggle.addEventListener("click", () => {
-      const collapsed = menuWrap.classList.contains("collapsed");
+
+      const collapsed =
+        menuWrap.classList.contains("collapsed");
+
       setMenuCollapsed(!collapsed);
+
     });
 
-    setMenuCollapsed(window.matchMedia("(max-width: 600px)").matches);
+
+    setMenuCollapsed(
+      window.matchMedia("(max-width: 600px)").matches
+    );
+
+
+    /* =========================================================
+       AUTH UI
+    ========================================================= */
 
     function refreshAuthUI() {
+
       if (!currentUser) {
-        authStateEl.textContent = "Not signed in";
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-        adminBadgeEl.style.display = "none";
-        sectionAdminTools.style.display = "none";
-        mustLoginNote.style.display = "block";
+
+        authStateEl.textContent =
+          "Not signed in";
+
+        loginBtn.style.display =
+          "inline-block";
+
+        logoutBtn.style.display =
+          "none";
+
+        adminBadgeEl.style.display =
+          "none";
+
+        sectionAdminTools.style.display =
+          "none";
+
+        mustLoginNote.style.display =
+          "block";
+
         return;
       }
 
-      authStateEl.textContent = currentUser.email || "Signed in";
-      loginBtn.style.display = "none";
-      logoutBtn.style.display = "inline-block";
-      adminBadgeEl.style.display = isAdmin ? "inline-block" : "none";
-      sectionAdminTools.style.display = isAdmin ? "block" : "none";
-      mustLoginNote.style.display = isMember ? "none" : "block";
+
+      authStateEl.textContent =
+        currentUser.email || "Signed in";
+
+
+      loginBtn.style.display =
+        "none";
+
+      logoutBtn.style.display =
+        "inline-block";
+
+
+      if (isAdmin) {
+
+        adminBadgeEl.style.display =
+          "inline-block";
+
+        sectionAdminTools.style.display =
+          "block";
+
+        mustLoginNote.style.display =
+          "none";
+
+      } else {
+
+        adminBadgeEl.style.display =
+          "none";
+
+        sectionAdminTools.style.display =
+          "none";
+
+        mustLoginNote.style.display =
+          "block";
+
+      }
+
     }
 
-    const map = L.map("map").setView([35.4676, -97.5164], 7);
 
-    const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors"
-    });
+    /* =========================================================
+       MAP
+    ========================================================= */
 
-    const satellite = L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      {
-        maxZoom: 19,
-        attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-      }
-    );
+    const map =
+      L.map("map").setView(
+        [35.4676, -97.5164],
+        7
+      );
+
+
+    const streets =
+      L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution:
+            "&copy; OpenStreetMap contributors"
+        }
+      );
+
+
+    const satellite =
+      L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          maxZoom: 19,
+          attribution:
+            "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+        }
+      );
+
 
     streets.addTo(map);
 
-    const listOverlayLayer = L.layerGroup();
 
-    const layersControl = L.control.layers(
+    const listOverlayLayer =
+      L.layerGroup();
+
+
+    L.control.layers(
+
       {
         "Streets": streets,
         "Satellite": satellite
       },
+
       {
         "List": listOverlayLayer
       },
-      { position: "topright" }
+
+      {
+        position: "topright"
+      }
+
     ).addTo(map);
 
-    const markerLayer = L.layerGroup().addTo(map);
+
+    const markerLayer =
+      L.layerGroup().addTo(map);
+
+
     let markers = [];
+
     let editingId = null;
+
     let locationDocs = [];
 
+
+    /* =========================================================
+       LOCATION EDIT MODE
+    ========================================================= */
+
     function setEditMode(idOrNull) {
+
       editingId = idOrNull;
+
       const on = !!editingId;
-      editModeBanner.style.display = on ? "block" : "none";
-      cancelEditBtn.style.display = on ? "inline-block" : "none";
-      submitBtn.textContent = on ? "Update Location" : "Add Location";
+
+      editModeBanner.style.display =
+        on ? "block" : "none";
+
+      cancelEditBtn.style.display =
+        on ? "inline-block" : "none";
+
+      submitBtn.textContent =
+        on
+          ? "Update Location"
+          : "Add Location";
+
     }
+
+
+    /* =========================================================
+       MARKERS
+    ========================================================= */
 
     function makeMarker(loc) {
-      const actions = isAdmin ? `
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" class="editPinBtn" data-id="${loc.id}">Edit</button>
-          <button type="button" class="deletePinBtn danger" data-id="${loc.id}">Delete</button>
-        </div>` : "";
 
-      return L.marker([loc.lat, loc.lng]).bindPopup(
-        `<b>${loc.name}</b><br>
-         Type: ${loc.type}<br>
-         County: ${loc.county}<br>
-         Status: ${loc.status}<br>
-         Permission: ${loc.permission}<br>
-         Entity: ${loc.entity}<br><br>
-         ${loc.details ? loc.details : ""}
-         ${actions}`
+      const actions = isAdmin
+        ? `
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+
+            <button
+              type="button"
+              class="editPinBtn"
+              data-id="${loc.id}">
+              Edit
+            </button>
+
+            <button
+              type="button"
+              class="deletePinBtn danger"
+              data-id="${loc.id}">
+              Delete
+            </button>
+
+          </div>
+        `
+        : "";
+
+
+      return L.marker([
+        loc.lat,
+        loc.lng
+      ]).bindPopup(
+
+        `
+          <b>${escapeHtml(loc.name)}</b>
+          <br>
+
+          Type:
+          ${escapeHtml(loc.type)}
+
+          <br>
+
+          County:
+          ${escapeHtml(loc.county)}
+
+          <br>
+
+          Status:
+          ${escapeHtml(loc.status)}
+
+          <br>
+
+          Permission:
+          ${escapeHtml(loc.permission)}
+
+          <br>
+
+          Entity:
+          ${escapeHtml(loc.entity)}
+
+          <br><br>
+
+          ${escapeHtml(loc.details || "")}
+
+          ${actions}
+        `
+
       );
+
     }
+
 
     function rebuildMarkersFromDocs() {
+
       markers = [];
 
+
       locationDocs.forEach((loc) => {
-        if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-          markers.push({ loc, marker: makeMarker(loc) });
+
+        if (
+          Number.isFinite(loc.lat) &&
+          Number.isFinite(loc.lng)
+        ) {
+
+          markers.push({
+            loc,
+            marker: makeMarker(loc)
+          });
+
         }
+
       });
 
+
       applyFilters();
+
       renderListView();
+
     }
 
+
+    /* =========================================================
+       FILTERS
+    ========================================================= */
+
     function applyFilters() {
-      const countyValue = countyFilterEl.value;
-      const statusValue = statusFilterEl.value;
-      const permissionValue = permissionFilterEl.value;
-      const entityValue = entityFilterEl.value;
-      const typeValue = typeFilterEl.value;
-      const searchValue = searchEl.value.trim().toLowerCase();
+
+      const countyValue =
+        countyFilterEl.value;
+
+      const statusValue =
+        statusFilterEl.value;
+
+      const permissionValue =
+        permissionFilterEl.value;
+
+      const entityValue =
+        entityFilterEl.value;
+
+      const typeValue =
+        typeFilterEl.value;
+
+      const searchValue =
+        searchEl.value
+          .trim()
+          .toLowerCase();
+
 
       markerLayer.clearLayers();
 
-      markers.forEach(({ loc, marker }) => {
-        const countyOk = (countyValue === "ALL") || (loc.county === countyValue);
-        const statusOk = (statusValue === "ALL") || (loc.status === statusValue);
-        const permissionOk = (permissionValue === "ALL") || (loc.permission === permissionValue);
-        const entityOk = (entityValue === "ALL") || (loc.entity === entityValue);
-        const typeOk = (typeValue === "ALL") || (loc.type === typeValue);
-        const searchOk = (searchValue === "") || (String(loc.name || "").toLowerCase().includes(searchValue));
 
-        if (countyOk && statusOk && permissionOk && entityOk && typeOk && searchOk) {
+      markers.forEach(({ loc, marker }) => {
+
+        const countyOk =
+          countyValue === "ALL" ||
+          loc.county === countyValue;
+
+        const statusOk =
+          statusValue === "ALL" ||
+          loc.status === statusValue;
+
+        const permissionOk =
+          permissionValue === "ALL" ||
+          loc.permission === permissionValue;
+
+        const entityOk =
+          entityValue === "ALL" ||
+          loc.entity === entityValue;
+
+        const typeOk =
+          typeValue === "ALL" ||
+          loc.type === typeValue;
+
+        const searchOk =
+          searchValue === "" ||
+          String(loc.name || "")
+            .toLowerCase()
+            .includes(searchValue);
+
+
+        if (
+          countyOk &&
+          statusOk &&
+          permissionOk &&
+          entityOk &&
+          typeOk &&
+          searchOk
+        ) {
+
           marker.addTo(markerLayer);
+
         }
+
       });
+
     }
 
+
+    /* =========================================================
+       LIST VIEW
+    ========================================================= */
+
     function escapeHtml(str) {
+
       return String(str ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+
     }
+
 
     function normalizeCounty(county) {
-      return county && county !== "Unassigned" ? county : "Unassigned";
+
+      return county &&
+        county !== "Unassigned"
+
+        ? county
+
+        : "Unassigned";
+
     }
 
+
     function renderListView() {
-      const grouped = new Map();
+
+      const grouped =
+        new Map();
+
 
       locationDocs.forEach((loc) => {
-        const county = normalizeCounty(loc.county);
-        if (!grouped.has(county)) grouped.set(county, []);
+
+        const county =
+          normalizeCounty(loc.county);
+
+        if (!grouped.has(county)) {
+          grouped.set(county, []);
+        }
+
         grouped.get(county).push(loc);
+
       });
 
-      const countyNames = Array.from(grouped.keys()).sort((a, b) => a.localeCompare(b));
+
+      const countyNames =
+        Array.from(grouped.keys())
+          .sort((a, b) =>
+            a.localeCompare(b)
+          );
+
 
       if (countyNames.length === 0) {
-        listViewContent.innerHTML = `<div class="muted">No locations found.</div>`;
+
+        listViewContent.innerHTML =
+          `<div class="muted">No locations found.</div>`;
+
         return;
       }
 
+
       let html = "";
 
+
       countyNames.forEach((county) => {
-        const items = grouped.get(county).slice().sort((a, b) => a.name.localeCompare(b.name));
+
+        const items =
+          grouped.get(county)
+            .slice()
+            .sort((a, b) =>
+              a.name.localeCompare(b.name)
+            );
+
 
         html += `
+
           <section class="countySection">
-            <div class="countyTitle">${escapeHtml(county)}</div>
+
+            <div class="countyTitle">
+              ${escapeHtml(county)}
+            </div>
 
             <div class="listHeader">
+
               <div>Location Name</div>
               <div>Type</div>
               <div>Status</div>
@@ -820,13 +1630,20 @@
               <div>Entity</div>
               <div>Latitude</div>
               <div>Longitude</div>
+
             </div>
+
         `;
 
+
         items.forEach((loc) => {
+
           html += `
+
             <div class="listRow">
+
               <div>
+
                 <button
                   type="button"
                   class="locationNameBtn"
@@ -835,797 +1652,2743 @@
                 >
                   ${escapeHtml(loc.name)}
                 </button>
+
               </div>
-              <div>${escapeHtml(loc.type || "Unknown")}</div>
-              <div>${escapeHtml(loc.status || "Unknown")}</div>
-              <div>${escapeHtml(loc.permission || "Unknown")}</div>
-              <div>${escapeHtml(loc.entity || "Unknown")}</div>
-              <div>${Number.isFinite(loc.lat) ? loc.lat.toFixed(6) : ""}</div>
-              <div>${Number.isFinite(loc.lng) ? loc.lng.toFixed(6) : ""}</div>
+
+              <div>
+                ${escapeHtml(loc.type || "Unknown")}
+              </div>
+
+              <div>
+                ${escapeHtml(loc.status || "Unknown")}
+              </div>
+
+              <div>
+                ${escapeHtml(loc.permission || "Unknown")}
+              </div>
+
+              <div>
+                ${escapeHtml(loc.entity || "Unknown")}
+              </div>
+
+              <div>
+                ${
+                  Number.isFinite(loc.lat)
+                    ? loc.lat.toFixed(6)
+                    : ""
+                }
+              </div>
+
+              <div>
+                ${
+                  Number.isFinite(loc.lng)
+                    ? loc.lng.toFixed(6)
+                    : ""
+                }
+              </div>
+
             </div>
+
           `;
+
         });
 
-        html += `</section>`;
+
+        html += `
+          </section>
+        `;
+
       });
 
-      listViewContent.innerHTML = html;
+
+      listViewContent.innerHTML =
+        html;
+
       wireLocationNoteButtons();
+
     }
 
-    function showNotesPopover(buttonEl, name, notes) {
-      const rect = buttonEl.getBoundingClientRect();
-      const notesText = notes && notes.trim() ? notes : "No notes available.";
+
+    function showNotesPopover(
+      buttonEl,
+      name,
+      notes
+    ) {
+
+      const rect =
+        buttonEl.getBoundingClientRect();
+
+
+      const notesText =
+        notes && notes.trim()
+          ? notes
+          : "No notes available.";
+
 
       notesPopover.innerHTML = `
-        <button type="button" class="notesPopoverClose" aria-label="Close notes">&times;</button>
-        <div class="notesPopoverTitle">${escapeHtml(name)}</div>
-        <div>${escapeHtml(notesText)}</div>
+
+        <button
+          type="button"
+          class="notesPopoverClose"
+          aria-label="Close notes">
+          &times;
+        </button>
+
+        <div class="notesPopoverTitle">
+          ${escapeHtml(name)}
+        </div>
+
+        <div>
+          ${escapeHtml(notesText)}
+        </div>
+
       `;
 
-      notesPopover.style.display = "block";
+
+      notesPopover.style.display =
+        "block";
+
 
       const popoverWidth = 320;
-      const left = Math.min(window.scrollX + rect.right + 10, window.scrollX + window.innerWidth - popoverWidth - 16);
-      const top = window.scrollY + rect.top;
 
-      notesPopover.style.left = `${Math.max(16, left)}px`;
-      notesPopover.style.top = `${Math.max(16, top)}px`;
 
-      const closeBtn = notesPopover.querySelector(".notesPopoverClose");
+      const left =
+        Math.min(
+          window.scrollX +
+            rect.right +
+            10,
+
+          window.scrollX +
+            window.innerWidth -
+            popoverWidth -
+            16
+        );
+
+
+      const top =
+        window.scrollY +
+        rect.top;
+
+
+      notesPopover.style.left =
+        `${Math.max(16, left)}px`;
+
+      notesPopover.style.top =
+        `${Math.max(16, top)}px`;
+
+
+      const closeBtn =
+        notesPopover.querySelector(
+          ".notesPopoverClose"
+        );
+
+
       if (closeBtn) {
-        closeBtn.addEventListener("click", hideNotesPopover);
+
+        closeBtn.addEventListener(
+          "click",
+          hideNotesPopover
+        );
+
       }
+
     }
+
 
     function hideNotesPopover() {
-      notesPopover.style.display = "none";
-      notesPopover.innerHTML = "";
+
+      notesPopover.style.display =
+        "none";
+
+      notesPopover.innerHTML =
+        "";
+
     }
 
-    function wireLocationNoteButtons() {
-      document.querySelectorAll(".locationNameBtn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
 
-          const sameButton = notesPopover.dataset.anchorName === btn.dataset.name && notesPopover.style.display === "block";
-          if (sameButton) {
-            hideNotesPopover();
-            notesPopover.dataset.anchorName = "";
+    function wireLocationNoteButtons() {
+
+      document
+        .querySelectorAll(".locationNameBtn")
+        .forEach((btn) => {
+
+          btn.addEventListener(
+            "click",
+            (e) => {
+
+              e.stopPropagation();
+
+
+              const sameButton =
+                notesPopover.dataset.anchorName ===
+                  btn.dataset.name &&
+                notesPopover.style.display ===
+                  "block";
+
+
+              if (sameButton) {
+
+                hideNotesPopover();
+
+                notesPopover.dataset.anchorName =
+                  "";
+
+                return;
+
+              }
+
+
+              notesPopover.dataset.anchorName =
+                btn.dataset.name || "";
+
+
+              showNotesPopover(
+                btn,
+                btn.dataset.name || "Location",
+                btn.dataset.notes || ""
+              );
+
+            }
+          );
+
+        });
+
+    }
+
+
+    function openListView() {
+
+      renderListView();
+
+      listViewOverlay.style.display =
+        "block";
+
+    }
+
+
+    function closeListView() {
+
+      listViewOverlay.style.display =
+        "none";
+
+      hideNotesPopover();
+
+      map.removeLayer(
+        listOverlayLayer
+      );
+
+    }
+
+
+    closeListBtn.addEventListener(
+      "click",
+      closeListView
+    );
+
+
+    map.on("overlayadd", (e) => {
+
+      if (e.layer === listOverlayLayer) {
+
+        openListView();
+
+      }
+
+    });
+
+
+    map.on("overlayremove", (e) => {
+
+      if (e.layer === listOverlayLayer) {
+
+        closeListView();
+
+      }
+
+    });
+
+
+    document.addEventListener(
+      "click",
+      (e) => {
+
+        if (
+          !notesPopover.contains(e.target) &&
+          !e.target.closest(".locationNameBtn")
+        ) {
+
+          hideNotesPopover();
+
+          notesPopover.dataset.anchorName =
+            "";
+
+        }
+
+      }
+    );
+
+
+    window.addEventListener(
+      "resize",
+      () => {
+
+        hideNotesPopover();
+
+        notesPopover.dataset.anchorName =
+          "";
+
+      }
+    );
+
+
+    /* =========================================================
+       AUTHENTICATION
+    ========================================================= */
+
+    loginBtn.addEventListener(
+      "click",
+      async () => {
+
+        try {
+
+          const res =
+            await signInWithPopup(
+              auth,
+              provider
+            );
+
+
+          const email =
+            (
+              res.user?.email || ""
+            ).toLowerCase();
+
+
+          if (
+            !isAuthorizedEditor(email)
+          ) {
+
+            await signOut(auth);
+
+
+            alert(
+              "This Google account is not authorized to edit the Oklahoma Investigation Map."
+            );
+
+
             return;
           }
 
-          notesPopover.dataset.anchorName = btn.dataset.name || "";
-          showNotesPopover(btn, btn.dataset.name || "Location", btn.dataset.notes || "");
-        });
-      });
-    }
 
-    function openListView() {
-      renderListView();
-      listViewOverlay.style.display = "block";
-    }
+        } catch (err) {
 
-    function closeListView() {
-      listViewOverlay.style.display = "none";
-      hideNotesPopover();
-      map.removeLayer(listOverlayLayer);
-    }
+          console.error(err);
 
-    closeListBtn.addEventListener("click", closeListView);
+          alert(
+            "Sign-in failed: " +
+            (err?.message || err)
+          );
 
-    map.on("overlayadd", (e) => {
-      if (e.layer === listOverlayLayer) {
-        openListView();
-      }
-    });
-
-    map.on("overlayremove", (e) => {
-      if (e.layer === listOverlayLayer) {
-        closeListView();
-      }
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!notesPopover.contains(e.target) && !e.target.closest(".locationNameBtn")) {
-        hideNotesPopover();
-        notesPopover.dataset.anchorName = "";
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      hideNotesPopover();
-      notesPopover.dataset.anchorName = "";
-    });
-
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const res = await signInWithPopup(auth, provider);
-        const email = (res.user?.email || "").toLowerCase();
-        if (!email.endsWith(ALLOWED_DOMAIN)) {
-          await signOut(auth);
-          alert(`Unauthorized account. Use a ${ALLOWED_DOMAIN} Google account.`);
         }
-      } catch (err) {
-        console.error(err);
-        alert("Sign-in failed: " + (err?.message || err));
+
       }
-    });
+    );
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-    });
 
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
+    logoutBtn.addEventListener(
+      "click",
+      async () => {
 
-      const email = (user?.email || "").toLowerCase();
-      isMember = !!user && email.endsWith(ALLOWED_DOMAIN);
-      isAdmin = !!user && ADMIN_EMAILS.has(email);
+        await signOut(auth);
 
-      refreshAuthUI();
-      setSectionEditingEnabled(isAdmin);
-      rebuildMarkersFromDocs();
-    });
+      }
+    );
+
+
+    onAuthStateChanged(
+      auth,
+      (user) => {
+
+        currentUser = user;
+
+
+        const email =
+          (
+            user?.email || ""
+          ).toLowerCase();
+
+
+        isAdmin =
+          !!user &&
+          isAuthorizedEditor(email);
+
+
+        refreshAuthUI();
+
+        setSectionEditingEnabled(
+          isAdmin
+        );
+
+        rebuildMarkersFromDocs();
+
+      }
+    );
+
+
+    /* =========================================================
+       LOCATION POPUP EDIT / DELETE
+    ========================================================= */
 
     map.on("popupopen", (e) => {
-      const popupEl = e.popup.getElement();
-      if (!popupEl || !isAdmin) return;
 
-      const editBtn = popupEl.querySelector(".editPinBtn");
-      const deleteBtn = popupEl.querySelector(".deletePinBtn");
+      const popupEl =
+        e.popup.getElement();
+
+
+      if (
+        !popupEl ||
+        !isAdmin
+      ) {
+        return;
+      }
+
+
+      const editBtn =
+        popupEl.querySelector(
+          ".editPinBtn"
+        );
+
+
+      const deleteBtn =
+        popupEl.querySelector(
+          ".deletePinBtn"
+        );
+
 
       if (editBtn) {
-        editBtn.addEventListener("click", () => {
-          const id = editBtn.dataset.id;
-          const loc = markers.find(m => m.loc.id === id)?.loc;
-          if (!loc) return alert("Could not find that pin.");
 
-          nl_name.value = loc.name || "";
-          nl_county.value = OKLAHOMA_COUNTIES.includes(loc.county) ? loc.county : "Unassigned";
-          nl_type.value = loc.type || "Unknown";
-          nl_status.value = loc.status || "Unknown";
-          nl_permission.value = loc.permission || "Unknown";
-          nl_entity.value = loc.entity || "Unknown";
-          nl_lat.value = Number(loc.lat).toFixed(6);
-          nl_lng.value = Number(loc.lng).toFixed(6);
-          nl_details.value = loc.details || "";
+        editBtn.addEventListener(
+          "click",
+          () => {
 
-          setEditMode(id);
-          alert("Editing mode enabled. Update the form and click Update Location.");
-          if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(false);
-        });
+            const id =
+              editBtn.dataset.id;
+
+
+            const loc =
+              markers.find(
+                m => m.loc.id === id
+              )?.loc;
+
+
+            if (!loc) {
+
+              return alert(
+                "Could not find that pin."
+              );
+
+            }
+
+
+            nl_name.value =
+              loc.name || "";
+
+
+            nl_county.value =
+              OKLAHOMA_COUNTIES.includes(
+                loc.county
+              )
+                ? loc.county
+                : "Unassigned";
+
+
+            nl_type.value =
+              loc.type || "Unknown";
+
+
+            nl_status.value =
+              loc.status || "Unknown";
+
+
+            nl_permission.value =
+              loc.permission || "Unknown";
+
+
+            nl_entity.value =
+              loc.entity || "Unknown";
+
+
+            nl_lat.value =
+              Number(loc.lat)
+                .toFixed(6);
+
+
+            nl_lng.value =
+              Number(loc.lng)
+                .toFixed(6);
+
+
+            nl_details.value =
+              loc.details || "";
+
+
+            setEditMode(id);
+
+
+            alert(
+              "Editing mode enabled. Update the form and click Update Location."
+            );
+
+
+            if (
+              window.matchMedia(
+                "(max-width: 600px)"
+              ).matches
+            ) {
+
+              setMenuCollapsed(false);
+
+            }
+
+          }
+        );
+
       }
+
 
       if (deleteBtn) {
-        deleteBtn.addEventListener("click", async () => {
-          const id = deleteBtn.dataset.id;
-          if (!confirm("Delete this pin? This cannot be undone.")) return;
 
-          try {
-            await deleteDoc(doc(db, LOCATIONS, id));
-            if (editingId === id) setEditMode(null);
-          } catch (err) {
-            console.error(err);
-            alert("Delete failed: " + (err?.message || err));
+        deleteBtn.addEventListener(
+          "click",
+          async () => {
+
+            const id =
+              deleteBtn.dataset.id;
+
+
+            if (
+              !confirm(
+                "Delete this pin? This cannot be undone."
+              )
+            ) {
+              return;
+            }
+
+
+            try {
+
+              await deleteDoc(
+                doc(
+                  db,
+                  LOCATIONS,
+                  id
+                )
+              );
+
+
+              if (
+                editingId === id
+              ) {
+
+                setEditMode(null);
+
+              }
+
+            } catch (err) {
+
+              console.error(err);
+
+              alert(
+                "Delete failed: " +
+                (err?.message || err)
+              );
+
+            }
+
           }
-        });
+        );
+
       }
+
     });
 
-    countyFilterEl.addEventListener("change", applyFilters);
-    statusFilterEl.addEventListener("change", applyFilters);
-    permissionFilterEl.addEventListener("change", applyFilters);
-    entityFilterEl.addEventListener("change", applyFilters);
-    typeFilterEl.addEventListener("change", applyFilters);
-    searchEl.addEventListener("input", applyFilters);
 
-    clearBtn.addEventListener("click", () => {
-      countyFilterEl.value = "ALL";
-      statusFilterEl.value = "ALL";
-      permissionFilterEl.value = "ALL";
-      entityFilterEl.value = "ALL";
-      typeFilterEl.value = "ALL";
-      searchEl.value = "";
-      applyFilters();
-    });
+    /* =========================================================
+       FILTER EVENTS
+    ========================================================= */
+
+    countyFilterEl.addEventListener(
+      "change",
+      applyFilters
+    );
+
+    statusFilterEl.addEventListener(
+      "change",
+      applyFilters
+    );
+
+    permissionFilterEl.addEventListener(
+      "change",
+      applyFilters
+    );
+
+    entityFilterEl.addEventListener(
+      "change",
+      applyFilters
+    );
+
+    typeFilterEl.addEventListener(
+      "change",
+      applyFilters
+    );
+
+    searchEl.addEventListener(
+      "input",
+      applyFilters
+    );
+
+
+    clearBtn.addEventListener(
+      "click",
+      () => {
+
+        countyFilterEl.value =
+          "ALL";
+
+        statusFilterEl.value =
+          "ALL";
+
+        permissionFilterEl.value =
+          "ALL";
+
+        entityFilterEl.value =
+          "ALL";
+
+        typeFilterEl.value =
+          "ALL";
+
+        searchEl.value =
+          "";
+
+        applyFilters();
+
+      }
+    );
+
+
+    /* =========================================================
+       PICK LOCATION FROM MAP
+    ========================================================= */
 
     let picking = false;
 
+
     function setPicking(on) {
+
       picking = on;
-      pickHint.style.display = on ? "block" : "none";
-      pickBtn.textContent = on ? "Picking…" : "Pick from map";
-      pickBtn.disabled = on;
-      map.getContainer().style.cursor = on ? "crosshair" : "";
+
+      pickHint.style.display =
+        on ? "block" : "none";
+
+      pickBtn.textContent =
+        on
+          ? "Picking…"
+          : "Pick from map";
+
+      pickBtn.disabled =
+        on;
+
+      map.getContainer().style.cursor =
+        on ? "crosshair" : "";
+
     }
 
-    pickBtn.addEventListener("click", () => setPicking(true));
 
-    map.on("click", (e) => {
-      if (!picking) return;
-      nl_lat.value = e.latlng.lat.toFixed(6);
-      nl_lng.value = e.latlng.lng.toFixed(6);
-      setPicking(false);
-      if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(false);
-    });
+    pickBtn.addEventListener(
+      "click",
+      () => {
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        if (picking) setPicking(false);
-        hideNotesPopover();
-        notesPopover.dataset.anchorName = "";
-      }
-    });
+        if (!isAdmin) {
 
-    cancelEditBtn.addEventListener("click", () => {
-      setEditMode(null);
-      form.reset();
-      nl_county.value = "Unassigned";
-    });
+          alert(
+            "You must be signed in with an authorized editor account."
+          );
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      if (!isMember) {
-        alert("Sign in with your @prcofok.org Google account to add locations.");
-        return;
-      }
-      if (editingId && !isAdmin) {
-        alert("Only admin can edit existing locations.");
-        return;
-      }
-
-      const name = nl_name.value.trim();
-      const county = nl_county.value;
-      const type = nl_type.value || "Unknown";
-      const status = nl_status.value || "Unknown";
-      const permission = nl_permission.value || "Unknown";
-      const entity = nl_entity.value || "Unknown";
-      const lat = Number(nl_lat.value);
-      const lng = Number(nl_lng.value);
-      const details = nl_details.value.trim();
-
-      if (!name) return alert("Location name is required.");
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        return alert("Valid latitude and longitude are required.");
-      }
-
-      const payload = {
-        name,
-        county,
-        type,
-        status,
-        permission,
-        entity,
-        lat,
-        lng,
-        details,
-        updatedAt: serverTimestamp()
-      };
-
-      try {
-        if (editingId) {
-          await updateDoc(doc(db, LOCATIONS, editingId), payload);
-          alert("Location updated!");
-          setEditMode(null);
-        } else {
-          payload.createdAt = serverTimestamp();
-          payload.createdBy = currentUser?.email || "";
-          await addDoc(collection(db, LOCATIONS), payload);
-          alert("Location added!");
-        }
-
-        form.reset();
-        nl_county.value = "Unassigned";
-
-        if (window.matchMedia("(max-width: 600px)").matches) setMenuCollapsed(true);
-      } catch (err) {
-        console.error(err);
-        alert("Save failed: " + (err?.message || err));
-      }
-    });
-
-    onSnapshot(
-      collection(db, LOCATIONS),
-      (snapshot) => {
-        locationDocs = [];
-
-        snapshot.forEach((docSnap) => {
-          const d = docSnap.data();
-
-          const loc = {
-            id: docSnap.id,
-            name: d.name || "(Unnamed)",
-            type: d.type || "Unknown",
-            county: d.county || "Unassigned",
-            status: d.status || "Unknown",
-            permission: d.permission || "Unknown",
-            entity: d.entity || "Unknown",
-            lat: Number(d.lat),
-            lng: Number(d.lng),
-            details: d.details || ""
-          };
-
-          if (Number.isFinite(loc.lat) && Number.isFinite(loc.lng)) {
-            locationDocs.push(loc);
-          }
-        });
-
-        rebuildMarkersFromDocs();
-      },
-      (error) => {
-        console.error("Firestore onSnapshot error:", error);
-        alert("Firestore error: " + error.message);
-      }
-    );
-
-    const STATUS_COLORS = {
-      uninvestigated: "#ffffff",
-      possible: "#ffeb3b",
-      confirmed: "#33a02c"
-    };
-
-    const HEX_SHOW_MIN_ZOOM = 14;
-    const HEX_SIZE_AT_ZOOM = 18;
-    const HEX_BASE_PX = 48;
-    const HEX_MIN_PX = 18;
-    const HEX_MAX_PX = 64;
-
-    const HEX_FADE_MS = 220;
-    const HEX_FADE_STEPS = 12;
-    const HEX_MIN_OPACITY = 0.0;
-    const HEX_MAX_OPACITY = 1.0;
-
-    function clamp(n, min, max) {
-      return Math.max(min, Math.min(max, n));
-    }
-
-    function hexSizeForZoom(z) {
-      const scale = Math.pow(1.15, z - HEX_SIZE_AT_ZOOM);
-      return Math.round(clamp(HEX_BASE_PX * scale, HEX_MIN_PX, HEX_MAX_PX));
-    }
-
-    function shouldShowHexesAtZoom(z) {
-      return z >= HEX_SHOW_MIN_ZOOM;
-    }
-
-    function animateOpacity(marker, to, ms = HEX_FADE_MS, steps = HEX_FADE_STEPS) {
-      if (marker._fadeTimer) {
-        clearInterval(marker._fadeTimer);
-        marker._fadeTimer = null;
-      }
-
-      const from = Number(marker.options.opacity ?? 1);
-      const target = Number(to);
-      if (!Number.isFinite(from) || !Number.isFinite(target)) return;
-
-      if (Math.abs(from - target) < 0.01) {
-        marker.setOpacity(target);
-        marker.options.opacity = target;
-        return;
-      }
-
-      const stepTime = Math.max(16, Math.round(ms / steps));
-      let step = 0;
-
-      marker._fadeTimer = setInterval(() => {
-        step += 1;
-        const t = step / steps;
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-
-        const val = from + (target - from) * eased;
-        marker.setOpacity(val);
-        marker.options.opacity = val;
-
-        if (step >= steps) {
-          clearInterval(marker._fadeTimer);
-          marker._fadeTimer = null;
-          marker.setOpacity(target);
-          marker.options.opacity = target;
-        }
-      }, stepTime);
-    }
-
-    function makeHexIcon(numberText, status, sizePx) {
-      const fill = STATUS_COLORS[status] || "#ffffff";
-      const text = String(numberText ?? "").trim();
-      const fontSize = Math.round(sizePx * 0.75);
-
-      const svg = `
-        <svg width="${sizePx}" height="${sizePx}" viewBox="0 0 100 100">
-          <polygon points="50,5 90,27 90,73 50,95 10,73 10,27"
-            fill="${fill}" stroke="#000" stroke-width="6" />
-          <text x="50" y="60" text-anchor="middle"
-            font-size="${fontSize}" font-family="Arial" font-weight="700" fill="#000">${text}</text>
-        </svg>`;
-
-      const half = Math.round(sizePx / 2);
-      return L.divIcon({
-        className: "",
-        html: svg,
-        iconSize: [sizePx, sizePx],
-        iconAnchor: [half, half]
-      });
-    }
-
-    function centroidOfLatLngs(latlngs) {
-      const ring = Array.isArray(latlngs?.[0]) ? latlngs[0] : latlngs;
-      let sumLat = 0;
-      let sumLng = 0;
-      const n = (ring && ring.length) ? ring.length : 1;
-      (ring || []).forEach((p) => {
-        sumLat += p.lat;
-        sumLng += p.lng;
-      });
-      return L.latLng(sumLat / n, sumLng / n);
-    }
-
-    function cycleStatus(s) {
-      return s === "uninvestigated" ? "possible" : s === "possible" ? "confirmed" : "uninvestigated";
-    }
-
-    function sectionPolyStyle() {
-      return { color: "#ffff00", weight: 5, fillOpacity: 0 };
-    }
-
-    function layerToPoints(layer) {
-      const ll = layer.getLatLngs();
-      let rings = ll;
-
-      if (!Array.isArray(rings)) rings = [];
-      if (!Array.isArray(rings[0])) rings = [rings];
-
-      if (Array.isArray(rings[0]) && Array.isArray(rings[0][0]) && rings[0][0]?.lat === undefined) {
-        rings = rings.map((r) => (Array.isArray(r[0]) ? r[0] : r));
-      }
-
-      const points = [];
-      rings.forEach((ring, ringIdx) => {
-        (ring || []).forEach((p, i) => {
-          const lat = Number(p?.lat);
-          const lng = Number(p?.lng);
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            points.push({ ring: ringIdx, i, lat, lng });
-          }
-        });
-      });
-
-      return points;
-    }
-
-    function pointsToLatLngRings(points) {
-      if (!Array.isArray(points) || points.length === 0) return null;
-
-      const byRing = new Map();
-
-      for (const pt of points) {
-        const ring = Number(pt.ring);
-        const i = Number(pt.i);
-        const lat = Number(pt.lat);
-        const lng = Number(pt.lng);
-
-        if (!Number.isFinite(ring) || !Number.isFinite(i) || !Number.isFinite(lat) || !Number.isFinite(lng)) continue;
-
-        if (!byRing.has(ring)) byRing.set(ring, []);
-        byRing.get(ring).push({ i, lat, lng });
-      }
-
-      const ringKeys = Array.from(byRing.keys()).sort((a, b) => a - b);
-      const rings = ringKeys.map((rk) =>
-        byRing.get(rk).sort((a, b) => a.i - b.i).map((p) => L.latLng(p.lat, p.lng))
-      );
-
-      return rings.length ? rings : null;
-    }
-
-    const sectionPolys = L.featureGroup().addTo(map);
-    const sectionHexes = L.layerGroup().addTo(map);
-    const sectionById = new Map();
-
-    let drawControl = null;
-
-    function setSectionEditingEnabled(enabled) {
-      if (enabled) {
-        if (!drawControl) {
-          drawControl = new L.Control.Draw({
-            position: "topright",
-            draw: {
-              polygon: true,
-              rectangle: true,
-              polyline: false,
-              circle: false,
-              marker: false,
-              circlemarker: false
-            },
-            edit: {
-              featureGroup: sectionPolys,
-              remove: true
-            }
-          });
-          map.addControl(drawControl);
-        }
-      } else {
-        if (drawControl) {
-          map.removeControl(drawControl);
-          drawControl = null;
-        }
-      }
-    }
-
-    function ensureSectionFilterOptions(mapNames) {
-      const current = sectionMapFilter.value || "ALL";
-      const names = Array.from(new Set(mapNames))
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b));
-
-      const opts = ["ALL", ...names];
-      sectionMapFilter.innerHTML = "";
-
-      opts.forEach((v) => {
-        const o = document.createElement("option");
-        o.value = v;
-        o.textContent = (v === "ALL") ? "All section maps" : v;
-        sectionMapFilter.appendChild(o);
-      });
-
-      sectionMapFilter.value = opts.includes(current) ? current : "ALL";
-    }
-
-    function applySectionFilter() {
-      const selected = sectionMapFilter.value || "ALL";
-
-      for (const [id, rec] of sectionById.entries()) {
-        const show = (selected === "ALL") || (rec.mapName === selected);
-
-        if (show) {
-          if (!sectionPolys.hasLayer(rec.poly)) sectionPolys.addLayer(rec.poly);
-          if (!sectionHexes.hasLayer(rec.hex)) sectionHexes.addLayer(rec.hex);
-        } else {
-          if (sectionPolys.hasLayer(rec.poly)) sectionPolys.removeLayer(rec.poly);
-          if (sectionHexes.hasLayer(rec.hex)) sectionHexes.removeLayer(rec.hex);
-        }
-      }
-    }
-
-    sectionMapFilter.addEventListener("change", () => {
-      const v = sectionMapFilter.value;
-      if (isAdmin && v && v !== "ALL") sectionMapName.value = v;
-      applySectionFilter();
-      refreshAllHexIconsForZoom();
-    });
-
-    function refreshAllHexIconsForZoom() {
-      const z = map.getZoom();
-      const shouldShow = shouldShowHexesAtZoom(z);
-      const sizePx = hexSizeForZoom(z);
-      const targetOpacity = shouldShow ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
-
-      for (const rec of sectionById.values()) {
-        rec.hex.setIcon(makeHexIcon(rec.number, rec.status, sizePx));
-        animateOpacity(rec.hex, targetOpacity);
-      }
-    }
-
-    map.on("zoomend", refreshAllHexIconsForZoom);
-
-    map.on(L.Draw.Event.CREATED, async (e) => {
-      if (!isAdmin) return;
-
-      const layer = e.layer;
-      layer.setStyle(sectionPolyStyle());
-      sectionPolys.addLayer(layer);
-
-      const mapName = (sectionMapName.value || "").trim();
-      if (!mapName) {
-        alert("Enter a Map name first (ex: Crown Hill Cemetery).");
-        sectionPolys.removeLayer(layer);
-        return;
-      }
-
-      const numRaw = (sectionNextNumber.value || "").trim();
-      const number = numRaw ? String(numRaw) : "1";
-      const status = sectionDefaultStatus.value || "uninvestigated";
-      const points = layerToPoints(layer);
-
-      try {
-        const docRef = await addDoc(collection(db, SECTIONS), {
-          mapName,
-          number,
-          status,
-          points,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          createdBy: currentUser?.email || ""
-        });
-
-        layer.options._sectionId = docRef.id;
-
-        const n = Number(number);
-        if (Number.isFinite(n)) sectionNextNumber.value = String(n + 1);
-      } catch (err) {
-        console.error(err);
-        alert("Save section failed: " + (err?.message || err));
-        sectionPolys.removeLayer(layer);
-      }
-    });
-
-    map.on(L.Draw.Event.EDITED, async (e) => {
-      if (!isAdmin) return;
-
-      const layers = e.layers;
-      const updates = [];
-
-      layers.eachLayer((layer) => {
-        const id = layer.options._sectionId;
-        if (!id) return;
-
-        const points = layerToPoints(layer);
-        updates.push(updateDoc(doc(db, SECTIONS, id), { points, updatedAt: serverTimestamp() }));
-      });
-
-      try {
-        await Promise.all(updates);
-      } catch (err) {
-        console.error(err);
-        alert("Update failed: " + (err?.message || err));
-      }
-    });
-
-    map.on(L.Draw.Event.DELETED, async (e) => {
-      if (!isAdmin) return;
-
-      const layers = e.layers;
-      const deletes = [];
-
-      layers.eachLayer((layer) => {
-        const id = layer.options._sectionId;
-        if (!id) return;
-        deletes.push(deleteDoc(doc(db, SECTIONS, id)));
-      });
-
-      try {
-        await Promise.all(deletes);
-      } catch (err) {
-        console.error(err);
-        alert("Delete failed: " + (err?.message || err));
-      }
-    });
-
-    function attachSectionInteractions(id, polyLayer, hexMarker) {
-      polyLayer.on("click", async () => {
-        const rec = sectionById.get(id);
-        if (!rec) return;
-
-        if (isAdmin) {
-          const next = cycleStatus(rec.status);
-          try {
-            await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() });
-          } catch (err) {
-            console.error(err);
-            alert("Status update failed: " + (err?.message || err));
-          }
           return;
         }
 
-        alert(`${rec.mapName}\nSection: ${rec.number}\nStatus: ${rec.status}`);
-      });
+        setPicking(true);
 
-      polyLayer.on("contextmenu", async () => {
-        if (!isAdmin) return;
-        const rec = sectionById.get(id);
-        if (!rec) return;
+      }
+    );
 
-        const newMapName = prompt("Map name:", rec.mapName);
-        if (!newMapName) return;
 
-        const newNumber = prompt("Section label/number:", rec.number);
-        if (!newNumber) return;
+    map.on("click", (e) => {
 
-        try {
-          await updateDoc(doc(db, SECTIONS, id), {
-            mapName: newMapName.trim(),
-            number: String(newNumber).trim(),
-            updatedAt: serverTimestamp()
-          });
-        } catch (err) {
-          console.error(err);
-          alert("Label update failed: " + (err?.message || err));
-        }
-      });
-
-      hexMarker.on("click", async () => {
-        if (!isAdmin) return;
-        const rec = sectionById.get(id);
-        if (!rec) return;
-
-        const next = cycleStatus(rec.status);
-        try {
-          await updateDoc(doc(db, SECTIONS, id), { status: next, updatedAt: serverTimestamp() });
-        } catch (err) {
-          console.error(err);
-          alert("Status update failed: " + (err?.message || err));
-        }
-      });
-    }
-
-    function rebuildSectionLayerFromDoc(id, d) {
-      const mapName = d.mapName || "Unnamed Map";
-      const number = d.number || "";
-      const status = d.status || "uninvestigated";
-
-      const existing = sectionById.get(id);
-      if (existing) {
-        if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
-        if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
-        sectionById.delete(id);
+      if (!picking) {
+        return;
       }
 
-      const latlngRings = pointsToLatLngRings(d.points);
-      if (!latlngRings) return;
 
-      const polyLayer = L.polygon(latlngRings, sectionPolyStyle());
-      polyLayer.options._sectionId = id;
+      nl_lat.value =
+        e.latlng.lat.toFixed(6);
 
-      const c = centroidOfLatLngs(polyLayer.getLatLngs());
-      const z = map.getZoom();
-      const sizePx = hexSizeForZoom(z);
-      const startOpacity = shouldShowHexesAtZoom(z) ? HEX_MAX_OPACITY : HEX_MIN_OPACITY;
 
-      const hex = L.marker(c, {
-        icon: makeHexIcon(number, status, sizePx),
-        interactive: true,
-        zIndexOffset: 1000,
-        opacity: startOpacity
-      });
+      nl_lng.value =
+        e.latlng.lng.toFixed(6);
 
-      sectionById.set(id, { poly: polyLayer, hex, mapName, number, status });
-      attachSectionInteractions(id, polyLayer, hex);
 
-      const selected = sectionMapFilter.value || "ALL";
-      const show = (selected === "ALL") || (mapName === selected);
+      setPicking(false);
 
-      if (show) {
-        sectionPolys.addLayer(polyLayer);
-        sectionHexes.addLayer(hex);
+
+      if (
+        window.matchMedia(
+          "(max-width: 600px)"
+        ).matches
+      ) {
+
+        setMenuCollapsed(false);
+
       }
-    }
+
+    });
+
+
+    document.addEventListener(
+      "keydown",
+      (e) => {
+
+        if (e.key === "Escape") {
+
+          if (picking) {
+            setPicking(false);
+          }
+
+          hideNotesPopover();
+
+          notesPopover.dataset.anchorName =
+            "";
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       CANCEL EDIT
+    ========================================================= */
+
+    cancelEditBtn.addEventListener(
+      "click",
+      () => {
+
+        setEditMode(null);
+
+        form.reset();
+
+        nl_county.value =
+          "Unassigned";
+
+      }
+    );
+
+
+    /* =========================================================
+       ADD / UPDATE LOCATION
+    ========================================================= */
+
+    form.addEventListener(
+      "submit",
+      async (e) => {
+
+        e.preventDefault();
+
+
+        if (!isAdmin) {
+
+          alert(
+            "You must be signed in with an authorized editor account."
+          );
+
+          return;
+
+        }
+
+
+        const name =
+          nl_name.value.trim();
+
+
+        const county =
+          nl_county.value;
+
+
+        const type =
+          nl_type.value ||
+          "Unknown";
+
+
+        const status =
+          nl_status.value ||
+          "Unknown";
+
+
+        const permission =
+          nl_permission.value ||
+          "Unknown";
+
+
+        const entity =
+          nl_entity.value ||
+          "Unknown";
+
+
+        const lat =
+          Number(nl_lat.value);
+
+
+        const lng =
+          Number(nl_lng.value);
+
+
+        const details =
+          nl_details.value.trim();
+
+
+        if (!name) {
+
+          return alert(
+            "Location name is required."
+          );
+
+        }
+
+
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
+        ) {
+
+          return alert(
+            "Valid latitude and longitude are required."
+          );
+
+        }
+
+
+        const payload = {
+
+          name,
+
+          county,
+
+          type,
+
+          status,
+
+          permission,
+
+          entity,
+
+          lat,
+
+          lng,
+
+          details,
+
+          updatedAt:
+            serverTimestamp()
+
+        };
+
+
+        try {
+
+          if (editingId) {
+
+            await updateDoc(
+              doc(
+                db,
+                LOCATIONS,
+                editingId
+              ),
+              payload
+            );
+
+
+            alert(
+              "Location updated!"
+            );
+
+
+            setEditMode(null);
+
+          } else {
+
+            payload.createdAt =
+              serverTimestamp();
+
+            payload.createdBy =
+              currentUser?.email || "";
+
+
+            await addDoc(
+              collection(
+                db,
+                LOCATIONS
+              ),
+              payload
+            );
+
+
+            alert(
+              "Location added!"
+            );
+
+          }
+
+
+          form.reset();
+
+          nl_county.value =
+            "Unassigned";
+
+
+          if (
+            window.matchMedia(
+              "(max-width: 600px)"
+            ).matches
+          ) {
+
+            setMenuCollapsed(true);
+
+          }
+
+        } catch (err) {
+
+          console.error(err);
+
+          alert(
+            "Save failed: " +
+            (err?.message || err)
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       FIRESTORE LOCATIONS
+    ========================================================= */
 
     onSnapshot(
-      collection(db, SECTIONS),
-      (snap) => {
-        const names = [];
 
-        snap.forEach((docSnap) => {
-          const d = docSnap.data();
-          if (d.mapName) names.push(d.mapName);
+      collection(
+        db,
+        LOCATIONS
+      ),
+
+      (snapshot) => {
+
+        locationDocs = [];
+
+
+        snapshot.forEach(
+          (docSnap) => {
+
+            const d =
+              docSnap.data();
+
+
+            const loc = {
+
+              id:
+                docSnap.id,
+
+              name:
+                d.name ||
+                "(Unnamed)",
+
+              type:
+                d.type ||
+                "Unknown",
+
+              county:
+                d.county ||
+                "Unassigned",
+
+              status:
+                d.status ||
+                "Unknown",
+
+              permission:
+                d.permission ||
+                "Unknown",
+
+              entity:
+                d.entity ||
+                "Unknown",
+
+              lat:
+                Number(d.lat),
+
+              lng:
+                Number(d.lng),
+
+              details:
+                d.details ||
+                ""
+
+            };
+
+
+            if (
+              Number.isFinite(loc.lat) &&
+              Number.isFinite(loc.lng)
+            ) {
+
+              locationDocs.push(
+                loc
+              );
+
+            }
+
+          }
+        );
+
+
+        rebuildMarkersFromDocs();
+
+      },
+
+      (error) => {
+
+        console.error(
+          "Firestore onSnapshot error:",
+          error
+        );
+
+
+        alert(
+          "Firestore error: " +
+          error.message
+        );
+
+      }
+
+    );
+
+
+    /* =========================================================
+       SECTION OVERLAY SYSTEM
+    ========================================================= */
+
+    const STATUS_COLORS = {
+
+      uninvestigated:
+        "#ffffff",
+
+      possible:
+        "#ffeb3b",
+
+      confirmed:
+        "#33a02c"
+
+    };
+
+
+    const HEX_SHOW_MIN_ZOOM =
+      14;
+
+    const HEX_SIZE_AT_ZOOM =
+      18;
+
+    const HEX_BASE_PX =
+      48;
+
+    const HEX_MIN_PX =
+      18;
+
+    const HEX_MAX_PX =
+      64;
+
+
+    const HEX_FADE_MS =
+      220;
+
+    const HEX_FADE_STEPS =
+      12;
+
+    const HEX_MIN_OPACITY =
+      0.0;
+
+    const HEX_MAX_OPACITY =
+      1.0;
+
+
+    function clamp(
+      n,
+      min,
+      max
+    ) {
+
+      return Math.max(
+        min,
+        Math.min(max, n)
+      );
+
+    }
+
+
+    function hexSizeForZoom(z) {
+
+      const scale =
+        Math.pow(
+          1.15,
+          z - HEX_SIZE_AT_ZOOM
+        );
+
+
+      return Math.round(
+        clamp(
+          HEX_BASE_PX * scale,
+          HEX_MIN_PX,
+          HEX_MAX_PX
+        )
+      );
+
+    }
+
+
+    function shouldShowHexesAtZoom(z) {
+
+      return z >=
+        HEX_SHOW_MIN_ZOOM;
+
+    }
+
+
+    function animateOpacity(
+      marker,
+      to,
+      ms = HEX_FADE_MS,
+      steps = HEX_FADE_STEPS
+    ) {
+
+      if (marker._fadeTimer) {
+
+        clearInterval(
+          marker._fadeTimer
+        );
+
+        marker._fadeTimer =
+          null;
+
+      }
+
+
+      const from =
+        Number(
+          marker.options.opacity ?? 1
+        );
+
+
+      const target =
+        Number(to);
+
+
+      if (
+        !Number.isFinite(from) ||
+        !Number.isFinite(target)
+      ) {
+        return;
+      }
+
+
+      if (
+        Math.abs(from - target) <
+        0.01
+      ) {
+
+        marker.setOpacity(
+          target
+        );
+
+        marker.options.opacity =
+          target;
+
+        return;
+
+      }
+
+
+      const stepTime =
+        Math.max(
+          16,
+          Math.round(
+            ms / steps
+          )
+        );
+
+
+      let step = 0;
+
+
+      marker._fadeTimer =
+        setInterval(
+          () => {
+
+            step += 1;
+
+
+            const t =
+              step / steps;
+
+
+            const eased =
+              t < 0.5
+                ? 2 * t * t
+                : 1 -
+                  Math.pow(
+                    -2 * t + 2,
+                    2
+                  ) / 2;
+
+
+            const val =
+              from +
+              (target - from) *
+              eased;
+
+
+            marker.setOpacity(
+              val
+            );
+
+            marker.options.opacity =
+              val;
+
+
+            if (
+              step >= steps
+            ) {
+
+              clearInterval(
+                marker._fadeTimer
+              );
+
+              marker._fadeTimer =
+                null;
+
+
+              marker.setOpacity(
+                target
+              );
+
+              marker.options.opacity =
+                target;
+
+            }
+
+          },
+          stepTime
+        );
+
+    }
+
+
+    function makeHexIcon(
+      numberText,
+      status,
+      sizePx
+    ) {
+
+      const fill =
+        STATUS_COLORS[status] ||
+        "#ffffff";
+
+
+      const text =
+        String(
+          numberText ?? ""
+        ).trim();
+
+
+      const fontSize =
+        Math.round(
+          sizePx * 0.75
+        );
+
+
+      const svg = `
+
+        <svg
+          width="${sizePx}"
+          height="${sizePx}"
+          viewBox="0 0 100 100">
+
+          <polygon
+            points="50,5 90,27 90,73 50,95 10,73 10,27"
+            fill="${fill}"
+            stroke="#000"
+            stroke-width="6"
+          />
+
+          <text
+            x="50"
+            y="60"
+            text-anchor="middle"
+            font-size="${fontSize}"
+            font-family="Arial"
+            font-weight="700"
+            fill="#000">
+            ${escapeHtml(text)}
+          </text>
+
+        </svg>
+
+      `;
+
+
+      const half =
+        Math.round(
+          sizePx / 2
+        );
+
+
+      return L.divIcon({
+
+        className: "",
+
+        html: svg,
+
+        iconSize: [
+          sizePx,
+          sizePx
+        ],
+
+        iconAnchor: [
+          half,
+          half
+        ]
+
+      });
+
+    }
+
+
+    function centroidOfLatLngs(
+      latlngs
+    ) {
+
+      const ring =
+        Array.isArray(latlngs?.[0])
+          ? latlngs[0]
+          : latlngs;
+
+
+      let sumLat = 0;
+
+      let sumLng = 0;
+
+
+      const n =
+        ring &&
+        ring.length
+          ? ring.length
+          : 1;
+
+
+      (ring || []).forEach(
+        (p) => {
+
+          sumLat += p.lat;
+
+          sumLng += p.lng;
+
+        }
+      );
+
+
+      return L.latLng(
+        sumLat / n,
+        sumLng / n
+      );
+
+    }
+
+
+    function cycleStatus(s) {
+
+      return s ===
+        "uninvestigated"
+
+        ? "possible"
+
+        : s === "possible"
+
+          ? "confirmed"
+
+          : "uninvestigated";
+
+    }
+
+
+    function sectionPolyStyle() {
+
+      return {
+
+        color:
+          "#ffff00",
+
+        weight:
+          5,
+
+        fillOpacity:
+          0
+
+      };
+
+    }
+
+
+    function layerToPoints(layer) {
+
+      const ll =
+        layer.getLatLngs();
+
+
+      let rings = ll;
+
+
+      if (!Array.isArray(rings)) {
+        rings = [];
+      }
+
+
+      if (
+        !Array.isArray(rings[0])
+      ) {
+
+        rings = [rings];
+
+      }
+
+
+      if (
+        Array.isArray(rings[0]) &&
+        Array.isArray(rings[0][0]) &&
+        rings[0][0]?.lat ===
+          undefined
+      ) {
+
+        rings =
+          rings.map(
+            (r) =>
+              Array.isArray(r[0])
+                ? r[0]
+                : r
+          );
+
+      }
+
+
+      const points = [];
+
+
+      rings.forEach(
+        (ring, ringIdx) => {
+
+          (ring || []).forEach(
+            (p, i) => {
+
+              const lat =
+                Number(p?.lat);
+
+              const lng =
+                Number(p?.lng);
+
+
+              if (
+                Number.isFinite(lat) &&
+                Number.isFinite(lng)
+              ) {
+
+                points.push({
+
+                  ring:
+                    ringIdx,
+
+                  i,
+
+                  lat,
+
+                  lng
+
+                });
+
+              }
+
+            }
+          );
+
+        }
+      );
+
+
+      return points;
+
+    }
+
+
+    function pointsToLatLngRings(
+      points
+    ) {
+
+      if (
+        !Array.isArray(points) ||
+        points.length === 0
+      ) {
+
+        return null;
+
+      }
+
+
+      const byRing =
+        new Map();
+
+
+      for (
+        const pt of points
+      ) {
+
+        const ring =
+          Number(pt.ring);
+
+        const i =
+          Number(pt.i);
+
+        const lat =
+          Number(pt.lat);
+
+        const lng =
+          Number(pt.lng);
+
+
+        if (
+          !Number.isFinite(ring) ||
+          !Number.isFinite(i) ||
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng)
+        ) {
+
+          continue;
+
+        }
+
+
+        if (
+          !byRing.has(ring)
+        ) {
+
+          byRing.set(
+            ring,
+            []
+          );
+
+        }
+
+
+        byRing.get(ring).push({
+          i,
+          lat,
+          lng
         });
 
-        ensureSectionFilterOptions(names);
+      }
 
-        snap.docChanges().forEach((ch) => {
-          const id = ch.doc.id;
 
-          if (ch.type === "removed") {
-            const existing = sectionById.get(id);
-            if (existing) {
-              if (sectionPolys.hasLayer(existing.poly)) sectionPolys.removeLayer(existing.poly);
-              if (sectionHexes.hasLayer(existing.hex)) sectionHexes.removeLayer(existing.hex);
-              sectionById.delete(id);
+      const ringKeys =
+        Array.from(
+          byRing.keys()
+        ).sort(
+          (a, b) =>
+            a - b
+        );
+
+
+      const rings =
+        ringKeys.map(
+          (rk) =>
+            byRing
+              .get(rk)
+              .sort(
+                (a, b) =>
+                  a.i - b.i
+              )
+              .map(
+                (p) =>
+                  L.latLng(
+                    p.lat,
+                    p.lng
+                  )
+              )
+        );
+
+
+      return rings.length
+        ? rings
+        : null;
+
+    }
+
+
+    const sectionPolys =
+      L.featureGroup()
+        .addTo(map);
+
+
+    const sectionHexes =
+      L.layerGroup()
+        .addTo(map);
+
+
+    const sectionById =
+      new Map();
+
+
+    let drawControl = null;
+
+
+    /* =========================================================
+       SECTION DRAWING CONTROLS
+    ========================================================= */
+
+    function setSectionEditingEnabled(
+      enabled
+    ) {
+
+      if (enabled) {
+
+        if (!drawControl) {
+
+          drawControl =
+            new L.Control.Draw({
+
+              position:
+                "topright",
+
+              draw: {
+
+                polygon:
+                  true,
+
+                rectangle:
+                  true,
+
+                polyline:
+                  false,
+
+                circle:
+                  false,
+
+                marker:
+                  false,
+
+                circlemarker:
+                  false
+
+              },
+
+              edit: {
+
+                featureGroup:
+                  sectionPolys,
+
+                remove:
+                  true
+
+              }
+
+            });
+
+
+          map.addControl(
+            drawControl
+          );
+
+        }
+
+      } else {
+
+        if (drawControl) {
+
+          map.removeControl(
+            drawControl
+          );
+
+          drawControl =
+            null;
+
+        }
+
+      }
+
+    }
+
+
+    function ensureSectionFilterOptions(
+      mapNames
+    ) {
+
+      const current =
+        sectionMapFilter.value ||
+        "ALL";
+
+
+      const names =
+        Array.from(
+          new Set(mapNames)
+        )
+        .filter(Boolean)
+        .sort(
+          (a, b) =>
+            a.localeCompare(b)
+        );
+
+
+      const opts = [
+        "ALL",
+        ...names
+      ];
+
+
+      sectionMapFilter.innerHTML =
+        "";
+
+
+      opts.forEach((v) => {
+
+        const o =
+          document.createElement(
+            "option"
+          );
+
+
+        o.value =
+          v;
+
+
+        o.textContent =
+          v === "ALL"
+            ? "All section maps"
+            : v;
+
+
+        sectionMapFilter.appendChild(
+          o
+        );
+
+      });
+
+
+      sectionMapFilter.value =
+        opts.includes(current)
+          ? current
+          : "ALL";
+
+    }
+
+
+    function applySectionFilter() {
+
+      const selected =
+        sectionMapFilter.value ||
+        "ALL";
+
+
+      for (
+        const [
+          id,
+          rec
+        ] of sectionById.entries()
+      ) {
+
+        const show =
+          selected === "ALL" ||
+          rec.mapName === selected;
+
+
+        if (show) {
+
+          if (
+            !sectionPolys.hasLayer(
+              rec.poly
+            )
+          ) {
+
+            sectionPolys.addLayer(
+              rec.poly
+            );
+
+          }
+
+
+          if (
+            !sectionHexes.hasLayer(
+              rec.hex
+            )
+          ) {
+
+            sectionHexes.addLayer(
+              rec.hex
+            );
+
+          }
+
+        } else {
+
+          if (
+            sectionPolys.hasLayer(
+              rec.poly
+            )
+          ) {
+
+            sectionPolys.removeLayer(
+              rec.poly
+            );
+
+          }
+
+
+          if (
+            sectionHexes.hasLayer(
+              rec.hex
+            )
+          ) {
+
+            sectionHexes.removeLayer(
+              rec.hex
+            );
+
+          }
+
+        }
+
+      }
+
+    }
+
+
+    sectionMapFilter.addEventListener(
+      "change",
+      () => {
+
+        const v =
+          sectionMapFilter.value;
+
+
+        if (
+          isAdmin &&
+          v &&
+          v !== "ALL"
+        ) {
+
+          sectionMapName.value =
+            v;
+
+        }
+
+
+        applySectionFilter();
+
+        refreshAllHexIconsForZoom();
+
+      }
+    );
+
+
+    function refreshAllHexIconsForZoom() {
+
+      const z =
+        map.getZoom();
+
+
+      const shouldShow =
+        shouldShowHexesAtZoom(z);
+
+
+      const sizePx =
+        hexSizeForZoom(z);
+
+
+      const targetOpacity =
+        shouldShow
+          ? HEX_MAX_OPACITY
+          : HEX_MIN_OPACITY;
+
+
+      for (
+        const rec
+        of sectionById.values()
+      ) {
+
+        rec.hex.setIcon(
+          makeHexIcon(
+            rec.number,
+            rec.status,
+            sizePx
+          )
+        );
+
+
+        animateOpacity(
+          rec.hex,
+          targetOpacity
+        );
+
+      }
+
+    }
+
+
+    map.on(
+      "zoomend",
+      refreshAllHexIconsForZoom
+    );
+
+
+    /* =========================================================
+       CREATE SECTION
+    ========================================================= */
+
+    map.on(
+      L.Draw.Event.CREATED,
+      async (e) => {
+
+        if (!isAdmin) {
+          return;
+        }
+
+
+        const layer =
+          e.layer;
+
+
+        layer.setStyle(
+          sectionPolyStyle()
+        );
+
+
+        sectionPolys.addLayer(
+          layer
+        );
+
+
+        const mapName =
+          (
+            sectionMapName.value ||
+            ""
+          ).trim();
+
+
+        if (!mapName) {
+
+          alert(
+            "Enter a Map name first (ex: Crown Hill Cemetery)."
+          );
+
+
+          sectionPolys.removeLayer(
+            layer
+          );
+
+
+          return;
+
+        }
+
+
+        const numRaw =
+          (
+            sectionNextNumber.value ||
+            ""
+          ).trim();
+
+
+        const number =
+          numRaw
+            ? String(numRaw)
+            : "1";
+
+
+        const status =
+          sectionDefaultStatus.value ||
+          "uninvestigated";
+
+
+        const points =
+          layerToPoints(layer);
+
+
+        try {
+
+          const docRef =
+            await addDoc(
+              collection(
+                db,
+                SECTIONS
+              ),
+              {
+
+                mapName,
+
+                number,
+
+                status,
+
+                points,
+
+                createdAt:
+                  serverTimestamp(),
+
+                updatedAt:
+                  serverTimestamp(),
+
+                createdBy:
+                  currentUser?.email ||
+                  ""
+
+              }
+            );
+
+
+          layer.options._sectionId =
+            docRef.id;
+
+
+          const n =
+            Number(number);
+
+
+          if (
+            Number.isFinite(n)
+          ) {
+
+            sectionNextNumber.value =
+              String(n + 1);
+
+          }
+
+        } catch (err) {
+
+          console.error(err);
+
+
+          alert(
+            "Save section failed: " +
+            (err?.message || err)
+          );
+
+
+          sectionPolys.removeLayer(
+            layer
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       EDIT SECTION
+    ========================================================= */
+
+    map.on(
+      L.Draw.Event.EDITED,
+      async (e) => {
+
+        if (!isAdmin) {
+          return;
+        }
+
+
+        const layers =
+          e.layers;
+
+
+        const updates = [];
+
+
+        layers.eachLayer(
+          (layer) => {
+
+            const id =
+              layer.options._sectionId;
+
+
+            if (!id) {
+              return;
             }
+
+
+            const points =
+              layerToPoints(layer);
+
+
+            updates.push(
+
+              updateDoc(
+
+                doc(
+                  db,
+                  SECTIONS,
+                  id
+                ),
+
+                {
+
+                  points,
+
+                  updatedAt:
+                    serverTimestamp()
+
+                }
+
+              )
+
+            );
+
+          }
+        );
+
+
+        try {
+
+          await Promise.all(
+            updates
+          );
+
+        } catch (err) {
+
+          console.error(err);
+
+
+          alert(
+            "Update failed: " +
+            (err?.message || err)
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       DELETE SECTION
+    ========================================================= */
+
+    map.on(
+      L.Draw.Event.DELETED,
+      async (e) => {
+
+        if (!isAdmin) {
+          return;
+        }
+
+
+        const layers =
+          e.layers;
+
+
+        const deletes = [];
+
+
+        layers.eachLayer(
+          (layer) => {
+
+            const id =
+              layer.options._sectionId;
+
+
+            if (!id) {
+              return;
+            }
+
+
+            deletes.push(
+
+              deleteDoc(
+
+                doc(
+                  db,
+                  SECTIONS,
+                  id
+                )
+
+              )
+
+            );
+
+          }
+        );
+
+
+        try {
+
+          await Promise.all(
+            deletes
+          );
+
+        } catch (err) {
+
+          console.error(err);
+
+
+          alert(
+            "Delete failed: " +
+            (err?.message || err)
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =========================================================
+       SECTION INTERACTIONS
+    ========================================================= */
+
+    function attachSectionInteractions(
+      id,
+      polyLayer,
+      hexMarker
+    ) {
+
+      polyLayer.on(
+        "click",
+        async () => {
+
+          const rec =
+            sectionById.get(id);
+
+
+          if (!rec) {
             return;
           }
 
-          rebuildSectionLayerFromDoc(id, ch.doc.data());
-        });
+
+          if (isAdmin) {
+
+            const next =
+              cycleStatus(
+                rec.status
+              );
+
+
+            try {
+
+              await updateDoc(
+
+                doc(
+                  db,
+                  SECTIONS,
+                  id
+                ),
+
+                {
+
+                  status:
+                    next,
+
+                  updatedAt:
+                    serverTimestamp()
+
+                }
+
+              );
+
+            } catch (err) {
+
+              console.error(err);
+
+
+              alert(
+                "Status update failed: " +
+                (err?.message || err)
+              );
+
+            }
+
+
+            return;
+
+          }
+
+
+          alert(
+            `${rec.mapName}\nSection: ${rec.number}\nStatus: ${rec.status}`
+          );
+
+        }
+      );
+
+
+      polyLayer.on(
+        "contextmenu",
+        async () => {
+
+          if (!isAdmin) {
+            return;
+          }
+
+
+          const rec =
+            sectionById.get(id);
+
+
+          if (!rec) {
+            return;
+          }
+
+
+          const newMapName =
+            prompt(
+              "Map name:",
+              rec.mapName
+            );
+
+
+          if (!newMapName) {
+            return;
+          }
+
+
+          const newNumber =
+            prompt(
+              "Section label/number:",
+              rec.number
+            );
+
+
+          if (!newNumber) {
+            return;
+          }
+
+
+          try {
+
+            await updateDoc(
+
+              doc(
+                db,
+                SECTIONS,
+                id
+              ),
+
+              {
+
+                mapName:
+                  newMapName.trim(),
+
+                number:
+                  String(
+                    newNumber
+                  ).trim(),
+
+                updatedAt:
+                  serverTimestamp()
+
+              }
+
+            );
+
+          } catch (err) {
+
+            console.error(err);
+
+
+            alert(
+              "Label update failed: " +
+              (err?.message || err)
+            );
+
+          }
+
+        }
+      );
+
+
+      hexMarker.on(
+        "click",
+        async () => {
+
+          if (!isAdmin) {
+            return;
+          }
+
+
+          const rec =
+            sectionById.get(id);
+
+
+          if (!rec) {
+            return;
+          }
+
+
+          const next =
+            cycleStatus(
+              rec.status
+            );
+
+
+          try {
+
+            await updateDoc(
+
+              doc(
+                db,
+                SECTIONS,
+                id
+              ),
+
+              {
+
+                status:
+                  next,
+
+                updatedAt:
+                  serverTimestamp()
+
+              }
+
+            );
+
+          } catch (err) {
+
+            console.error(err);
+
+
+            alert(
+              "Status update failed: " +
+              (err?.message || err)
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    /* =========================================================
+       REBUILD SECTION FROM FIRESTORE
+    ========================================================= */
+
+    function rebuildSectionLayerFromDoc(
+      id,
+      d
+    ) {
+
+      const mapName =
+        d.mapName ||
+        "Unnamed Map";
+
+
+      const number =
+        d.number ||
+        "";
+
+
+      const status =
+        d.status ||
+        "uninvestigated";
+
+
+      const existing =
+        sectionById.get(id);
+
+
+      if (existing) {
+
+        if (
+          sectionPolys.hasLayer(
+            existing.poly
+          )
+        ) {
+
+          sectionPolys.removeLayer(
+            existing.poly
+          );
+
+        }
+
+
+        if (
+          sectionHexes.hasLayer(
+            existing.hex
+          )
+        ) {
+
+          sectionHexes.removeLayer(
+            existing.hex
+          );
+
+        }
+
+
+        sectionById.delete(id);
+
+      }
+
+
+      const latlngRings =
+        pointsToLatLngRings(
+          d.points
+        );
+
+
+      if (!latlngRings) {
+        return;
+      }
+
+
+      const polyLayer =
+        L.polygon(
+          latlngRings,
+          sectionPolyStyle()
+        );
+
+
+      polyLayer.options._sectionId =
+        id;
+
+
+      const c =
+        centroidOfLatLngs(
+          polyLayer.getLatLngs()
+        );
+
+
+      const z =
+        map.getZoom();
+
+
+      const sizePx =
+        hexSizeForZoom(z);
+
+
+      const startOpacity =
+        shouldShowHexesAtZoom(z)
+          ? HEX_MAX_OPACITY
+          : HEX_MIN_OPACITY;
+
+
+      const hex =
+        L.marker(
+          c,
+          {
+
+            icon:
+              makeHexIcon(
+                number,
+                status,
+                sizePx
+              ),
+
+            interactive:
+              true,
+
+            zIndexOffset:
+              1000,
+
+            opacity:
+              startOpacity
+
+          }
+        );
+
+
+      sectionById.set(
+        id,
+        {
+
+          poly:
+            polyLayer,
+
+          hex,
+
+          mapName,
+
+          number,
+
+          status
+
+        }
+      );
+
+
+      attachSectionInteractions(
+        id,
+        polyLayer,
+        hex
+      );
+
+
+      const selected =
+        sectionMapFilter.value ||
+        "ALL";
+
+
+      const show =
+        selected === "ALL" ||
+        mapName === selected;
+
+
+      if (show) {
+
+        sectionPolys.addLayer(
+          polyLayer
+        );
+
+        sectionHexes.addLayer(
+          hex
+        );
+
+      }
+
+    }
+
+
+    /* =========================================================
+       FIRESTORE SECTION OVERLAYS
+    ========================================================= */
+
+    onSnapshot(
+
+      collection(
+        db,
+        SECTIONS
+      ),
+
+      (snap) => {
+
+        const names = [];
+
+
+        snap.forEach(
+          (docSnap) => {
+
+            const d =
+              docSnap.data();
+
+
+            if (d.mapName) {
+              names.push(
+                d.mapName
+              );
+            }
+
+          }
+        );
+
+
+        ensureSectionFilterOptions(
+          names
+        );
+
+
+        snap.docChanges().forEach(
+          (ch) => {
+
+            const id =
+              ch.doc.id;
+
+
+            if (
+              ch.type === "removed"
+            ) {
+
+              const existing =
+                sectionById.get(id);
+
+
+              if (existing) {
+
+                if (
+                  sectionPolys.hasLayer(
+                    existing.poly
+                  )
+                ) {
+
+                  sectionPolys.removeLayer(
+                    existing.poly
+                  );
+
+                }
+
+
+                if (
+                  sectionHexes.hasLayer(
+                    existing.hex
+                  )
+                ) {
+
+                  sectionHexes.removeLayer(
+                    existing.hex
+                  );
+
+                }
+
+
+                sectionById.delete(
+                  id
+                );
+
+              }
+
+
+              return;
+
+            }
+
+
+            rebuildSectionLayerFromDoc(
+              id,
+              ch.doc.data()
+            );
+
+          }
+        );
+
 
         applySectionFilter();
+
         refreshAllHexIconsForZoom();
+
       },
+
       (error) => {
-        console.error("Section overlay snapshot error:", error);
+
+        console.error(
+          "Section overlay snapshot error:",
+          error
+        );
+
       }
+
     );
+
   </script>
+
 </body>
 </html>
