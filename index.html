@@ -1190,6 +1190,123 @@
 
     }
 
+
+    /* =========================================================
+       FINAL MOBILE MENU FIXES
+       Keeps the header fixed and makes ONLY the menu body scroll.
+    ========================================================== */
+
+    @media (max-width: 600px) {
+
+      .panel {
+        position: fixed !important;
+        left: 8px !important;
+        right: 8px !important;
+        top: calc(8px + env(safe-area-inset-top)) !important;
+        bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0 !important;
+
+        padding: 9px !important;
+        overflow: hidden !important;
+
+        background: rgba(255,255,255,0.985) !important;
+      }
+
+      #menuWrap {
+        height: 100% !important;
+        min-height: 0 !important;
+      }
+
+      #menuHeader {
+        flex: 0 0 auto !important;
+        min-height: 48px !important;
+        position: relative !important;
+        z-index: 5 !important;
+        background: rgba(255,255,255,0.995) !important;
+      }
+
+      .menuBody {
+        display: block !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        height: 0 !important;
+
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior: contain !important;
+        touch-action: pan-y !important;
+
+        padding: 2px 2px calc(28px + env(safe-area-inset-bottom)) 0 !important;
+        margin: 0 !important;
+      }
+
+      #controls,
+      #newLocationPanel,
+      #sectionAdminTools {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      #newLocationForm {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding-bottom: 8px !important;
+      }
+
+      .btnRow {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        width: 100% !important;
+        gap: 8px !important;
+      }
+
+      .btnRow button,
+      #submitBtn,
+      #cancelEditBtn {
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 46px !important;
+        color: #111 !important;
+        background: #fff !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+
+      #submitBtn {
+        display: block !important;
+        font-weight: 600 !important;
+      }
+
+      #cancelEditBtn[style*="display:none"] {
+        display: none !important;
+      }
+
+      .menuBody input,
+      .menuBody select,
+      .menuBody textarea,
+      .menuBody button {
+        max-width: 100% !important;
+      }
+
+      .menuBody textarea {
+        min-height: 110px !important;
+      }
+
+      /* Prevent the browser's focus/scroll behavior from leaving
+         the menu at a strange position after opening it. */
+      .menuBody > *:first-child {
+        margin-top: 0 !important;
+      }
+    }
+
   </style>
 
 </head>
@@ -2399,6 +2516,19 @@
           ? "Open"
           : "Close";
 
+      /*
+        On phones, the menu body is its own scroll container.
+        Always reset it when the menu is opened so it does not
+        reopen halfway down the form.
+      */
+      if (!collapsed && mobileQuery.matches) {
+        const body =
+          menuWrap.querySelector(".menuBody");
+
+        if (body) {
+          body.scrollTop = 0;
+        }
+      }
 
       setTimeout(
         () => map.invalidateSize(),
