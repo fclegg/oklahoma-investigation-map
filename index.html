@@ -200,6 +200,50 @@
       display: none;
     }
 
+    /* =========================================================
+       COLLAPSIBLE MENU SECTIONS
+    ========================================================== */
+
+    .menuSectionHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      margin-top: 10px;
+      margin-bottom: 4px;
+    }
+
+    .menuSectionToggle {
+      flex: 0 0 auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fff;
+      color: #111;
+      padding: 6px 10px;
+      min-width: 42px;
+      min-height: 34px;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .menuSectionToggle:hover {
+      background: #f5f5f5;
+    }
+
+    .menuSectionContent {
+      display: block;
+    }
+
+    .menuSectionContent.collapsed {
+      display: none !important;
+    }
+
+    .menuSectionTitle {
+      font-weight: 700;
+    }
+
 
     /* =========================================================
        GENERAL CONTROLS
@@ -1564,19 +1608,31 @@
            SECTION OVERLAYS
       ====================================================== -->
 
-      <div style="margin-top:10px;">
+      <div id="sectionOverlaysSection" style="margin-top:10px;">
 
-        <div
-          class="row"
-          style="margin-bottom:2px;"
-        >
+        <div class="menuSectionHeader">
 
-          <strong>
+          <strong class="menuSectionTitle">
             Section Overlays
           </strong>
 
+          <button
+            id="sectionOverlaysToggle"
+            class="menuSectionToggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="sectionOverlaysContent"
+            title="Collapse Section Overlays"
+          >
+            −
+          </button>
+
         </div>
 
+        <div
+          id="sectionOverlaysContent"
+          class="menuSectionContent"
+        >
 
         <div class="row">
 
@@ -1681,6 +1737,8 @@
 
         </div>
 
+        </div>
+
       </div>
 
 
@@ -1693,18 +1751,33 @@
         style="margin-top:10px;"
       >
 
-        <div class="row">
+        <div class="menuSectionHeader">
 
-          <strong>
+          <strong class="menuSectionTitle">
             New Location
           </strong>
 
-          <span class="hint">
-            Tip: click “Pick from map”, then click the map to fill lat/lng.
-          </span>
+          <button
+            id="newLocationToggle"
+            class="menuSectionToggle"
+            type="button"
+            aria-expanded="true"
+            aria-controls="newLocationContent"
+            title="Collapse New Location"
+          >
+            −
+          </button>
 
         </div>
 
+        <div
+          id="newLocationContent"
+          class="menuSectionContent"
+        >
+
+          <div class="hint" style="margin-bottom:8px;">
+            Tip: click “Pick from map”, then click the map to fill lat/lng.
+          </div>
 
         <div
           id="mustLoginNote"
@@ -1924,6 +1997,8 @@
           </div>
 
         </form>
+
+        </div>
 
       </div>
 
@@ -2501,6 +2576,119 @@
       false,
       true
     );
+
+
+    /* =========================================================
+       COLLAPSIBLE MENU SECTIONS
+    ========================================================== */
+
+    const sectionOverlaysContent =
+      document.getElementById(
+        "sectionOverlaysContent"
+      );
+
+    const sectionOverlaysToggle =
+      document.getElementById(
+        "sectionOverlaysToggle"
+      );
+
+    const newLocationContent =
+      document.getElementById(
+        "newLocationContent"
+      );
+
+    const newLocationToggle =
+      document.getElementById(
+        "newLocationToggle"
+      );
+
+
+    function setMenuSectionCollapsed(
+      content,
+      toggle,
+      collapsed,
+      expandedLabel,
+      collapsedLabel
+    ) {
+
+      if (!content || !toggle) {
+        return;
+      }
+
+      content.classList.toggle(
+        "collapsed",
+        collapsed
+      );
+
+      toggle.setAttribute(
+        "aria-expanded",
+        collapsed ? "false" : "true"
+      );
+
+      toggle.setAttribute(
+        "title",
+        collapsed
+          ? collapsedLabel
+          : expandedLabel
+      );
+
+      toggle.textContent =
+        collapsed
+          ? "+"
+          : "−";
+    }
+
+
+    if (sectionOverlaysToggle) {
+
+      sectionOverlaysToggle.addEventListener(
+        "click",
+        (event) => {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const collapsed =
+            sectionOverlaysContent.classList.contains(
+              "collapsed"
+            );
+
+          setMenuSectionCollapsed(
+            sectionOverlaysContent,
+            sectionOverlaysToggle,
+            !collapsed,
+            "Collapse Section Overlays",
+            "Expand Section Overlays"
+          );
+        }
+      );
+    }
+
+
+    if (newLocationToggle) {
+
+      newLocationToggle.addEventListener(
+        "click",
+        (event) => {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const collapsed =
+            newLocationContent.classList.contains(
+              "collapsed"
+            );
+
+          setMenuSectionCollapsed(
+            newLocationContent,
+            newLocationToggle,
+            !collapsed,
+            "Collapse New Location",
+            "Expand New Location"
+          );
+        }
+      );
+    }
 
 
     /* =========================================================
@@ -3850,6 +4038,14 @@
                   false
                 );
 
+                /* Editing a location automatically expands the form. */
+                setMenuSectionCollapsed(
+                  newLocationContent,
+                  newLocationToggle,
+                  false,
+                  "Collapse New Location",
+                  "Expand New Location"
+                );
 
                 setTimeout(
                   () => {
